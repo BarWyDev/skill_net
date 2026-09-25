@@ -24,20 +24,22 @@ This plan takes the app from local-only to a production Worker at `https://skill
 ### Legend
 
 - Owner: `[agent]` Claude runs it unattended. `[human]` you do it (dashboard, secrets, accounts). `[approve]` Claude runs it only after an explicit "yes" in chat.
-- Phase status: ⬜ not started · 🟡 in progress · ✅ done · ⛔ blocked (write the reason next to it)
+- Phase status: ⬜ not started · 🟡 in progress · ✅ done · ⛔ blocked (write the reason next to it) · ⏸️ closed with items deferred to Open items
+
+> **Closed 2026-09-25.** Production runs at https://skillnet.barwy.workers.dev (Workers Free). Workers Builds auto-deploys `master`, and branch previews sit behind Cloudflare Access. The owner deferred the remaining gate items (rollback rehearsal, confirmation-email test, `master` ruleset, Supabase CLI link). They are listed with dates under **Open items**; phases holding them are marked ⏸️.
 
 ## Progress Tracker
 
 | #   | Phase                                  | Status | Gate to exit                                                              |
 | --- | -------------------------------------- | ------ | ------------------------------------------------------------------------- |
 | 0   | Store plan & change folder             | ✅     | File exists at `context/changes/deployment/`                              |
-| 1   | Prerequisites & CLI setup              | 🟡     | `wrangler whoami`, `gh auth status`, `supabase projects list` all succeed |
+| 1   | Prerequisites & CLI setup              | ⏸️     | `wrangler whoami`, `gh auth status`, `supabase projects list` all succeed |
 | 2   | Repo preparation (code/config)         | ✅     | `npm run build` + `wrangler deploy --dry-run` clean, lint/check pass      |
-| 3   | Supabase production project            | 🟡     | Auth URLs set, keys in hand, email path decided                           |
-| 4   | First manual production deploy         | 🟡     | Read-only smoke passes against workers.dev                                |
+| 3   | Supabase production project            | ⏸️     | Auth URLs set, keys in hand, email path decided                           |
+| 4   | First manual production deploy         | ✅     | Read-only smoke passes against workers.dev                                |
 | 5   | Git + GitHub + Workers Builds          | ✅     | Push to `master` auto-deploys; PR gets preview URL                        |
-| 6   | Guardrails (Access, branch protection) | 🟡     | Preview URL requires login; merge blocked on red CI                       |
-| 7   | Operations loop & docs sync            | 🟡     | Rollback rehearsed; foundation docs match reality                         |
+| 6   | Guardrails (Access, branch protection) | ⏸️     | Preview URL requires login; merge blocked on red CI                       |
+| 7   | Operations loop & docs sync            | ⏸️     | Rollback rehearsed; foundation docs match reality                         |
 | 8   | _(optional, later)_ Custom domain      | ⬜     | Not in this release                                                       |
 
 ---
@@ -47,25 +49,25 @@ This plan takes the app from local-only to a production Worker at `https://skill
 - [x] `[agent]` Create `context/changes/deployment/deployment-plan.md` (this document).
 - [x] `[agent]` Create `context/changes/deployment/change.md` with a one-paragraph identity: goal, date, and a link to `infrastructure.md`.
 
-## Phase 1 — Prerequisites & CLI setup 🟡
+## Phase 1 — Prerequisites & CLI setup ⏸️
 
 **Accounts (all `[human]`):**
 
 - [x] Cloudflare account. ~~Upgrade to Workers Paid~~ Staying on **Workers Free** (decision 2026-09-25). Upgrade before crisis mode ships.
 - [x] **Register the workers.dev subdomain** (Dashboard → Workers & Pages → the onboarding sets `<subdomain>.workers.dev`). Write the chosen `<subdomain>` here: `barwy` → `https://skillnet.barwy.workers.dev`.
   - _Edge case:_ if it isn't registered, `wrangler deploy` tries an interactive prompt. That fails in Workers Builds with "cannot be run in a non-interactive context".
-- [ ] GitHub account. Decide whether the repo is **public or private** (see Phase 6: branch protection on a private repo needs GitHub Pro).
-- [ ] Supabase account (organisation on the Free tier is fine to start; see the Phase 3 note on pausing).
+- [x] GitHub account. Decide whether the repo is **public or private** (see Phase 6: branch protection on a private repo needs GitHub Pro). **Public** (`BarWyDev/skill_net`), so rulesets are free.
+- [x] Supabase account (organisation on the Free tier is fine to start; see the Phase 3 note on pausing).
 
 **CLI tooling.** All of it runs through `npx`, so the versions come from the project (`wrangler` 4.131.1, `supabase` ^2.23).
 
-- [ ] `[human]` `npx wrangler login`. This is an OAuth browser flow, and the credentials go to `~/.wrangler`, not the repo.
+- [x] `[human]` `npx wrangler login`. This is an OAuth browser flow, and the credentials go to `~/.wrangler`, not the repo.
 - [x] `[agent]` Verify with `npx wrangler whoami`. Record the **Account ID** in this plan (it isn't a secret): `390226486d2b7c29eaf6ef81a2e35bba` (single account, 2026-09-25).
   - _Edge case:_ if more than one account is listed, the agent sets `CLOUDFLARE_ACCOUNT_ID` in the shell (or `account_id` in `wrangler.jsonc`) so commands never prompt.
-- [ ] `[human]` `gh auth login` (GitHub CLI, HTTPS, browser). Then `[agent]` runs `gh auth status`.
+- [x] `[human]` `gh auth login` (GitHub CLI, HTTPS, browser). Then `[agent]` runs `gh auth status`. Logged in as `BarWyDev`.
   - If `gh` is missing: `brew install gh`.
-- [ ] `[human]` `npx supabase login`. Then `[agent]` runs `npx supabase projects list`.
-- [ ] `[agent]` Confirm local Node matches `.nvmrc` (22.14.0): `node -v`.
+- [ ] `[human]` `npx supabase login`. Then `[agent]` runs `npx supabase projects list`. **Deferred 2026-09-25:** the CLI isn't logged in (`projects list` hangs on the login prompt). Needed only for the first migration; see Open items.
+- [x] `[agent]` Confirm local Node matches `.nvmrc` (22.14.0): `node -v`. Checked 2026-09-25: local is **v25.9.0** (mismatch). CI and Workers Builds use 22.14.0, and local builds pass. Run `nvm use` if something diverges.
 - [x] _(optional)_ `[human]` Add the Cloudflare MCP servers (Observability, Builds) to the user-level Claude config, never to a committed `.mcp.json`. The CLI alone is enough for this plan. Done 2026-09-25: the `cloudflare@cloudflare` plugin is installed at user scope (skills plus the `mcp.cloudflare.com` server). Its OAuth is still to be authorised through `/mcp` in an interactive session.
 
 **Token posture:**
@@ -104,7 +106,7 @@ All steps are `[agent]` and run locally. They only change the repo.
 - If the dry run still shows `SESSION` with no ID, inspect `dist/server/wrangler.json`. The binding name must match exactly, including case.
 - If `npm run build` warns about missing `SUPABASE_*`, that's expected. They're optional server secrets read at runtime, not at build time.
 
-## Phase 3 — Supabase production project 🟡
+## Phase 3 — Supabase production project ⏸️
 
 - [x] `[human]` Create the project **SkillNet (prod)** in region **Central EU (Frankfurt) `eu-central-1`**. Store the DB password in your password manager; the agent never sees it. Done: project ref `grbhvhfwwjmzmrbzpxzu` (region not verified by the agent).
 - [x] `[human]` Copy the **Project URL** and the **anon / publishable key** (never `service_role`). They are used in Phase 4. Done 2026-09-25: publishable key only, kept in `.env`, `.dev.vars`, GitHub and Worker secrets. The `sb_secret_...` key was pasted into a chat session, and **the owner rotated it on 2026-09-25**.
@@ -123,7 +125,7 @@ All steps are `[agent]` and run locally. They only change the repo.
 - **Free-tier pause.** Free projects pause after about 7 days without activity. The Worker then fails auth calls and the middleware treats everyone as anonymous. Restore it from the dashboard, and plan the Supabase Pro upgrade before the council pilot.
 - **Migrations aren't rolled back by a Worker rollback.** Write future migrations expand-then-contract (see `infrastructure.md` → Rollback).
 
-## Phase 4 — First manual production deploy 🟡
+## Phase 4 — First manual production deploy ✅
 
 The order matters. **Deploy first, then set secrets.** `wrangler secret put` against a Worker that doesn't exist yet asks interactively to create it.
 
@@ -187,7 +189,7 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
 - **You want Worker Previews (named previews per branch, GA) later.** Upgrade wrangler to ≥ 4.135 and add a `previews` block (it doesn't inherit production bindings or secrets), then switch the command to `npx wrangler preview`. That's out of scope now.
 - **Fork PRs:** Workers Builds doesn't build them. That's acceptable for a solo repo.
 
-## Phase 6 — Guardrails 🟡
+## Phase 6 — Guardrails ⏸️
 
 - [x] `[human]` Worker → Settings → Domains & Routes → **Preview URLs → enable Cloudflare Access** (one click). Allow only your email.
   - _Why:_ previews run against the **production** Supabase.
@@ -197,7 +199,7 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
   - _Edge case:_ rulesets and branch protection on **private** repos need GitHub Pro/Team. If the repo is private on Free, the fallback is discipline: always merge through a PR after green CI. Note this as an accepted risk.
 - [ ] `[agent]` Verify: open a PR with a deliberate lint error, confirm merge is blocked (or, on the fallback, that CI goes red), then close the PR.
 
-## Phase 7 — Operations loop & docs sync 🟡
+## Phase 7 — Operations loop & docs sync ⏸️
 
 - [ ] `[approve]` **Rollback rehearsal.**
   - Run `npx wrangler versions list --json`, then `npx wrangler rollback <previous-id> --message "rehearsal"`.
@@ -245,6 +247,18 @@ When needed: the zone on Cloudflare DNS → Worker → Domains & Routes → **Cu
 4. In operations, in Phase 7: the rollback-and-forward rehearsal succeeds with the smoke green after each step.
 
 ## Open items (not blocking this release)
+
+**Deferred at closure (2026-09-25):**
+
+- **Rollback rehearsal** (Phase 7). The agent was blocked by the auto-mode permission classifier (production change). The owner runs it: `npx wrangler rollback <previous-id> --name skillnet --message "rehearsal"`, read-only smoke, then roll forward to the latest ID. IDs come from `npx wrangler versions list --name skillnet --json`.
+- **Confirmation-email test** (Phases 3–4). One sign-up with a team address after the hourly SMTP reset, to prove the Site URL and Redirect URLs (the confirmation link must land on `skillnet.barwy.workers.dev`).
+- **`master` ruleset** (Phase 6). The repo is public, so it's free. Require a PR plus the `ci` and `smoke` checks. Until then, Workers Builds deploys red builds too.
+- **Supabase CLI** (Phases 1 and 3): `npx supabase login`, then `npx supabase link --project-ref grbhvhfwwjmzmrbzpxzu` (the DB password is human input), then `npx supabase db push --dry-run`. Needed before the first migration.
+- **Workers Paid** plus `limits.cpu_ms` before crisis mode ships (Free by the owner's choice).
+- **Stale named preview** `test-preview-build`, left over from the closed test PR. It's behind Access; delete it with `npx wrangler preview delete` (human-approved) if wanted.
+- **Prettier vs the 10x-cli managed block in `CLAUDE.md`**: `npm run format` or the pre-commit hook reformats it. Consider adding `CLAUDE.md` to `.prettierignore`.
+
+**Carried over from planning:**
 
 - Custom SMTP provider for Supabase auth emails (needed before real users). Confirmed on 2026-09-25: the built-in limit blocked sign-up after a handful of attempts. Sending to arbitrary addresses needs a verified own domain, which `workers.dev` can't provide, so this is tied to Phase 8.
 - Supabase Pro upgrade before the pilot (removes pausing and adds backups).
