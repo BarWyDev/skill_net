@@ -190,3 +190,5 @@ GitHub Actions runs two jobs on every push and PR to `master`:
 ## License
 
 MIT
+
+<!-- preview build test, PR will be closed without merging -->
