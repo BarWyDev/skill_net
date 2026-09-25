@@ -138,7 +138,8 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
 5. [ ] `[human]` Manual auth check with your own email (a team address, so the built-in SMTP delivers):
    - Sign up, and the confirmation email arrives with a workers.dev link.
    - Confirm, sign in, `/dashboard` renders, sign out.
-6. [ ] `[agent]` Run `npx wrangler tail skillnet --format json --status error` during step 5. Expect no errors.
+   - **2026-09-25, partial:** sign in → `/dashboard` → sign out all work on production. Sign-up returned `email rate limit exceeded` (built-in SMTP, about 2 emails/hour per project, already used up), so the **confirmation email link is still untested**. Retest once, after the hourly reset.
+6. [x] `[agent]` Run `npx wrangler tail skillnet --format json --status error` during step 5. Expect no errors. Done 2026-09-25: two tail sessions, every request outcome `Ok`, no exceptions.
 7. [x] `[agent]` `npx wrangler versions list --json`: record the first good version ID here: `bece9ffd-8854-4cb4-a430-1acde2b863ad` (100% deployed, 2026-09-25).
 
 **Support steps:**
@@ -240,7 +241,7 @@ When needed: the zone on Cloudflare DNS → Worker → Domains & Routes → **Cu
 
 ## Open items (not blocking this release)
 
-- Custom SMTP provider for Supabase auth emails (needed before real users).
+- Custom SMTP provider for Supabase auth emails (needed before real users). Confirmed on 2026-09-25: the built-in limit blocked sign-up after a handful of attempts. Sending to arbitrary addresses needs a verified own domain, which `workers.dev` can't provide, so this is tied to Phase 8.
 - Supabase Pro upgrade before the pilot (removes pausing and adds backups).
 - A staging Supabase project, if previews ever need writable test data.
 - Upgrade to wrangler ≥ 4.135 and Worker Previews once #15682 is resolved.
