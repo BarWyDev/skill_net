@@ -35,7 +35,7 @@ This plan takes the app from local-only to a production Worker at `https://skill
 | 2   | Repo preparation (code/config)         | ✅     | `npm run build` + `wrangler deploy --dry-run` clean, lint/check pass      |
 | 3   | Supabase production project            | ⬜     | Auth URLs set, keys in hand, email path decided                           |
 | 4   | First manual production deploy         | 🟡     | Read-only smoke passes against workers.dev                                |
-| 5   | Git + GitHub + Workers Builds          | ⬜     | Push to `master` auto-deploys; PR gets preview URL                        |
+| 5   | Git + GitHub + Workers Builds          | 🟡     | Push to `master` auto-deploys; PR gets preview URL                        |
 | 6   | Guardrails (Access, branch protection) | 🟡     | Preview URL requires login; merge blocked on red CI                       |
 | 7   | Operations loop & docs sync            | ⬜     | Rollback rehearsed; foundation docs match reality                         |
 | 8   | _(optional, later)_ Custom domain      | ⬜     | Not in this release                                                       |
@@ -153,7 +153,7 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
 | Runtime `not implemented` errors       | A Node built-in stub under `nodejs_compat`                     | Find it with `wrangler tail`; replace the SDK with `fetch` to the REST API            |
 | Confirmation link → localhost          | Supabase Site URL not set                                      | Phase 3 URL configuration                                                             |
 
-## Phase 5 — Git, GitHub & Workers Builds ⬜
+## Phase 5 — Git, GitHub & Workers Builds 🟡
 
 1. [x] `[agent]` `git init -b master`.
    - Check that `.gitignore` covers `.env`, `.dev.vars`, `.wrangler/`, `dist/` and `wrangler-output.json`.
@@ -161,14 +161,14 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
    - First commit.
 2. [x] `[approve]` `gh repo create skillnet --<private|public> --source . --push`. This publishes code to GitHub. **Done differently:** the repo was created by hand as `BarWyDev/skill_net` and pushed on 2026-09-25.
 3. [x] `[human]` Add the GitHub repo secrets `SUPABASE_URL` / `SUPABASE_KEY`, which the existing `ci` job's build step uses. Use the prod anon values or dummies; the build doesn't need real ones. Done 2026-09-25 with the prod publishable key.
-4. [ ] `[human]` Cloudflare Dashboard → Workers & Pages → **skillnet** → Settings → Builds → **Connect** to the GitHub repo (install the Cloudflare GitHub App on this repo only). Configure:
+4. [x] `[human]` Cloudflare Dashboard → Workers & Pages → **skillnet** → Settings → Builds → **Connect** to the GitHub repo (install the Cloudflare GitHub App on this repo only). Configure: **Connected 2026-09-25.**
    - Production branch: `master`
    - Build command: `npm run build`
    - Deploy command: `npx wrangler deploy`
    - **Non-production branch deploy command: `npx wrangler versions upload`.** Do _not_ keep the new default `npx wrangler preview`, which needs wrangler ≥ 4.135.0; the project pins 4.131.1.
    - Build variables: none needed. `.nvmrc` pins Node 22.14.0. The build image preinstalls 22.23.2 and 24.18.0, so 22.14.0 is installed per build: slower, but consistent with CI.
    - Build watch paths: default (all).
-5. [ ] `[agent]` Push a trivial commit to `master` (for example the docs sync from Phase 7), then check:
+5. [x] `[agent]` Push a trivial commit to `master` (for example the docs sync from Phase 7), then check: **Verified 2026-09-25:** two pushes deployed on their own. `5f6bada` → version `6185fee0` (build succeeded 17:40 UTC) and `62cbaf3` → version `ccd7b111` (build succeeded 17:44 UTC, 100% traffic). The Workers Builds check shows up on each commit next to `ci` and `smoke`, and the read-only smoke passes on the new version.
    - The build succeeds in the dashboard.
    - `npx wrangler deployments status` shows a new version with Workers Builds as the source.
    - The read-only smoke passes again.
