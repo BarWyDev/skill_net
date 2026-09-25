@@ -5,7 +5,7 @@ project_name: skillnet
 hints:
   language_family: js
   team_size: solo
-  deployment_target: cloudflare-pages
+  deployment_target: cloudflare-workers
   ci_provider: github-actions
   ci_default_flow: auto-deploy-on-merge
   bootstrapper_confidence: first-class
@@ -33,7 +33,9 @@ a five-minute window suits Supabase Realtime. Two frictions were surfaced and
 accepted rather than solved here. The SMS alert loop (FR-011) is an external
 integration no starter in the registry carries. The crisis-mode fan-out fights
 the edge runtime's long-task limits, so a queue or external worker is expected
-work, not a freebie. Deployment is the starter default, Cloudflare Pages, with
+work, not a freebie. Deployment is Cloudflare Workers with static assets (the starter default said Pages,
+but @astrojs/cloudflare v14 dropped Pages; corrected 2026-09-25), with
 EU data residency left as a deliberate setup decision given that resident phone
-numbers and home locations are stored. CI is GitHub Actions with auto-deploy on
-merge.
+numbers and home locations are stored. CI is GitHub Actions (lint, type check, build, smoke). Auto-deploy on merge to
+`master` is done by Cloudflare Workers Builds, not by a GitHub Actions job; see
+`context/foundation/infrastructure.md` → Operational Story.

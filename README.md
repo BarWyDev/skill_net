@@ -151,21 +151,43 @@ Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_
 
 ## Deployment
 
-This project deploys to [Cloudflare Workers](https://workers.cloudflare.com/).
+SkillNet runs on [Cloudflare Workers](https://workers.cloudflare.com/) (Workers + static assets, not Pages) at **https://skillnet.barwy.workers.dev**.
 
-1. Build the project:
+- **Production:** every push to `master` is built and deployed by Cloudflare Workers Builds. It doesn't wait for GitHub CI, so merge through PRs after `ci` and `smoke` pass.
+- **Previews:** other branches get `https://<branch>-skillnet.barwy.workers.dev`, behind Cloudflare Access. Previews carry no Supabase secrets, so auth is disabled there.
+- **Manual deploy** (normally not needed):
 
 ```bash
 npm run build
 ```
 
-2. Deploy with Wrangler:
-
 ```bash
 npx wrangler deploy
 ```
 
-Set `SUPABASE_URL` and `SUPABASE_KEY` as secrets in your Cloudflare dashboard or via `npx wrangler secret put`.
+- **Secrets:** `SUPABASE_URL` and `SUPABASE_KEY` (the publishable key). Setting either one deploys a new version immediately:
+
+```bash
+npx wrangler secret bulk .dev.vars --name skillnet
+```
+
+- **Rollback:** find the last good version, then roll back to it. The next push to `master` redeploys, so revert the bad commit as well.
+
+```bash
+npx wrangler versions list --json
+```
+
+```bash
+npx wrangler rollback <version-id> --message "<reason>"
+```
+
+- **Live errors:**
+
+```bash
+npx wrangler tail skillnet --format json --status error
+```
+
+The full deployment record is in `context/changes/deployment/deployment-plan.md`.
 
 ## Smoke test
 
@@ -177,6 +199,12 @@ BASE_URL=http://localhost:4321 npm run smoke
 ```
 
 It needs a reachable Supabase instance (local or cloud) with email confirmation disabled.
+
+Against production, run only the read-only steps. They create no accounts:
+
+```bash
+SMOKE_READONLY=1 BASE_URL=https://skillnet.barwy.workers.dev npm run smoke
+```
 
 > **Note:** this script exists primarily to guard the development of the starter itself — it is a fast sanity check that dependency upgrades did not break the build, the Cloudflare adapter or the Supabase auth flow. It is **not** a substitute for a real test suite. Once you build your own product on top of this starter, add proper tests (unit, integration, end-to-end) suited to your application.
 
