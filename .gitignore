@@ -26,3 +26,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# wrangler deploy output (WRANGLER_OUTPUT_FILE_PATH)
+wrangler-output.json

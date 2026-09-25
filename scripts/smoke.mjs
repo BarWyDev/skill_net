@@ -1,7 +1,9 @@
 // Smoke test: proves the built app, the Cloudflare adapter and the Supabase auth flow still work together.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
+// SMOKE_READONLY=1 runs only the steps that create no accounts, for production.
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
+const READONLY = process.env.SMOKE_READONLY === "1";
 const email = `smoke-${Date.now()}@example.com`;
 const password = "Smoke-Test-Passw0rd!";
 const jar = new Map();
@@ -35,9 +37,12 @@ async function request(path, { method = "GET", form } = {}) {
   return { status: response.status, location: response.headers.get("location") ?? "" };
 }
 
-const steps = [
+const readonlySteps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+];
+
+const writeSteps = [
   [
     "signup creates account",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
@@ -57,6 +62,8 @@ const steps = [
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
 ];
+
+const steps = READONLY ? readonlySteps : [...readonlySteps, ...writeSteps];
 
 let failed = 0;
 for (const [name, run, expected] of steps) {
