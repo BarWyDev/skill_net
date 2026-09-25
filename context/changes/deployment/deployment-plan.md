@@ -37,7 +37,7 @@ This plan takes the app from local-only to a production Worker at `https://skill
 | 4   | First manual production deploy         | 🟡     | Read-only smoke passes against workers.dev                                |
 | 5   | Git + GitHub + Workers Builds          | ✅     | Push to `master` auto-deploys; PR gets preview URL                        |
 | 6   | Guardrails (Access, branch protection) | 🟡     | Preview URL requires login; merge blocked on red CI                       |
-| 7   | Operations loop & docs sync            | ⬜     | Rollback rehearsed; foundation docs match reality                         |
+| 7   | Operations loop & docs sync            | 🟡     | Rollback rehearsed; foundation docs match reality                         |
 | 8   | _(optional, later)_ Custom domain      | ⬜     | Not in this release                                                       |
 
 ---
@@ -66,7 +66,7 @@ This plan takes the app from local-only to a production Worker at `https://skill
   - If `gh` is missing: `brew install gh`.
 - [ ] `[human]` `npx supabase login`. Then `[agent]` runs `npx supabase projects list`.
 - [ ] `[agent]` Confirm local Node matches `.nvmrc` (22.14.0): `node -v`.
-- [ ] _(optional)_ `[human]` Add the Cloudflare MCP servers (Observability, Builds) to the user-level Claude config, never to a committed `.mcp.json`. The CLI alone is enough for this plan.
+- [x] _(optional)_ `[human]` Add the Cloudflare MCP servers (Observability, Builds) to the user-level Claude config, never to a committed `.mcp.json`. The CLI alone is enough for this plan. Done 2026-09-25: the `cloudflare@cloudflare` plugin is installed at user scope (skills plus the `mcp.cloudflare.com` server). Its OAuth is still to be authorised through `/mcp` in an interactive session.
 
 **Token posture:**
 
@@ -107,7 +107,7 @@ All steps are `[agent]` and run locally. They only change the repo.
 ## Phase 3 — Supabase production project 🟡
 
 - [x] `[human]` Create the project **SkillNet (prod)** in region **Central EU (Frankfurt) `eu-central-1`**. Store the DB password in your password manager; the agent never sees it. Done: project ref `grbhvhfwwjmzmrbzpxzu` (region not verified by the agent).
-- [x] `[human]` Copy the **Project URL** and the **anon / publishable key** (never `service_role`). They are used in Phase 4. Done 2026-09-25: publishable key only, kept in `.env`, `.dev.vars`, GitHub and Worker secrets. **The `sb_secret_...` key was pasted into a chat session; rotate it.**
+- [x] `[human]` Copy the **Project URL** and the **anon / publishable key** (never `service_role`). They are used in Phase 4. Done 2026-09-25: publishable key only, kept in `.env`, `.dev.vars`, GitHub and Worker secrets. The `sb_secret_...` key was pasted into a chat session, and **the owner rotated it on 2026-09-25**.
 - [x] `[human]` Auth → URL Configuration: Set by the owner on 2026-09-25 with subdomain `barwy`. The first confirmation email link will prove it.
   - **Site URL:** `https://skillnet.<subdomain>.workers.dev`
   - **Redirect URLs:** `https://skillnet.<subdomain>.workers.dev/**`, plus the preview pattern `https://*-skillnet.<subdomain>.workers.dev/**`
@@ -197,20 +197,20 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
   - _Edge case:_ rulesets and branch protection on **private** repos need GitHub Pro/Team. If the repo is private on Free, the fallback is discipline: always merge through a PR after green CI. Note this as an accepted risk.
 - [ ] `[agent]` Verify: open a PR with a deliberate lint error, confirm merge is blocked (or, on the fallback, that CI goes red), then close the PR.
 
-## Phase 7 — Operations loop & docs sync ⬜
+## Phase 7 — Operations loop & docs sync 🟡
 
 - [ ] `[approve]` **Rollback rehearsal.**
   - Run `npx wrangler versions list --json`, then `npx wrangler rollback <previous-id> --message "rehearsal"`.
   - Verify with the read-only smoke.
   - Roll forward with `npx wrangler rollback <latest-id> --message "rehearsal done"`.
   - _Note:_ the next push to `master` redeploys over any rollback, so after a real rollback also revert the commit.
-- [ ] `[agent]` Update `context/foundation/tech-stack.md`: set `deployment_target: cloudflare-workers` and add a line saying auto-deploy is via Workers Builds.
-- [ ] `[agent]` Update `context/foundation/infrastructure.md` → Operational Story: auto-deploy through Workers Builds (not a GitHub Actions deploy job), pinned `SESSION` KV, previews through `versions upload` behind Access, and the #15682 workaround. Add risk-register rows for Workers Builds deploying without CI gating and for the Supabase built-in SMTP limits.
-- [ ] `[agent]` Update `CLAUDE.md`:
+- [x] `[agent]` Update `context/foundation/tech-stack.md`: set `deployment_target: cloudflare-workers` and add a line saying auto-deploy is via Workers Builds.
+- [x] `[agent]` Update `context/foundation/infrastructure.md` → Operational Story: auto-deploy through Workers Builds (not a GitHub Actions deploy job), pinned `SESSION` KV, previews through `versions upload` behind Access, and the #15682 workaround. Add risk-register rows for Workers Builds deploying without CI gating and for the Supabase built-in SMTP limits.
+- [x] `[agent]` Update `CLAUDE.md`:
   - Remove "package.json still uses 10x-astro-starter" and "not a git repository".
   - Add a **Deploy** section: production URL, `SMOKE_READONLY=1` usage, rollback commands, and "Workers only — never `wrangler pages`, never `Astro.locals.runtime`; env via `astro:env/server`".
   - Add the no-PII-in-logs rule.
-- [ ] `[agent]` Update the `README.md` deploy section to match.
+- [x] `[agent]` Update the `README.md` deploy section to match. Done 2026-09-25 (items 207–213): `tech-stack.md`, `infrastructure.md` ("as deployed" note, preview and secrets bullets, four new risk rows), `CLAUDE.md` (Deploy section, Workers-only and no-PII rules, stale lines removed) and `README.md` (deploy, rollback and read-only smoke).
 - [ ] _(optional)_ `/10x-lesson` for any class of failure hit during this run.
 
 **Runbook (lives in `CLAUDE.md` after Phase 7):**

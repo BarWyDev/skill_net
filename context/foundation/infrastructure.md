@@ -15,6 +15,7 @@ tech_stack:
 **Deploy on Cloudflare Workers, on the Workers Paid plan ($5/mo), using Workers + static assets (not Pages).**
 
 On raw criteria Cloudflare scores 21/22. Render and Railway both score 22/22. Cloudflare wins because of the interview answers:
+
 - **Developer experience over cost.** The scaffold already targets it: the `@astrojs/cloudflare` adapter, `wrangler.jsonc`, a workerd-based `astro dev`, and a CI build plus smoke test that run on workerd. Nothing needs migrating.
 - **Existing familiarity.** The developer already knows Cloudflare, which breaks the near-tie.
 - **Persistent connections and background workers.** The requirement is met by Queues (SMS/push fan-out), Durable Objects with WebSocket Hibernation (long-lived connections), Cron Triggers and Workflows. Supabase Realtime, which the browser connects to directly, carries the coordinator's live confirmations.
@@ -25,16 +26,17 @@ The recommendation rests on those answers. If familiarity or the zero-migration 
 
 Scoring: Pass = 2, Partial = 1, Fail = 0. CLI-first, Managed and Deploy API are weighted ×3, Docs ×2 and MCP ×1, for a maximum of 22. Hard filter: the interview required persistent connections and background workers, which drops serverless-only platforms. All six platforms can run TypeScript/Astro, so the language filter drops none. Status was checked on 2026-09-23.
 
-| Platform | CLI-first | Managed/Serverless | Agent-readable docs | Stable deploy API | MCP / Integration | Total |
-|---|---|---|---|---|---|---|
-| Cloudflare Workers | Pass | Pass | Pass | Partial | Pass | 21 |
-| Render | Pass | Pass | Pass | Pass | Pass | 22 |
-| Railway | Pass | Pass | Pass | Pass | Pass | 22 |
-| Fly.io | Pass | Partial | Pass | Partial | Partial | 17 |
-| Vercel | Pass | Pass | Pass | Pass | Partial | ruled out: no persistent processes |
-| Netlify | Pass | Pass | Pass | Pass | Pass | ruled out: no persistent processes |
+| Platform           | CLI-first | Managed/Serverless | Agent-readable docs | Stable deploy API | MCP / Integration | Total                              |
+| ------------------ | --------- | ------------------ | ------------------- | ----------------- | ----------------- | ---------------------------------- |
+| Cloudflare Workers | Pass      | Pass               | Pass                | Partial           | Pass              | 21                                 |
+| Render             | Pass      | Pass               | Pass                | Pass              | Pass              | 22                                 |
+| Railway            | Pass      | Pass               | Pass                | Pass              | Pass              | 22                                 |
+| Fly.io             | Pass      | Partial            | Pass                | Partial           | Partial           | 17                                 |
+| Vercel             | Pass      | Pass               | Pass                | Pass              | Partial           | ruled out: no persistent processes |
+| Netlify            | Pass      | Pass               | Pass                | Pass              | Pass              | ruled out: no persistent processes |
 
 **Cloudflare Workers.**
+
 - **CLI.** Wrangler covers every routine operation without prompts: `deploy`, `versions upload --preview-alias`, `versions deploy`, `rollback --message`, `tail --format json` and `secret put|list|delete|bulk`.
 - **Docs.** A root `llms.txt` links to one per product, and appending `/index.md` to any docs page returns markdown.
 - **Deploy API: Partial.** `deploy` doesn't print JSON; structured output needs `WRANGLER_OUTPUT_FILE_PATH`, which the installed 4.131.1 supports. Workers that contain a Durable Object get no version preview URLs and can't be tailed.
@@ -44,15 +46,18 @@ Scoring: Pass = 2, Partial = 1, Fail = 0. CLI-first, Managed and Deploy API are 
 - **EU residency.** The Data Localization Suite is **Enterprise-only**. Durable Objects can be pinned with `jurisdiction("eu")`. Smart Placement is **beta** (checked 2026-09-23).
 
 **Render.**
+
 - **Strengths.** Native Node on `@astrojs/node`, a Frankfurt region for every service (next to Supabase `eu-central-1`), always-on Background Workers and WebSockets with no maximum duration. Docs come as `llms.txt`, `llms-full.txt` and `.md` pages.
 - **Integration.** A hosted MCP server (GA) that can't delete, scale or roll back. Workflows became GA on 2026-09-01.
 - **Gaps.** No rollback command in the CLI (it's API or Dashboard only). API keys can't be scoped, so one key reaches every workspace. Full-stack preview environments need the Pro workspace ($25/mo). Starter web plus a worker costs about $14/mo or more.
 
 **Railway.**
+
 - **Strengths.** `railway up --ci` has clean exit codes, project-scoped `RAILWAY_TOKEN`, `--json` on logs and deployments, `llms-full.txt`, and a hosted MCP (`mcp.railway.com`, no status label). PR environments are included.
 - **Gaps.** The only EU region is Amsterdam (EU West Metal). Rollback works through the dashboard or the GraphQL `deploymentRollback` mutation, and only while the image is retained: 72 h on Hobby. Sleeping (Serverless) mode can't host a worker. Estimated $10–20/mo.
 
 **Fly.io.**
+
 - **Strengths.** Any Docker image, process groups for a worker, WebSockets, about $8/mo for web plus worker at 512 MB in `fra`.
 - **Gaps.**
   - The **`waw` (Warsaw) region was deprecated in September 2025**.
@@ -62,10 +67,12 @@ Scoring: Pass = 2, Partial = 1, Fail = 0. CLI-first, Managed and Deploy API are 
   - There are no native PR previews; you'd need the `fly-pr-review-apps` GitHub Action.
 
 **Vercel (ruled out).**
+
 - **Why.** No always-on processes. WebSockets are in **public beta** (since 2026-06-22) and close when the function hits its time limit. Queues are **beta**.
 - **Also.** Workflows are GA, but the 4.x SDK stores state in `iad1`, which is a GDPR problem. Hobby is non-commercial only. The MCP is **public beta** and gets full account permissions. Otherwise the CLI, docs and deploy API are excellent.
 
 **Netlify (ruled out).**
+
 - **Why.** No WebSockets or long-lived processes. Background Functions are capped at 15 min.
 - **Also.** Choosing the EU region requires Pro. Blobs default to `us-east-2`. The CLI, `.md` docs and official MCP are all strong.
 
@@ -74,6 +81,7 @@ Scoring: Pass = 2, Partial = 1, Fail = 0. CLI-first, Managed and Deploy API are 
 #### 1. Cloudflare Workers (Recommended)
 
 Nothing to migrate: the adapter, config, CI and smoke test already run on workerd. It costs a flat $5/mo at MVP traffic.
+
 - **Fan-out.** Queues are the natural shape for the SMS/push fan-out, and Cron Triggers handle auto-expiry of forgotten crises (FR-015).
 - **Connections.** Durable Objects cover any long-lived connection Supabase Realtime doesn't.
 - **Tokens.** API tokens can be scoped per account and permission, which fits the scoped-token rule for production access.
@@ -83,6 +91,7 @@ Nothing to migrate: the adapter, config, CI and smoke test already run on worker
 #### 2. Render
 
 Scores as well as or better than Cloudflare on every criterion.
+
 - **Region.** Frankfurt co-location with Supabase helps both the ≤ 3 s ranking target and the data-residency story.
 - **Workers.** Always-on workers plus Workflows (GA) are a simpler mental model than queue-first serverless.
 - **Why it's second:**
@@ -119,10 +128,17 @@ Six months in, the pilot council's first real drill failed. The team had deploye
 
 ## Operational Story
 
-- **Preview deploys.** For each PR, upload a new version of the Worker with `npx wrangler versions upload --preview-alias pr-<n>`, which gives `https://pr-<n>-skillnet.<account-subdomain>.workers.dev` without changing production traffic. Alternatively, Workers Builds' Git integration posts preview URLs on PRs; it carries no status label. Protect `*.workers.dev` previews with Cloudflare Access, because they hit real Supabase data unless a separate staging Supabase project exists. Preview URLs don't exist for a Worker that contains a Durable Object, so Durable Objects go in a separate Worker. Fork PRs get no previews because GitHub doesn't pass secrets to fork PRs.
+> **As deployed (2026-09-25).** Production is `https://skillnet.barwy.workers.dev` on the **Workers Free** plan. The owner chose to stay on Free; upgrading to Paid is still required before crisis mode ships (see the Risk Register). Every push to `master` is built and deployed by **Cloudflare Workers Builds**, not by a GitHub Actions job. Other branches get a Worker Preview behind Cloudflare Access. The tracker with the full run log is `context/changes/deployment/deployment-plan.md`. The bullets below are updated to match. Where research and reality differ, the "as deployed" note wins.
+
+- **Preview deploys (as deployed).** Workers Builds runs `npx wrangler preview` on non-`master` branches (dashboard: Settings → Build → **Previews Base**). On wrangler 4.131.1 that command is marked private beta, but it works on this account. Each branch gets a named preview, `https://<branch>-skillnet.barwy.workers.dev`, plus a per-deployment URL `https://<id>-skillnet.barwy.workers.dev`, and the Cloudflare bot comments both on the PR.
+  - All preview URLs sit behind Cloudflare Access (team `fancy-surf-cca9`, owner's email only). Verified on 2026-09-25 with a 302 to `cloudflareaccess.com`.
+  - Previews **don't inherit bindings or secrets**. `wrangler.jsonc` pins a preview-only `SESSION` KV (`skillnet-session-preview`) under `previews.kv_namespaces`; without it the adapter injects an ID-less binding and the API rejects it with error 10021. Preview deployments have no `SUPABASE_*`, so auth is off there. If previews need auth, set `npx wrangler preview secret` to a **staging** Supabase project, never production.
+  - A named preview outlives its branch. Remove it with `npx wrangler preview delete` (human-approved).
+- **Preview deploys (original research).** For each PR, upload a new version of the Worker with `npx wrangler versions upload --preview-alias pr-<n>`, which gives `https://pr-<n>-skillnet.<account-subdomain>.workers.dev` without changing production traffic. Alternatively, Workers Builds' Git integration posts preview URLs on PRs; it carries no status label. Protect `*.workers.dev` previews with Cloudflare Access, because they hit real Supabase data unless a separate staging Supabase project exists. Preview URLs don't exist for a Worker that contains a Durable Object, so Durable Objects go in a separate Worker. Fork PRs get no previews because GitHub doesn't pass secrets to fork PRs.
 - **Secrets.** Runtime secrets (`SUPABASE_URL`, `SUPABASE_KEY`, and later the SMS provider key) are Workers Secrets, set with `npx wrangler secret put <NAME>`.
   - **Who can read them:** nobody through the API or dashboard; values can't be read back after they're set. Locally they live in `.dev.vars` (gitignored).
-  - **CI:** needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as GitHub repository secrets, next to the existing `SUPABASE_URL` and `SUPABASE_KEY`.
+  - **CI (as deployed):** no Cloudflare token in GitHub. Workers Builds uses a Cloudflare-managed build token, so GitHub holds only `SUPABASE_URL` and `SUPABASE_KEY` (the publishable key) for the `ci` build step. The production Worker's secrets were set once with `npx wrangler secret bulk .dev.vars --name skillnet`.
+  - **Key hygiene:** the app only ever uses the publishable key. The `sb_secret_...` key was rotated on 2026-09-25 after it was exposed in a chat session, and it isn't stored anywhere in the project.
   - **Rotation:** `wrangler secret put` immediately creates and deploys a new version, so rotating a secret is a production change.
 - **Rollback.** Run `npx wrangler versions list --json` to find the last good version, then `npx wrangler rollback <version-id> --message "reason"`.
   - **Time to revert:** seconds.
@@ -130,7 +146,7 @@ Six months in, the pilot council's first real drill failed. The team had deploye
   - **What it doesn't undo:** Supabase migrations, KV, Queue or Durable Object data, or secrets changed since. Write database migrations to be expand-then-contract so the previous code version still works.
 - **Approval.**
   - **The agent may run unattended:** `npm run build`, `wrangler versions upload` (previews), `wrangler versions list`, `wrangler deployments status`, `wrangler tail`, and read-only MCP queries.
-  - **A human approves:** production deploys (`wrangler deploy`, `versions deploy`, or merging to `master` once CI auto-deploys), `wrangler secret put` against production, and rollbacks during an active crisis.
+  - **A human approves:** production deploys (`wrangler deploy`, `versions deploy`, or merging to `master`, because Workers Builds deploys every push to `master` **whether or not GitHub CI is green**), `wrangler secret put` against production, and rollbacks during an active crisis.
   - **Human-only, by hand in the dashboard:** deleting the Worker, KV namespaces or queues, rotating the Supabase service key, dropping database objects, and changing the Workers plan.
 - **Logs.**
   - Live: `npx wrangler tail skillnet --format json --status error`.
@@ -140,20 +156,23 @@ Six months in, the pilot council's first real drill failed. The team had deploye
 
 ## Risk Register
 
-| Risk | Source | Likelihood | Impact | Mitigation |
-|---|---|---|---|---|
-| Free-plan limits (10 ms CPU, 50 subrequests) silently truncate a crisis fan-out | Research finding | H (if Free is used) | H | Upgrade to Workers Paid before the first deploy that carries crisis mode; set `limits.cpu_ms` explicitly in `wrangler.jsonc` |
-| Fan-out hits the 6-connection limit and the SMS provider's rate limits | Devil's advocate | H | H | Build the fan-out as a Cloudflare Queue from day one: producer on activation, batched consumer, `max_retries` plus a dead-letter queue, and progress recorded in Supabase |
-| Council DPO rejects "processed at any edge location" for phones and locations | Devil's advocate / Pre-mortem | M | H | Supabase project in `eu-central-1`; no personal data in `console.log`; document Cloudflare's DPA and SCCs; pin any Durable Object that holds personal data with `jurisdiction("eu")`; reassess the Data Localization Suite (Enterprise) before multi-municipality rollout |
-| Durable Object in the main Worker removes preview URLs and tail | Devil's advocate / Research finding | M | M | Put any Durable Object in a separate Worker, bound through a service binding |
-| A deploy during an active crisis drops coordinators' live connections | Pre-mortem | M | H | Keep coordinator live updates on Supabase Realtime; enforce a deploy freeze while a crisis is active (check before `wrangler deploy`) |
-| Push or SMS SDK depends on stubbed Node modules (`http2`, etc.) and fails at runtime | Unknown unknowns | M | H | Use providers' REST APIs through `fetch`; smoke-test the alert path on `npm run preview` (workerd) in CI |
-| Agent follows Pages docs, or `Astro.locals.runtime` examples, that don't match adapter v14 | Unknown unknowns | H | M | Fix `tech-stack.md` (`deployment_target: cloudflare-workers`); add a CLAUDE.md rule: Workers only, no `wrangler pages`, env through `astro:env` or `cloudflare:workers` |
-| First CI deploy fails because the scoped token can't create the automatic `SESSION` KV namespace | Unknown unknowns | M | L | Do the first deploy locally with `wrangler login`, or give the token Workers KV Storage:Edit; or set `session: false` if Astro sessions stay unused |
-| Ranked list exceeds 3 s because of chatty cross-region queries | Devil's advocate | M | M | One PostGIS RPC for the ranking; measure latency from Poland; add a placement hint (`aws:eu-central-1`) or Smart Placement (beta) only if measured latency requires it |
-| Three-vendor confirmation path (SMS → Worker → Supabase → Realtime) breaks the 5-minute window | Devil's advocate | L | H | Idempotent webhook with retries; the coordinator list reads Supabase directly (not a Worker cache); the break-glass reveal works when SMS is down |
-| Break-glass and consent audit is lost to 7-day log retention | Unknown unknowns | M | H | Write audit events to an append-only Supabase table with RLS; never rely on Workers Logs for compliance |
-| Worker still named `10x-astro-starter`, so previews and production get the wrong URL and name | Research finding | H | L | Rename to `skillnet` in `wrangler.jsonc` and `package.json` before the first deploy |
+| Risk                                                                                                                                         | Source                                   | Likelihood                                                 | Impact | Mitigation                                                                                                                                                                                                                                                                |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Free-plan limits (10 ms CPU, 50 subrequests) silently truncate a crisis fan-out                                                              | Research finding                         | H (**Free is in use** since 2026-09-25, by owner's choice) | H      | Upgrade to Workers Paid before the first deploy that carries crisis mode; set `limits.cpu_ms` explicitly in `wrangler.jsonc` then (Free rejects it, so it's absent today)                                                                                                 |
+| Fan-out hits the 6-connection limit and the SMS provider's rate limits                                                                       | Devil's advocate                         | H                                                          | H      | Build the fan-out as a Cloudflare Queue from day one: producer on activation, batched consumer, `max_retries` plus a dead-letter queue, and progress recorded in Supabase                                                                                                 |
+| Council DPO rejects "processed at any edge location" for phones and locations                                                                | Devil's advocate / Pre-mortem            | M                                                          | H      | Supabase project in `eu-central-1`; no personal data in `console.log`; document Cloudflare's DPA and SCCs; pin any Durable Object that holds personal data with `jurisdiction("eu")`; reassess the Data Localization Suite (Enterprise) before multi-municipality rollout |
+| Durable Object in the main Worker removes preview URLs and tail                                                                              | Devil's advocate / Research finding      | M                                                          | M      | Put any Durable Object in a separate Worker, bound through a service binding                                                                                                                                                                                              |
+| A deploy during an active crisis drops coordinators' live connections                                                                        | Pre-mortem                               | M                                                          | H      | Keep coordinator live updates on Supabase Realtime; enforce a deploy freeze while a crisis is active (check before `wrangler deploy`)                                                                                                                                     |
+| Push or SMS SDK depends on stubbed Node modules (`http2`, etc.) and fails at runtime                                                         | Unknown unknowns                         | M                                                          | H      | Use providers' REST APIs through `fetch`; smoke-test the alert path on `npm run preview` (workerd) in CI                                                                                                                                                                  |
+| Agent follows Pages docs, or `Astro.locals.runtime` examples, that don't match adapter v14                                                   | Unknown unknowns                         | H                                                          | M      | Fix `tech-stack.md` (`deployment_target: cloudflare-workers`); add a CLAUDE.md rule: Workers only, no `wrangler pages`, env through `astro:env` or `cloudflare:workers`                                                                                                   |
+| First CI deploy fails because the scoped token can't create the automatic `SESSION` KV namespace                                             | Unknown unknowns                         | M                                                          | L      | Do the first deploy locally with `wrangler login`, or give the token Workers KV Storage:Edit; or set `session: false` if Astro sessions stay unused                                                                                                                       |
+| Ranked list exceeds 3 s because of chatty cross-region queries                                                                               | Devil's advocate                         | M                                                          | M      | One PostGIS RPC for the ranking; measure latency from Poland; add a placement hint (`aws:eu-central-1`) or Smart Placement (beta) only if measured latency requires it                                                                                                    |
+| Three-vendor confirmation path (SMS → Worker → Supabase → Realtime) breaks the 5-minute window                                               | Devil's advocate                         | L                                                          | H      | Idempotent webhook with retries; the coordinator list reads Supabase directly (not a Worker cache); the break-glass reveal works when SMS is down                                                                                                                         |
+| Break-glass and consent audit is lost to 7-day log retention                                                                                 | Unknown unknowns                         | M                                                          | H      | Write audit events to an append-only Supabase table with RLS; never rely on Workers Logs for compliance                                                                                                                                                                   |
+| Worker still named `10x-astro-starter`, so previews and production get the wrong URL and name                                                | Research finding                         | H                                                          | L      | **Resolved 2026-09-25:** renamed to `skillnet` before the first deploy                                                                                                                                                                                                    |
+| Workers Builds deploys a push to `master` even when GitHub CI is red                                                                         | Research finding (deploy run 2026-09-25) | M                                                          | H      | GitHub ruleset on `master` requiring `ci` and `smoke` and a PR; until then, only merge PRs after green CI                                                                                                                                                                 |
+| Supabase built-in SMTP (about 2 emails/hour, team addresses only) blocks sign-ups                                                            | Research finding (hit on 2026-09-25)     | H                                                          | H      | Custom SMTP (Resend, Postmark or SES) before any non-team user; that needs a verified own domain, which `workers.dev` can't provide, so it's tied to the custom-domain phase                                                                                              |
+| The adapter's generated `previews` block breaks preview builds (ID-less `SESSION`, error 10021), or a preview writes to production resources | Research finding (hit on 2026-09-25)     | M                                                          | M      | Keep `previews.kv_namespaces` pinned to the preview-only namespace; review the generated `dist/server/wrangler.json` `previews` block after adapter upgrades                                                                                                              |
 
 ## Getting Started
 
@@ -168,6 +187,7 @@ These commands are verified against Astro 7.3.2, `@astrojs/cloudflare` 14.3.1 an
 ## Out of Scope
 
 The following were not evaluated in this research:
+
 - Docker image configuration
 - CI/CD pipeline setup
 - Production-scale architecture (multi-region, HA, DR)
