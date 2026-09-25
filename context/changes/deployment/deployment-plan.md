@@ -36,7 +36,7 @@ This plan takes the app from local-only to a production Worker at `https://skill
 | 3   | Supabase production project            | ⬜     | Auth URLs set, keys in hand, email path decided                           |
 | 4   | First manual production deploy         | 🟡     | Read-only smoke passes against workers.dev                                |
 | 5   | Git + GitHub + Workers Builds          | ⬜     | Push to `master` auto-deploys; PR gets preview URL                        |
-| 6   | Guardrails (Access, branch protection) | ⬜     | Preview URL requires login; merge blocked on red CI                       |
+| 6   | Guardrails (Access, branch protection) | 🟡     | Preview URL requires login; merge blocked on red CI                       |
 | 7   | Operations loop & docs sync            | ⬜     | Rollback rehearsed; foundation docs match reality                         |
 | 8   | _(optional, later)_ Custom domain      | ⬜     | Not in this release                                                       |
 
@@ -182,11 +182,11 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
 - **You want Worker Previews (named previews per branch, GA) later.** Upgrade wrangler to ≥ 4.135 and add a `previews` block (it doesn't inherit production bindings or secrets), then switch the command to `npx wrangler preview`. That's out of scope now.
 - **Fork PRs:** Workers Builds doesn't build them. That's acceptable for a solo repo.
 
-## Phase 6 — Guardrails ⬜
+## Phase 6 — Guardrails 🟡
 
-- [ ] `[human]` Worker → Settings → Domains & Routes → **Preview URLs → enable Cloudflare Access** (one click). Allow only your email.
+- [x] `[human]` Worker → Settings → Domains & Routes → **Preview URLs → enable Cloudflare Access** (one click). Allow only your email.
   - _Why:_ previews run against the **production** Supabase.
-  - `[agent]` verify: `curl -sI <preview-url>` returns a 302 to `cloudflareaccess.com`.
+  - `[agent]` verify: `curl -sI <preview-url>` returns a 302 to `cloudflareaccess.com`. **Verified 2026-09-25:** `bece9ffd-skillnet.barwy.workers.dev` → 302 to the Access team `fancy-surf-cca9.cloudflareaccess.com`. Production `skillnet.barwy.workers.dev` stays public (200).
 - [ ] `[human]` GitHub branch protection / ruleset on `master`: require the status checks `ci` and `smoke`, and require a PR before merging.
   - _Why:_ Workers Builds deploys on **every push to `master`**, regardless of GitHub Actions results. This is the only thing that stops a red build shipping.
   - _Edge case:_ rulesets and branch protection on **private** repos need GitHub Pro/Team. If the repo is private on Free, the fallback is discipline: always merge through a PR after green CI. Note this as an accepted risk.
