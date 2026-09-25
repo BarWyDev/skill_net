@@ -33,9 +33,9 @@ This plan takes the app from local-only to a production Worker at `https://skill
 | 0   | Store plan & change folder             | ✅     | File exists at `context/changes/deployment/`                              |
 | 1   | Prerequisites & CLI setup              | 🟡     | `wrangler whoami`, `gh auth status`, `supabase projects list` all succeed |
 | 2   | Repo preparation (code/config)         | ✅     | `npm run build` + `wrangler deploy --dry-run` clean, lint/check pass      |
-| 3   | Supabase production project            | ⬜     | Auth URLs set, keys in hand, email path decided                           |
+| 3   | Supabase production project            | 🟡     | Auth URLs set, keys in hand, email path decided                           |
 | 4   | First manual production deploy         | 🟡     | Read-only smoke passes against workers.dev                                |
-| 5   | Git + GitHub + Workers Builds          | 🟡     | Push to `master` auto-deploys; PR gets preview URL                        |
+| 5   | Git + GitHub + Workers Builds          | ✅     | Push to `master` auto-deploys; PR gets preview URL                        |
 | 6   | Guardrails (Access, branch protection) | 🟡     | Preview URL requires login; merge blocked on red CI                       |
 | 7   | Operations loop & docs sync            | ⬜     | Rollback rehearsed; foundation docs match reality                         |
 | 8   | _(optional, later)_ Custom domain      | ⬜     | Not in this release                                                       |
@@ -104,15 +104,15 @@ All steps are `[agent]` and run locally. They only change the repo.
 - If the dry run still shows `SESSION` with no ID, inspect `dist/server/wrangler.json`. The binding name must match exactly, including case.
 - If `npm run build` warns about missing `SUPABASE_*`, that's expected. They're optional server secrets read at runtime, not at build time.
 
-## Phase 3 — Supabase production project ⬜
+## Phase 3 — Supabase production project 🟡
 
-- [ ] `[human]` Create the project **SkillNet (prod)** in region **Central EU (Frankfurt) `eu-central-1`**. Store the DB password in your password manager; the agent never sees it.
-- [ ] `[human]` Copy the **Project URL** and the **anon / publishable key** (never `service_role`). They are used in Phase 4.
-- [ ] `[human]` Auth → URL Configuration:
+- [x] `[human]` Create the project **SkillNet (prod)** in region **Central EU (Frankfurt) `eu-central-1`**. Store the DB password in your password manager; the agent never sees it. Done: project ref `grbhvhfwwjmzmrbzpxzu` (region not verified by the agent).
+- [x] `[human]` Copy the **Project URL** and the **anon / publishable key** (never `service_role`). They are used in Phase 4. Done 2026-09-25: publishable key only, kept in `.env`, `.dev.vars`, GitHub and Worker secrets. **The `sb_secret_...` key was pasted into a chat session; rotate it.**
+- [x] `[human]` Auth → URL Configuration: Set by the owner on 2026-09-25 with subdomain `barwy`. The first confirmation email link will prove it.
   - **Site URL:** `https://skillnet.<subdomain>.workers.dev`
   - **Redirect URLs:** `https://skillnet.<subdomain>.workers.dev/**`, plus the preview pattern `https://*-skillnet.<subdomain>.workers.dev/**`
   - _Edge case:_ without this, confirmation emails link to `localhost:3000`, which is the `supabase/config.toml` default.
-- [ ] `[human]` Auth → Email: keep **Confirm email ON** in production.
+- [x] `[human]` Auth → Email: keep **Confirm email ON** in production. Verified 2026-09-25: `/auth/v1/settings` reports `mailer_autoconfirm: false`.
 - [ ] **Email delivery decision.** Supabase's built-in SMTP only sends to **your project team's addresses** and is capped at about 2 emails/hour.
   - That's fine for the first deploy's manual test with your own address.
   - **Configure custom SMTP (e.g. Resend, Postmark, SES) before any non-team user signs up.** Track it as an open item; it isn't blocking for this release.
@@ -153,7 +153,7 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
 | Runtime `not implemented` errors       | A Node built-in stub under `nodejs_compat`                     | Find it with `wrangler tail`; replace the SDK with `fetch` to the REST API            |
 | Confirmation link → localhost          | Supabase Site URL not set                                      | Phase 3 URL configuration                                                             |
 
-## Phase 5 — Git, GitHub & Workers Builds 🟡
+## Phase 5 — Git, GitHub & Workers Builds ✅
 
 1. [x] `[agent]` `git init -b master`.
    - Check that `.gitignore` covers `.env`, `.dev.vars`, `.wrangler/`, `dist/` and `wrangler-output.json`.
@@ -172,7 +172,12 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
    - The build succeeds in the dashboard.
    - `npx wrangler deployments status` shows a new version with Workers Builds as the source.
    - The read-only smoke passes again.
-6. [ ] `[agent]` Open a test PR from a branch. Expected: a Cloudflare bot comment with a version preview URL, and `ci` and `smoke` checks running in GitHub Actions.
+6. [x] `[agent]` Open a test PR from a branch. Expected: a Cloudflare bot comment with a version preview URL, and `ci` and `smoke` checks running in GitHub Actions.
+   - **Result 2026-09-25 (PR BarWyDev/skill_net#1, closed unmerged):** the non-production builds run **`npx wrangler preview`** (Worker Previews), not `versions upload`. The dashboard now keeps this under Settings → Build → **Previews Base**, and changing the command there did not take effect. The 4.131.1 CLI has `preview` as a private-beta command, and it works on this account.
+   - The first two builds failed with **error 10021** (`binding SESSION of type kv_namespace must have a namespace_id`): the adapter injects an ID-less `SESSION` into the `previews` block. The fix was a preview-only namespace `skillnet-session-preview` (`95e132ccfd4f47baac88a246023277bf`) pinned under `previews.kv_namespaces` in `wrangler.jsonc` (commit `733f5f4`).
+   - After the fix, the named preview `https://test-preview-build-skillnet.barwy.workers.dev` and the per-deployment URL `https://ab947d29-skillnet.barwy.workers.dev` both 302 to Cloudflare Access. `ci` and `smoke` are green.
+   - **Previews don't inherit Worker secrets**, so preview deployments run without `SUPABASE_*`: the config banner shows and auth is off. That's acceptable for now. If previews need auth, set it with `npx wrangler preview secret` (point it at a staging Supabase, not production).
+   - The named preview for a deleted branch may linger. Remove it with `npx wrangler preview delete` (human-approved).
 
 **Support steps:**
 
