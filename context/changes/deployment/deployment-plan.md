@@ -34,7 +34,7 @@ This plan takes the app from local-only to a production Worker at `https://skill
 | 1   | Prerequisites & CLI setup              | 🟡     | `wrangler whoami`, `gh auth status`, `supabase projects list` all succeed |
 | 2   | Repo preparation (code/config)         | ✅     | `npm run build` + `wrangler deploy --dry-run` clean, lint/check pass      |
 | 3   | Supabase production project            | ⬜     | Auth URLs set, keys in hand, email path decided                           |
-| 4   | First manual production deploy         | ⬜     | Read-only smoke passes against workers.dev                                |
+| 4   | First manual production deploy         | 🟡     | Read-only smoke passes against workers.dev                                |
 | 5   | Git + GitHub + Workers Builds          | ⬜     | Push to `master` auto-deploys; PR gets preview URL                        |
 | 6   | Guardrails (Access, branch protection) | ⬜     | Preview URL requires login; merge blocked on red CI                       |
 | 7   | Operations loop & docs sync            | ⬜     | Rollback rehearsed; foundation docs match reality                         |
@@ -123,23 +123,23 @@ All steps are `[agent]` and run locally. They only change the repo.
 - **Free-tier pause.** Free projects pause after about 7 days without activity. The Worker then fails auth calls and the middleware treats everyone as anonymous. Restore it from the dashboard, and plan the Supabase Pro upgrade before the council pilot.
 - **Migrations aren't rolled back by a Worker rollback.** Write future migrations expand-then-contract (see `infrastructure.md` → Rollback).
 
-## Phase 4 — First manual production deploy ⬜
+## Phase 4 — First manual production deploy 🟡
 
 The order matters. **Deploy first, then set secrets.** `wrangler secret put` against a Worker that doesn't exist yet asks interactively to create it.
 
-1. [ ] `[approve]` `WRANGLER_OUTPUT_FILE_PATH=./wrangler-output.json npx wrangler deploy` (after `npm run build`).
+1. [x] `[approve]` `WRANGLER_OUTPUT_FILE_PATH=./wrangler-output.json npx wrangler deploy` (after `npm run build`). **Done 2026-09-25** → `https://skillnet.barwy.workers.dev`, startup time 21 ms.
    - Add `wrangler-output.json` to `.gitignore`.
    - Expected: the site loads with the Polish config banner ("Supabase nie jest skonfigurowany"). The client returns `null` without env, and that's handled gracefully.
-2. [ ] `[human]` `npx wrangler secret put SUPABASE_URL`, then `npx wrangler secret put SUPABASE_KEY`, pasting the values at the prompt.
+2. [x] `[human]` `npx wrangler secret put SUPABASE_URL`, then `npx wrangler secret put SUPABASE_KEY`, pasting the values at the prompt. **Done 2026-09-25** by the owner with `npx wrangler secret bulk .dev.vars --name skillnet` (version `d017772d`, 2 s before the deploy finished; the deploy kept the secrets).
    - Each command **deploys a new version immediately**.
    - The agent doesn't type key values.
-3. [ ] `[agent]` `npx wrangler secret list` shows both names, and the banner is gone on the live URL.
-4. [ ] `[agent]` `SMOKE_READONLY=1 BASE_URL=https://skillnet.<subdomain>.workers.dev npm run smoke` → all pass.
+3. [x] `[agent]` `npx wrangler secret list` shows both names, and the banner is gone on the live URL.
+4. [x] `[agent]` `SMOKE_READONLY=1 BASE_URL=https://skillnet.<subdomain>.workers.dev npm run smoke` → all pass. Passed 2026-09-25. A bad-password sign-in also returned `?error=Invalid login credentials`, which proves the Worker → Supabase path.
 5. [ ] `[human]` Manual auth check with your own email (a team address, so the built-in SMTP delivers):
    - Sign up, and the confirmation email arrives with a workers.dev link.
    - Confirm, sign in, `/dashboard` renders, sign out.
 6. [ ] `[agent]` Run `npx wrangler tail skillnet --format json --status error` during step 5. Expect no errors.
-7. [ ] `[agent]` `npx wrangler versions list --json`: record the first good version ID here: `____`.
+7. [x] `[agent]` `npx wrangler versions list --json`: record the first good version ID here: `bece9ffd-8854-4cb4-a430-1acde2b863ad` (100% deployed, 2026-09-25).
 
 **Support steps:**
 
