@@ -1,9 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "10x-astro-starter",
+  "name": "skillnet",
   "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2026-05-08",
   "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": true,
   "assets": {
     "binding": "ASSETS",
     "directory": "./dist",
@@ -12,4 +14,10 @@
   "observability": {
     "enabled": true,
   },
+  "kv_namespaces": [
+    {
+      "binding": "SESSION",
+      "id": "ac680c0499b04685bdd941b6d25b6b77",
+    },
+  ],
 }
