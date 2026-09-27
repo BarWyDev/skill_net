@@ -476,27 +476,27 @@ The `/profil` page and its React island, plus the Polish shell.
 
 #### Automated
 
-- [x] 1.1 Migrations apply cleanly on a fresh local DB: `npx supabase db reset`
-- [x] 1.2 pgTAP suite passes: `npm run test:db`
-- [x] 1.3 Generated types compile: `npm run db:types && npx astro check`
-- [x] 1.4 Lint passes: `npm run lint`
+- [x] 1.1 Migrations apply cleanly on a fresh local DB: `npx supabase db reset` — 740d731
+- [x] 1.2 pgTAP suite passes: `npm run test:db` — 740d731
+- [x] 1.3 Generated types compile: `npm run db:types && npx astro check` — 740d731
+- [x] 1.4 Lint passes: `npm run lint` — 740d731
 
 #### Manual
 
-- [x] 1.5 Studio shows RLS enabled with separate per-operation policies on `profiles` and `profile_skills`
-- [x] 1.6 Seeded taxonomy reads correctly in Polish
+- [x] 1.5 Studio shows RLS enabled with separate per-operation policies on `profiles` and `profile_skills` — 740d731
+- [x] 1.6 Seeded taxonomy reads correctly in Polish — 740d731
 
 ### Phase 2: Postcode centroid data
 
 #### Automated
 
-- [ ] 2.1 Migration applies: `npx supabase db reset`
-- [ ] 2.2 `select count(*) from postcodes` returns 20,000–25,000
-- [ ] 2.3 pgTAP suite still passes: `npm run test:db`
+- [x] 2.1 Migration applies: `npx supabase db reset`
+- [x] 2.2 `select count(*) from postcodes` returns 20,000–25,000
+- [x] 2.3 pgTAP suite still passes: `npm run test:db`
 
 #### Manual
 
-- [ ] 2.4 Three spot-checked postcode centroids land in the right place
+- [x] 2.4 Three spot-checked postcode centroids land in the right place
 
 ### Phase 3: Profile API and sign-in nudge
 

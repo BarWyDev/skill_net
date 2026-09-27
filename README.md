@@ -149,6 +149,20 @@ Users can then sign in immediately after sign-up without clicking a confirmation
 
 Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_ROUTES` array there to require authentication.
 
+### Dane kodów pocztowych
+
+The `postcodes` table holds one centroid per Polish postcode (the mean of that postcode's address points). It is loaded by the migration `supabase/migrations/20260927130000_seed_postcode_centroids.sql`, so postcode lookup never calls an external service at runtime.
+
+- **Source:** GUGiK PRG address points (Państwowy Rejestr Granic, about 8.6M points), open data made available free of charge under the Polish Law on Geodesy and Cartography of 17 May 1989. No attribution is required. The current migration was built from the [OpenAddresses](https://github.com/openaddresses/openaddresses/tree/master/sources/pl) per-voivodeship CSV snapshots of PRG dated 2026-06-03 (coordinates in EPSG:2180). The official national file is `https://opendata.geoportal.gov.pl/prg/adresy/PRG-punkty_adresowe.zip`.
+- **Privacy:** the table stores centroids of whole postcodes, not addresses. The raw address files are never committed; keep them outside the repo (or in the gitignored `data/` folder).
+- **Regenerating:** download the 16 `<voivodeship>.csv.zip` files listed in the OpenAddresses `sources/pl/*.json` definitions, then run:
+
+  ```bash
+  node scripts/build-postcode-centroids.mjs --out supabase/migrations/20260927130000_seed_postcode_centroids.sql data/*.csv.zip
+  ```
+
+  The script needs only Node and `unzip`. For other inputs (for example the official GML converted with `ogr2ogr`), see the options in the script's header comment. The migration is an idempotent upsert, but an already applied migration is not re-run by `db push`, so ship updated data in a new migration with a fresh timestamp.
+
 ## Deployment
 
 SkillNet runs on [Cloudflare Workers](https://workers.cloudflare.com/) (Workers + static assets, not Pages) at **https://skillnet.barwy.workers.dev**.
