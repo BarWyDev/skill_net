@@ -1,10 +1,10 @@
 ---
 change_id: profile-postcode-minimisation
 title: Profile postcode minimisation
-status: impl_reviewed
+status: archived
 created: 2026-09-27
 updated: 2026-09-27
-archived_at: null
+archived_at: 2026-09-27T16:46:44Z
 ---
 
 ## Notes
