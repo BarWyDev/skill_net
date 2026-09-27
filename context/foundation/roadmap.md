@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-09-26
+updated: 2026-09-27
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -41,7 +41,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 
 | ID   | Change ID                       | Outcome (user can …)                                                                   | Prerequisites                 | PRD refs              | Status   |
 | ---- | ------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------- | --------------------- | -------- |
-| S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location          | —                             | FR-002, FR-003        | ready    |
+| S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location          | —                             | FR-002, FR-003        | in-progress |
 | S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | ready    |
 | S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents        | S-01, S-02                    | US-01, FR-009, FR-010 | proposed |
 | S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | proposed |
@@ -103,7 +103,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - How is a postcode turned into a location, given the guardrail that matching must work when optional external services fail? — Owner: user. Block: no.
 - **Risk:** First, because every other slice consumes resident data. The location model has to support a radius query from day one, or S-03 inherits a rewrite.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-02: Operator grants the coordinator role
 
