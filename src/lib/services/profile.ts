@@ -12,6 +12,7 @@ const GENERIC_SAVE_ERROR = "Nie udało się zapisać profilu. Spróbuj ponownie.
 // Messages raised by the triggers in the profile schema migration.
 const DB_ERROR_MESSAGES: Record<string, string> = {
   unknown_postcode: "Nie znamy tego kodu pocztowego — zaznacz lokalizację na mapie.",
+  postcode_required: "Podaj kod pocztowy w formacie 00-000.",
   outside_poland: "Lokalizacja musi być w Polsce.",
   level_required: "Wybierz poziom dla każdej zaznaczonej umiejętności.",
   level_not_applicable: "Ta umiejętność nie ma poziomu.",
@@ -43,7 +44,6 @@ export async function getTaxonomy(supabase: SupabaseClient): Promise<TaxonomyDTO
 }
 
 const myProfileSchema = z.object({
-  postcode: z.string().nullable(),
   location_source: z.enum(["postcode", "pin"]).nullable(),
   lat: z.number().nullable(),
   lng: z.number().nullable(),
@@ -59,7 +59,6 @@ export async function getMyProfile(supabase: SupabaseClient): Promise<MyProfileD
 
   const profile = myProfileSchema.parse(data);
   return {
-    postcode: profile.postcode,
     locationSource: profile.location_source,
     lat: profile.lat,
     lng: profile.lng,
