@@ -19,7 +19,7 @@ Roadmap slice S-15 (FR-003, the "exact location hidden" guardrail), from S-01 im
 
 ## Desired End State
 
-- `profiles.postcode` is null on every row, enforced by `check (postcode is null)`. The column is only a write-time input: the trigger resolves it, then nulls it. No reader, whether RLS owner, security definer, backup taken after the migration or admin, can see a typed postcode.
+- `profiles.postcode` is null on every row, enforced by `check (postcode is null)`. The column is only a write-time input: the trigger resolves it, then nulls it. No database reader, whether RLS owner, security definer, backup taken after the migration or admin, can see a typed postcode. It also never appears in an RPC response or the `/profil` page. Known exception, queued as a follow-up (impl-review F1): the island's postcode lookup puts the code in the URL path (`/api/kody-pocztowe/<code>`), so it appears in Workers Logs, without a user_id.
 - `get_my_profile()` has no `postcode` key. `/profil` never contains the resident's postcode.
 - A resident who set their location by postcode can reload `/profil`, change only skills and save. Their location and `location_source = 'postcode'` stay unchanged.
 - Typing into the postcode field and clearing it again goes back to the location loaded with the page. It never removes the location.
@@ -239,6 +239,8 @@ None. The trigger does the same single primary-key lookup, or none in the keep b
 ## Migration Notes
 
 - On production, the migration nulls postcodes on existing rows and keeps their points. A human pushes it with `npx supabase db push` *after* the code deploy (see Critical Implementation Details). Rolling back the Worker does not restore postcodes, and should not. A Worker rolled back to the S-01 build would break `/profil` against the new schema, so roll forward instead.
+- After `npx supabase db push` on production, run this query and expect `t` (impl-review F4, plan-review F2). CI only migrates empty tables, so this is the one check on real rows:
+  `select count(*) filter (where postcode is not null) = 0 and count(*) filter (where location_source = 'postcode' and location is null) = 0 from public.profiles;`
 - The migration is forward-only. Reverting it would need a new migration that drops `profiles_postcode_never_stored`. The discarded codes cannot be recovered, which is intended.
 
 ## References

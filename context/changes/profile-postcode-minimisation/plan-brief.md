@@ -62,6 +62,7 @@ Everything is enforced in the database. The trigger is the single place that tur
 ## Open Risks & Assumptions
 
 - **Deploy ordering.** Nothing applies migrations automatically. Merge the code first, then a human runs `npx supabase db push`. The reverse order breaks `/profil`, because the old zod schema requires the `postcode` key.
+- The postcode lookup `GET /api/kody-pocztowe/<code>` puts the typed code in Workers Logs, without a user_id. S-15's guarantee covers database, RPC and page readers only. A POST-body lookup is queued in `follow-ups/review-fixes.md` (impl-review F1).
 - Postcodes stored before the migration persist in Supabase backups and WAL until retention expires. Code can't fix that. Accepted.
 - No UI path removes a location after this change. Deletion is left to S-14 or a follow-up.
 
