@@ -38,7 +38,9 @@ const skillsSchema = z
 const profileFormSchema = z.discriminatedUnion("location_source", [
   z.object({
     location_source: z.literal("postcode"),
+    // Empty: keep the stored postcode location (the field starts empty, the code is never stored).
     postcode: z.string().transform((value, ctx) => {
+      if (value.trim() === "") return null;
       const postcode = normalisePostcode(value);
       if (postcode === null) {
         ctx.addIssue({ code: "custom", message: "Podaj kod pocztowy w formacie 00-000." });
