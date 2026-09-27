@@ -2,7 +2,7 @@
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
 // SMOKE_READONLY=1 runs only the steps that create no accounts, for production.
 // A step's expected location is a prefix match, unless the step sets `exact: true`.
-// A step may set `bodyExcludes` to assert the response body does not contain a string.
+// A step may set `bodyIncludes` / `bodyExcludes` to assert the response body does / does not contain a string.
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const READONLY = process.env.SMOKE_READONLY === "1";
@@ -24,16 +24,29 @@ function storeCookies(response) {
   }
 }
 
-async function request(path, { method = "GET", form } = {}) {
+// `form` sends a urlencoded body, `json` a JSON body, and `rawBody` is sent as is with `contentType`.
+async function request(path, { method = "GET", form, json, rawBody, contentType } = {}) {
+  let body;
+  let type;
+  if (form) {
+    body = new URLSearchParams(form).toString();
+    type = "application/x-www-form-urlencoded";
+  } else if (json !== undefined) {
+    body = JSON.stringify(json);
+    type = "application/json";
+  } else if (rawBody !== undefined) {
+    body = rawBody;
+    type = contentType;
+  }
   const response = await fetch(BASE_URL + path, {
     method,
     redirect: "manual",
     headers: {
       Cookie: cookieHeader(),
       Origin: BASE_URL,
-      ...(form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
+      ...(type ? { "Content-Type": type } : {}),
     },
-    body: form ? new URLSearchParams(form).toString() : undefined,
+    body,
   });
   storeCookies(response);
   return { status: response.status, location: response.headers.get("location") ?? "", body: await response.text() };
@@ -43,6 +56,22 @@ const readonlySteps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["profil redirects anonymous user", () => request("/profil"), { status: 302, location: "/auth/signin" }],
+  // The lookup takes the postcode in a POST body, so it never appears in a request URL.
+  [
+    "postcode lookup finds known code",
+    () => request("/api/kody-pocztowe", { method: "POST", json: { postcode: "31-001" } }),
+    { status: 200, bodyIncludes: '"lat"' },
+  ],
+  [
+    "postcode lookup rejects unknown code",
+    () => request("/api/kody-pocztowe", { method: "POST", json: { postcode: "00-000" } }),
+    { status: 404 },
+  ],
+  [
+    "postcode lookup rejects malformed body",
+    () => request("/api/kody-pocztowe", { method: "POST", rawBody: '{"postcode":', contentType: "application/json" }),
+    { status: 400 },
+  ],
 ];
 
 const writeSteps = [
@@ -138,11 +167,14 @@ for (const [name, run, expected] of steps) {
     actual.status === expected.status &&
     (expected.location === undefined ||
       (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location))) &&
+    (expected.bodyIncludes === undefined || actual.body.includes(expected.bodyIncludes)) &&
     (expected.bodyExcludes === undefined || !actual.body.includes(expected.bodyExcludes));
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;
     console.log(`      expected ${expected.status} ${expected.location ?? ""}`);
+    if (expected.bodyIncludes !== undefined) console.log(`      expected body to include ${expected.bodyIncludes}`);
+    if (expected.bodyExcludes !== undefined) console.log(`      expected body to exclude ${expected.bodyExcludes}`);
   }
 }
 
