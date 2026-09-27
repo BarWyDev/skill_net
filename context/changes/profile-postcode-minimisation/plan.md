@@ -256,28 +256,28 @@ None. The trigger does the same single primary-key lookup, or none in the keep b
 
 #### Automated
 
-- [x] 1.1 Migrations apply cleanly on a fresh local database
-- [x] 1.2 pgTAP passes, including the new named cases
-- [x] 1.3 Type check passes
+- [x] 1.1 Migrations apply cleanly on a fresh local database — 8dec4cf
+- [x] 1.2 pgTAP passes, including the new named cases — 8dec4cf
+- [x] 1.3 Type check passes — 8dec4cf
 
 #### Manual
 
-- [x] 1.4 No profile row holds a postcode after a postcode save
+- [x] 1.4 No profile row holds a postcode after a postcode save — 8dec4cf
 
 ### Phase 2: App — form, island, smoke
 
 #### Automated
 
-- [ ] 2.1 Lint passes
-- [ ] 2.2 Type check passes
-- [ ] 2.3 Build succeeds
-- [ ] 2.4 Smoke passes against local Supabase, including the 3 new steps
+- [x] 2.1 Lint passes
+- [x] 2.2 Type check passes
+- [x] 2.3 Build succeeds
+- [x] 2.4 Smoke passes against local Supabase, including the 3 new steps
 
 #### Manual
 
-- [ ] 2.5 Postcode save shows status line, coarsened point, no code in page source
-- [ ] 2.6 Skills-only re-save keeps the location
-- [ ] 2.7 Typing then clearing the field reverts to the stored location
-- [ ] 2.8 New postcode moves the point
-- [ ] 2.9 Pin save replaces the postcode status
-- [ ] 2.10 Works at phone width
+- [x] 2.5 Postcode save shows status line, coarsened point, no code in page source
+- [x] 2.6 Skills-only re-save keeps the location
+- [x] 2.7 Typing then clearing the field reverts to the stored location
+- [x] 2.8 New postcode moves the point
+- [x] 2.9 Pin save replaces the postcode status
+- [x] 2.10 Works at phone width

@@ -58,10 +58,12 @@ function ClickToPin({ onPin }: { onPin: (lat: number, lng: number) => void }) {
 
 interface Props {
   value: LocationValue;
+  /** The location loaded with the page. An emptied postcode field goes back to it. */
+  initial: LocationValue;
   onChange: (next: LocationValue) => void;
 }
 
-export function LocationPicker({ value, onChange }: Props) {
+export function LocationPicker({ value, initial, onChange }: Props) {
   const [lookup, setLookup] = useState<LookupStatus>("idle");
   const [viewTarget, setViewTarget] = useState<ViewTarget | null>(null);
   const latestLookup = useRef(0);
@@ -71,10 +73,17 @@ export function LocationPicker({ value, onChange }: Props) {
 
   async function handlePostcodeChange(raw: string) {
     const request = ++latestLookup.current;
-    // Typing a postcode makes it the location (last edit wins); clearing it removes the location.
-    const next: LocationValue = raw.trim()
-      ? { source: "postcode", postcode: raw, lat: null, lng: null }
-      : { source: null, postcode: "", lat: null, lng: null };
+    // Typing a postcode makes it the location (last edit wins). Clearing the field goes back to
+    // the stored location, so an abandoned edit never removes it.
+    if (!raw.trim()) {
+      setLookup("idle");
+      onChange(initial);
+      if (initial.lat !== null && initial.lng !== null) {
+        setViewTarget({ lat: initial.lat, lng: initial.lng, zoom: POINT_ZOOM });
+      }
+      return;
+    }
+    const next: LocationValue = { source: "postcode", postcode: raw, lat: null, lng: null };
     onChange(next);
 
     const match = POSTCODE_RE.exec(raw.trim());
@@ -108,7 +117,9 @@ export function LocationPicker({ value, onChange }: Props) {
     onChange({ source: "pin", postcode: "", lat, lng });
   }
 
-  const message = LOOKUP_MESSAGES[lookup];
+  // The stored postcode is never read back, so a postcode location loads with an empty field.
+  const storedFromPostcode = lookup === "idle" && value.source === "postcode" && !value.postcode.trim();
+  const message = storedFromPostcode ? "Ustawiono z kodu pocztowego" : LOOKUP_MESSAGES[lookup];
 
   return (
     <div className="space-y-3">
@@ -134,7 +145,10 @@ export function LocationPicker({ value, onChange }: Props) {
         <p
           id="postcode-status"
           role="status"
-          className={cn("mt-1 min-h-5 text-sm", lookup === "loading" ? "text-blue-100/70" : "text-red-300")}
+          className={cn(
+            "mt-1 min-h-5 text-sm",
+            lookup === "loading" || storedFromPostcode ? "text-blue-100/70" : "text-red-300",
+          )}
         >
           {message}
         </p>
