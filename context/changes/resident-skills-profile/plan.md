@@ -517,15 +517,15 @@ The `/profil` page and its React island, plus the Polish shell.
 
 #### Automated
 
-- [x] 4.1 Lint passes: `npm run lint`
-- [x] 4.2 Type check passes: `npx astro check`
-- [x] 4.3 Build passes: `npm run build`
-- [x] 4.4 Smoke still passes: `npm run smoke`
+- [x] 4.1 Lint passes: `npm run lint` — 1a8f52d
+- [x] 4.2 Type check passes: `npx astro check` — 1a8f52d
+- [x] 4.3 Build passes: `npm run build` — 1a8f52d
+- [x] 4.4 Smoke still passes: `npm run smoke` — 1a8f52d
 
 #### Manual
 
-- [x] 4.5 New resident completes the profile at 375 px with no horizontal scroll
-- [x] 4.6 Dragging the pin clears the postcode, and the saved pin sits on the coarsened point
-- [x] 4.7 A missing level is blocked with a Polish message, and equipment has no level control
-- [x] 4.8 Unknown postcode shows the Polish message and the pin path still works
-- [x] 4.9 Reloading `/profil` shows the saved state
+- [x] 4.5 New resident completes the profile at 375 px with no horizontal scroll — 1a8f52d
+- [x] 4.6 Dragging the pin clears the postcode, and the saved pin sits on the coarsened point — 1a8f52d
+- [x] 4.7 A missing level is blocked with a Polish message, and equipment has no level control — 1a8f52d
+- [x] 4.8 Unknown postcode shows the Polish message and the pin path still works — 1a8f52d
+- [x] 4.9 Reloading `/profil` shows the saved state — 1a8f52d
