@@ -502,30 +502,30 @@ The `/profil` page and its React island, plus the Polish shell.
 
 #### Automated
 
-- [x] 3.1 Lint passes: `npm run lint`
-- [x] 3.2 Type check passes: `npx astro check`
-- [x] 3.3 Build passes: `npm run build`
-- [x] 3.4 Smoke passes against local dev: `npm run smoke`
-- [x] 3.5 Readonly smoke passes: `SMOKE_READONLY=1 npm run smoke`
+- [x] 3.1 Lint passes: `npm run lint` — 8f0c830
+- [x] 3.2 Type check passes: `npx astro check` — 8f0c830
+- [x] 3.3 Build passes: `npm run build` — 8f0c830
+- [x] 3.4 Smoke passes against local dev: `npm run smoke` — 8f0c830
+- [x] 3.5 Readonly smoke passes: `SMOKE_READONLY=1 npm run smoke` — 8f0c830
 
 #### Manual
 
-- [x] 3.6 Postcode endpoint returns 200, 404 and 400 as specified
-- [x] 3.7 No postcode, coordinates or email in logs during a save
+- [x] 3.6 Postcode endpoint returns 200, 404 and 400 as specified — 8f0c830
+- [x] 3.7 No postcode, coordinates or email in logs during a save — 8f0c830
 
 ### Phase 4: Polish profile UI
 
 #### Automated
 
-- [ ] 4.1 Lint passes: `npm run lint`
-- [ ] 4.2 Type check passes: `npx astro check`
-- [ ] 4.3 Build passes: `npm run build`
-- [ ] 4.4 Smoke still passes: `npm run smoke`
+- [x] 4.1 Lint passes: `npm run lint`
+- [x] 4.2 Type check passes: `npx astro check`
+- [x] 4.3 Build passes: `npm run build`
+- [x] 4.4 Smoke still passes: `npm run smoke`
 
 #### Manual
 
-- [ ] 4.5 New resident completes the profile at 375 px with no horizontal scroll
-- [ ] 4.6 Dragging the pin clears the postcode, and the saved pin sits on the coarsened point
-- [ ] 4.7 A missing level is blocked with a Polish message, and equipment has no level control
-- [ ] 4.8 Unknown postcode shows the Polish message and the pin path still works
-- [ ] 4.9 Reloading `/profil` shows the saved state
+- [x] 4.5 New resident completes the profile at 375 px with no horizontal scroll
+- [x] 4.6 Dragging the pin clears the postcode, and the saved pin sits on the coarsened point
+- [x] 4.7 A missing level is blocked with a Polish message, and equipment has no level control
+- [x] 4.8 Unknown postcode shows the Polish message and the pin path still works
+- [x] 4.9 Reloading `/profil` shows the saved state

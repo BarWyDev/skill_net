@@ -1,9 +1,81 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+import ProfileForm from "@/components/profile/ProfileForm";
+import { createClient } from "@/lib/supabase";
+import { getMyProfile, getTaxonomy } from "@/lib/services/profile";
+import type { MyProfileDTO, TaxonomyDTO } from "@/types";
+
+const saved = Astro.url.searchParams.has("zapisano");
+const error = Astro.url.searchParams.get("error");
+
+let taxonomy: TaxonomyDTO | null = null;
+let profile: MyProfileDTO | null = null;
+let loadError: string | null = null;
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (!supabase) {
+  loadError = "Supabase nie jest skonfigurowany.";
+} else {
+  try {
+    [taxonomy, profile] = await Promise.all([getTaxonomy(supabase), getMyProfile(supabase)]);
+  } catch {
+    loadError = "Nie udało się wczytać profilu. Odśwież stronę.";
+  }
+}
 ---
 
 <Layout title="Mój profil">
-  <main class="mx-auto max-w-2xl p-4">
-    <h1 class="text-2xl font-bold">Mój profil</h1>
-  </main>
+  <div class="bg-cosmic min-h-screen w-full">
+    <div class="mx-auto max-w-2xl p-4 sm:p-8">
+      <Topbar />
+
+      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+        <h1 class="mb-4 text-2xl font-bold">Mój profil</h1>
+
+        {saved && !error && (
+          <p
+            role="status"
+            class="mb-4 rounded-lg border border-green-400/50 bg-green-500/15 p-3 text-sm text-green-100"
+          >
+            Zapisano.
+          </p>
+        )}
+        {error && (
+          <p role="alert" class="mb-4 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
+            {error}
+          </p>
+        )}
+
+        {profile && (
+          <p
+            class:list={[
+              "mb-6 rounded-lg border p-3 text-sm",
+              profile.matchable
+                ? "border-green-400/40 bg-green-500/10 text-green-100"
+                : "border-amber-400/40 bg-amber-500/10 text-amber-100",
+            ]}
+          >
+            {profile.matchable
+              ? "Profil kompletny"
+              : "Profil niekompletny — dodaj lokalizację i co najmniej jedną umiejętność, aby koordynator mógł Cię znaleźć."}
+          </p>
+        )}
+
+        {loadError && (
+          <p role="alert" class="text-red-200">
+            {loadError}
+          </p>
+        )}
+
+        {taxonomy && profile && (
+          <ProfileForm client:only="react" taxonomy={taxonomy} profile={profile}>
+            <p slot="fallback" class="text-blue-100/70">
+              Ładowanie formularza…
+            </p>
+          </ProfileForm>
+        )}
+      </main>
+    </div>
+  </div>
 </Layout>
