@@ -29,3 +29,6 @@ pnpm-debug.log*
 
 # wrangler deploy output (WRANGLER_OUTPUT_FILE_PATH)
 wrangler-output.json
+
+# raw address data for scripts/build-postcode-centroids.mjs (never committed)
+data/

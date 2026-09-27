@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
+import { isProfileMatchable } from "@/lib/services/profile";
 
 export const POST: APIRoute = async (context) => {
   const form = await context.request.formData();
@@ -10,11 +11,14 @@ export const POST: APIRoute = async (context) => {
   if (!supabase) {
     return context.redirect(`/auth/signin?error=${encodeURIComponent("Supabase is not configured")}`);
   }
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     return context.redirect(`/auth/signin?error=${encodeURIComponent(error.message)}`);
   }
 
-  return context.redirect("/");
+  // Nudge residents with an incomplete profile to finish it. A failed check (null) must
+  // never block sign-in, so it falls back to the home page.
+  const matchable = await isProfileMatchable(supabase, data.user.id);
+  return context.redirect(matchable === false ? "/profil" : "/");
 };

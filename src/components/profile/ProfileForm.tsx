@@ -1,0 +1,102 @@
+import { useState } from "react";
+import type React from "react";
+import { LocationPicker, type LocationValue } from "@/components/profile/LocationPicker";
+import { SkillsPicker, type SelectedSkills } from "@/components/profile/SkillsPicker";
+import type { MyProfileDTO, SkillLevel, TaxonomyDTO } from "@/types";
+
+interface Props {
+  taxonomy: TaxonomyDTO;
+  profile: MyProfileDTO;
+}
+
+const POSTCODE_RE = /^\d{2}-?\d{3}$/;
+
+export default function ProfileForm({ taxonomy, profile }: Props) {
+  const [selected, setSelected] = useState<SelectedSkills>(() =>
+    Object.fromEntries(profile.skills.map((s) => [s.slug, s.level])),
+  );
+  const [location, setLocation] = useState<LocationValue>({
+    source: profile.locationSource,
+    postcode: profile.postcode ?? "",
+    lat: profile.lat,
+    lng: profile.lng,
+  });
+  const [clientError, setClientError] = useState<string | null>(null);
+  const [showMissingLevels, setShowMissingLevels] = useState(false);
+
+  const levelled = new Set(taxonomy.skills.filter((s) => s.hasLevel).map((s) => s.slug));
+  const missingLevel = Object.entries(selected).some(([slug, level]) => levelled.has(slug) && level === null);
+
+  function handleToggle(slug: string, checked: boolean) {
+    setSelected((prev) => {
+      if (checked) return { ...prev, [slug]: null };
+      const { [slug]: _unchecked, ...rest } = prev;
+      return rest;
+    });
+  }
+
+  function handleLevel(slug: string, level: SkillLevel) {
+    setSelected((prev) => ({ ...prev, [slug]: level }));
+  }
+
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+    if (missingLevel) {
+      e.preventDefault();
+      setShowMissingLevels(true);
+      setClientError("Wybierz poziom dla każdej zaznaczonej umiejętności.");
+      return;
+    }
+    if (location.source === "postcode" && !POSTCODE_RE.test(location.postcode.trim())) {
+      e.preventDefault();
+      setClientError("Podaj kod pocztowy w formacie 00-000.");
+      return;
+    }
+    setClientError(null);
+  }
+
+  return (
+    <form method="POST" action="/api/profile" className="space-y-8" onSubmit={handleSubmit} noValidate>
+      <section aria-labelledby="skills-heading" className="space-y-3">
+        <h2 id="skills-heading" className="text-lg font-semibold text-white">
+          Umiejętności i sprzęt
+        </h2>
+        <p className="text-sm text-blue-100/70">
+          Zaznacz, co umiesz lub co masz. Przy umiejętnościach wybierz swój poziom.
+        </p>
+        <SkillsPicker
+          categories={taxonomy.categories}
+          skills={taxonomy.skills}
+          selected={selected}
+          showMissingLevels={showMissingLevels}
+          onToggle={handleToggle}
+          onLevel={handleLevel}
+        />
+      </section>
+
+      <section aria-labelledby="location-heading" className="space-y-3">
+        <h2 id="location-heading" className="text-lg font-semibold text-white">
+          Przybliżona lokalizacja
+        </h2>
+        <LocationPicker value={location} onChange={setLocation} />
+      </section>
+
+      {Object.entries(selected).map(([slug, level]) => (
+        <input key={slug} type="hidden" name="skill" value={level === null ? slug : `${slug}:${level}`} />
+      ))}
+
+      <div className="space-y-2">
+        {clientError && (
+          <p role="alert" className="rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
+            {clientError}
+          </p>
+        )}
+        <button
+          type="submit"
+          className="h-12 w-full rounded-lg bg-purple-600 px-6 font-medium text-white transition-colors hover:bg-purple-500 sm:w-auto"
+        >
+          Zapisz profil
+        </button>
+      </div>
+    </form>
+  );
+}
