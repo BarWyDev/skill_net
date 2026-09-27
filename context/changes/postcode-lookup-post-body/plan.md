@@ -198,27 +198,27 @@ Code only. There's no database migration and no secret change. Rolling back with
 
 #### Automated
 
-- [x] 1.1 Lint passes: `npm run lint`
-- [x] 1.2 Type check passes: `npx astro check`
-- [x] 1.3 Build succeeds: `npm run build`
-- [x] 1.4 No request URL is built from a postcode: `grep -rn "kody-pocztowe/" src` returns nothing
-- [x] 1.5 No public cache header remains: `grep -rn "public, max-age" src` returns nothing
-- [x] 1.6 The existing smoke test passes against local Supabase: `npm run smoke`
+- [x] 1.1 Lint passes: `npm run lint` — e893a30
+- [x] 1.2 Type check passes: `npx astro check` — e893a30
+- [x] 1.3 Build succeeds: `npm run build` — e893a30
+- [x] 1.4 No request URL is built from a postcode: `grep -rn "kody-pocztowe/" src` returns nothing — e893a30
+- [x] 1.5 No public cache header remains: `grep -rn "public, max-age" src` returns nothing — e893a30
+- [x] 1.6 The existing smoke test passes against local Supabase: `npm run smoke` — e893a30
 
 #### Manual
 
-- [x] 1.7 Typing `31-001` recentres the map; the network log shows a POST with the code only in the body
-- [x] 1.8 Typing `00-000` shows the "unknown" message
-- [x] 1.9 An incomplete code sends no request; clearing the field reverts to the stored location
-- [x] 1.10 `Cache-Control: no-store` on both the 200 and the 404
+- [x] 1.7 Typing `31-001` recentres the map; the network log shows a POST with the code only in the body — e893a30
+- [x] 1.8 Typing `00-000` shows the "unknown" message — e893a30
+- [x] 1.9 An incomplete code sends no request; clearing the field reverts to the stored location — e893a30
+- [x] 1.10 `Cache-Control: no-store` on both the 200 and the 404 — e893a30
 
 ### Phase 2: Smoke coverage
 
 #### Automated
 
-- [ ] 2.1 Lint passes: `npm run lint`
-- [ ] 2.2 Full smoke passes against local Supabase, including the 3 new steps: `npm run smoke`
-- [ ] 2.3 Readonly smoke passes locally: `SMOKE_READONLY=1 npm run smoke`
+- [x] 2.1 Lint passes: `npm run lint`
+- [x] 2.2 Full smoke passes against local Supabase, including the 3 new steps: `npm run smoke`
+- [x] 2.3 Readonly smoke passes locally: `SMOKE_READONLY=1 npm run smoke`
 - [ ] 2.4 CI `ci` and `smoke` jobs are green on the PR
 
 #### Manual
