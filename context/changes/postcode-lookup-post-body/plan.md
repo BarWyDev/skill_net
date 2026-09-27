@@ -216,12 +216,12 @@ Code only. There's no database migration and no secret change. Rolling back with
 
 #### Automated
 
-- [x] 2.1 Lint passes: `npm run lint`
-- [x] 2.2 Full smoke passes against local Supabase, including the 3 new steps: `npm run smoke`
-- [x] 2.3 Readonly smoke passes locally: `SMOKE_READONLY=1 npm run smoke`
-- [ ] 2.4 CI `ci` and `smoke` jobs are green on the PR
+- [x] 2.1 Lint passes: `npm run lint` — 0993e3d
+- [x] 2.2 Full smoke passes against local Supabase, including the 3 new steps: `npm run smoke` — 0993e3d
+- [x] 2.3 Readonly smoke passes locally: `SMOKE_READONLY=1 npm run smoke` — 0993e3d
+- [x] 2.4 CI `ci` and `smoke` jobs are green on the PR — 0993e3d
 
 #### Manual
 
-- [ ] 2.5 Production readonly smoke passes after the deploy
-- [ ] 2.6 `wrangler tail` shows `/api/kody-pocztowe` with no code in the URL
+- [x] 2.5 Production readonly smoke passes after the deploy — 0993e3d
+- [x] 2.6 `wrangler tail` shows `/api/kody-pocztowe` with no code in the URL — 0993e3d
