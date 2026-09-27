@@ -268,16 +268,16 @@ None. The trigger does the same single primary-key lookup, or none in the keep b
 
 #### Automated
 
-- [x] 2.1 Lint passes
-- [x] 2.2 Type check passes
-- [x] 2.3 Build succeeds
-- [x] 2.4 Smoke passes against local Supabase, including the 3 new steps
+- [x] 2.1 Lint passes — d5c1cf9
+- [x] 2.2 Type check passes — d5c1cf9
+- [x] 2.3 Build succeeds — d5c1cf9
+- [x] 2.4 Smoke passes against local Supabase, including the 3 new steps — d5c1cf9
 
 #### Manual
 
-- [x] 2.5 Postcode save shows status line, coarsened point, no code in page source
-- [x] 2.6 Skills-only re-save keeps the location
-- [x] 2.7 Typing then clearing the field reverts to the stored location
-- [x] 2.8 New postcode moves the point
-- [x] 2.9 Pin save replaces the postcode status
-- [x] 2.10 Works at phone width
+- [x] 2.5 Postcode save shows status line, coarsened point, no code in page source — d5c1cf9
+- [x] 2.6 Skills-only re-save keeps the location — d5c1cf9
+- [x] 2.7 Typing then clearing the field reverts to the stored location — d5c1cf9
+- [x] 2.8 New postcode moves the point — d5c1cf9
+- [x] 2.9 Pin save replaces the postcode status — d5c1cf9
+- [x] 2.10 Works at phone width — d5c1cf9
