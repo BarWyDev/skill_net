@@ -490,28 +490,28 @@ The `/profil` page and its React island, plus the Polish shell.
 
 #### Automated
 
-- [x] 2.1 Migration applies: `npx supabase db reset`
-- [x] 2.2 `select count(*) from postcodes` returns 20,000–25,000
-- [x] 2.3 pgTAP suite still passes: `npm run test:db`
+- [x] 2.1 Migration applies: `npx supabase db reset` — c6d6f5c
+- [x] 2.2 `select count(*) from postcodes` returns 20,000–25,000 — c6d6f5c
+- [x] 2.3 pgTAP suite still passes: `npm run test:db` — c6d6f5c
 
 #### Manual
 
-- [x] 2.4 Three spot-checked postcode centroids land in the right place
+- [x] 2.4 Three spot-checked postcode centroids land in the right place — c6d6f5c
 
 ### Phase 3: Profile API and sign-in nudge
 
 #### Automated
 
-- [ ] 3.1 Lint passes: `npm run lint`
-- [ ] 3.2 Type check passes: `npx astro check`
-- [ ] 3.3 Build passes: `npm run build`
-- [ ] 3.4 Smoke passes against local dev: `npm run smoke`
-- [ ] 3.5 Readonly smoke passes: `SMOKE_READONLY=1 npm run smoke`
+- [x] 3.1 Lint passes: `npm run lint`
+- [x] 3.2 Type check passes: `npx astro check`
+- [x] 3.3 Build passes: `npm run build`
+- [x] 3.4 Smoke passes against local dev: `npm run smoke`
+- [x] 3.5 Readonly smoke passes: `SMOKE_READONLY=1 npm run smoke`
 
 #### Manual
 
-- [ ] 3.6 Postcode endpoint returns 200, 404 and 400 as specified
-- [ ] 3.7 No postcode, coordinates or email in logs during a save
+- [x] 3.6 Postcode endpoint returns 200, 404 and 400 as specified
+- [x] 3.7 No postcode, coordinates or email in logs during a save
 
 ### Phase 4: Polish profile UI
 

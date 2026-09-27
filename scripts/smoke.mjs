@@ -1,6 +1,7 @@
 // Smoke test: proves the built app, the Cloudflare adapter and the Supabase auth flow still work together.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
 // SMOKE_READONLY=1 runs only the steps that create no accounts, for production.
+// A step's expected location is a prefix match, unless the step sets `exact: true`.
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const READONLY = process.env.SMOKE_READONLY === "1";
@@ -40,6 +41,7 @@ async function request(path, { method = "GET", form } = {}) {
 const readonlySteps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["profil redirects anonymous user", () => request("/profil"), { status: 302, location: "/auth/signin" }],
 ];
 
 const writeSteps = [
@@ -54,9 +56,44 @@ const writeSteps = [
     { status: 302, location: "/auth/signin?error=" },
   ],
   [
-    "signin accepts correct password",
+    "signin redirects new user to profil",
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/" },
+    { status: 302, location: "/profil", exact: true },
+  ],
+  ["profil renders for signed-in user", () => request("/profil"), { status: 200 }],
+  [
+    "profile save rejects bad level",
+    () =>
+      request("/api/profile", {
+        method: "POST",
+        form: [
+          ["location_source", "pin"],
+          ["lat", "52.2297"],
+          ["lng", "21.0122"],
+          ["skill", "elektryk:5"],
+        ],
+      }),
+    { status: 302, location: "/profil?error=" },
+  ],
+  [
+    "profile save accepts pin and skill",
+    () =>
+      request("/api/profile", {
+        method: "POST",
+        form: [
+          ["location_source", "pin"],
+          ["lat", "52.2297"],
+          ["lng", "21.0122"],
+          ["skill", "elektryk:2"],
+        ],
+      }),
+    { status: 302, location: "/profil?zapisano=1", exact: true },
+  ],
+  ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
+  [
+    "signin redirects complete user home",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
+    { status: 302, location: "/", exact: true },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
@@ -70,7 +107,8 @@ for (const [name, run, expected] of steps) {
   const actual = await run();
   const ok =
     actual.status === expected.status &&
-    (expected.location === undefined || actual.location.startsWith(expected.location));
+    (expected.location === undefined ||
+      (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location)));
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;
