@@ -96,7 +96,12 @@ export function LocationPicker({ value, initial, onChange }: Props) {
 
     setLookup("loading");
     try {
-      const response = await fetch(`/api/kody-pocztowe/${match[1]}-${match[2]}`);
+      // The code goes in the body: a URL would put it in Workers Logs.
+      const response = await fetch("/api/kody-pocztowe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postcode: `${match[1]}-${match[2]}` }),
+      });
       if (request !== latestLookup.current) return;
       if (response.status === 404) {
         setLookup("unknown");
