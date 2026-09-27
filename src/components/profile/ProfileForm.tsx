@@ -15,12 +15,14 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
   const [selected, setSelected] = useState<SelectedSkills>(() =>
     Object.fromEntries(profile.skills.map((s) => [s.slug, s.level])),
   );
-  const [location, setLocation] = useState<LocationValue>({
+  // The postcode is never stored, so the field always starts empty.
+  const [initialLocation] = useState<LocationValue>(() => ({
     source: profile.locationSource,
-    postcode: profile.postcode ?? "",
+    postcode: "",
     lat: profile.lat,
     lng: profile.lng,
-  });
+  }));
+  const [location, setLocation] = useState<LocationValue>(initialLocation);
   const [clientError, setClientError] = useState<string | null>(null);
   const [showMissingLevels, setShowMissingLevels] = useState(false);
 
@@ -46,7 +48,9 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
       setClientError("Wybierz poziom dla każdej zaznaczonej umiejętności.");
       return;
     }
-    if (location.source === "postcode" && !POSTCODE_RE.test(location.postcode.trim())) {
+    // An empty postcode keeps the stored postcode location.
+    const postcode = location.postcode.trim();
+    if (location.source === "postcode" && postcode && !POSTCODE_RE.test(postcode)) {
       e.preventDefault();
       setClientError("Podaj kod pocztowy w formacie 00-000.");
       return;
@@ -77,7 +81,7 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
         <h2 id="location-heading" className="text-lg font-semibold text-white">
           Przybliżona lokalizacja
         </h2>
-        <LocationPicker value={location} onChange={setLocation} />
+        <LocationPicker value={location} initial={initialLocation} onChange={setLocation} />
       </section>
 
       {Object.entries(selected).map(([slug, level]) => (

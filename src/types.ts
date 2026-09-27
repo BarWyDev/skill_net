@@ -20,8 +20,8 @@ export interface ProfileSkillDTO {
   level: SkillLevel | null;
 }
 
+/** The caller's profile. The postcode is never stored, so it is never returned. */
 export interface MyProfileDTO {
-  postcode: string | null;
   locationSource: LocationSource | null;
   lat: number | null;
   lng: number | null;
@@ -37,6 +37,7 @@ export interface TaxonomyDTO {
 /** Parsed profile form, ready for the `save_my_profile` RPC. */
 export interface SaveProfileInput {
   locationSource: LocationSource | null;
+  /** With `locationSource: "postcode"`, null means "keep the stored location". */
   postcode: string | null;
   lat: number | null;
   lng: number | null;

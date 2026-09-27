@@ -1,11 +1,11 @@
--- Resident profile guarantees: RLS isolation, coarsening, postcode resolution,
--- level rules, the matchability contract and save atomicity.
+-- Resident profile guarantees: RLS isolation, coarsening, postcode resolution (the postcode
+-- itself is never stored), level rules, the matchability contract and save atomicity.
 -- Run with `npm run test:db`. Everything is rolled back at the end.
 
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(30);
+select plan(39);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as postgres: bypasses RLS, triggers still apply)
@@ -18,7 +18,9 @@ insert into auth.users (id, email) values
   ('dddddddd-0000-0000-0000-000000000004', 'd@test.local');
 
 insert into public.postcodes (postcode, centroid, address_count)
-values ('00-950', extensions.st_setsrid(extensions.st_makepoint(21.0118, 52.2319), 4326)::extensions.geography, 10)
+values
+  ('00-950', extensions.st_setsrid(extensions.st_makepoint(21.0118, 52.2319), 4326)::extensions.geography, 10),
+  ('00-951', extensions.st_setsrid(extensions.st_makepoint(21.0500, 52.2500), 4326)::extensions.geography, 10)
 on conflict (postcode) do update set centroid = excluded.centroid, address_count = excluded.address_count;
 
 -- Pin input used by the coarsening cases.
@@ -177,12 +179,16 @@ select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-0000000
 select public.save_my_profile('postcode', '00-950', null, null, '[{"slug":"elektryk","level":2}]');
 select ok(
   (
-    select p.postcode = '00-950'
+    select p.postcode is null
        and extensions.st_equals(p.location::extensions.geometry, public.coarsen_point(c.centroid)::extensions.geometry)
     from public.profiles p, public.postcodes c
     where c.postcode = '00-950'
   ),
-  'postcode_resolves: a known postcode stores its coarsened centroid'
+  'postcode_resolves: a known postcode stores its coarsened centroid and not the code'
+);
+select ok(
+  not (public.get_my_profile() ? 'postcode'),
+  'postcode_not_returned: get_my_profile has no postcode key'
 );
 select is(
   (select row(l.lat, l.lng)::text from public.lookup_postcode('00-950') l),
@@ -198,6 +204,46 @@ select throws_ok(
   'unknown_postcode_raises'
 );
 
+-- resave_keeps_location: a postcode-source save without a code keeps the stored point
+select public.save_my_profile('postcode', null, null, null, '[{"slug":"elektryk","level":3}]');
+select ok(
+  (
+    select p.location_source = 'postcode'
+       and extensions.st_equals(p.location::extensions.geometry, public.coarsen_point(c.centroid)::extensions.geometry)
+    from public.profiles p, public.postcodes c
+    where c.postcode = '00-950'
+  ),
+  'resave_keeps_location: location and source are unchanged'
+);
+select results_eq(
+  $$ select skill_slug, level from public.profile_skills order by skill_slug $$,
+  $$ values ('elektryk'::text, 3::smallint) $$,
+  'resave_keeps_location: skills are replaced'
+);
+
+-- patch_cannot_move_postcode_location: a direct update cannot relabel an arbitrary point
+update public.profiles set location = (select g from pin_input);
+select ok(
+  (
+    select extensions.st_equals(p.location::extensions.geometry, public.coarsen_point(c.centroid)::extensions.geometry)
+    from public.profiles p, public.postcodes c
+    where c.postcode = '00-950'
+  ),
+  'patch_cannot_move_postcode_location: supplied point is ignored without a code'
+);
+
+-- patch_with_postcode_resolves: a direct update with a code resolves it and discards it
+update public.profiles set location_source = 'postcode', postcode = '00-951';
+select ok(
+  (
+    select p.postcode is null
+       and extensions.st_equals(p.location::extensions.geometry, public.coarsen_point(c.centroid)::extensions.geometry)
+    from public.profiles p, public.postcodes c
+    where c.postcode = '00-951'
+  ),
+  'patch_with_postcode_resolves: stores the new centroid and a null postcode'
+);
+
 -- pin_clears_postcode: a direct update that only switches to a pin still clears the postcode
 update public.profiles
 set location_source = 'pin',
@@ -207,6 +253,27 @@ select is(
   null::text,
   'pin_clears_postcode: switching to a pin nulls the postcode'
 );
+
+-- keep_without_prior_raises: nothing to keep from a pin, or from no profile at all
+select throws_ok(
+  $$ select public.save_my_profile('postcode', null, null, null, '[]') $$,
+  'P0001',
+  'postcode_required',
+  'keep_without_prior_raises: a pin profile cannot keep a postcode location'
+);
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","role":"authenticated"}', true);
+select throws_ok(
+  $$ select public.save_my_profile('postcode', null, null, null, '[]') $$,
+  'P0001',
+  'postcode_required',
+  'keep_without_prior_raises: a user without a profile cannot keep a location'
+);
+select is(
+  (select count(*) from public.profiles),
+  0::bigint,
+  'keep_without_prior_raises: the failed save left no profile row'
+);
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
 -- outside_poland_raises
 select throws_ok(
@@ -251,7 +318,7 @@ select throws_ok(
 );
 select results_eq(
   $$ select skill_slug, level from public.profile_skills order by skill_slug $$,
-  $$ values ('elektryk'::text, 2::smallint) $$,
+  $$ values ('elektryk'::text, 3::smallint) $$,
   'save_is_atomic: previous skills are unchanged'
 );
 select is(
@@ -270,6 +337,16 @@ select throws_ok(
 );
 
 reset role;
+
+-- postcode_never_stored_check: even with the trigger off, the table rejects a stored postcode
+alter table public.profiles disable trigger profiles_resolve_and_coarsen;
+select throws_ok(
+  $$ update public.profiles set postcode = '00-950' where user_id = 'aaaaaaaa-0000-0000-0000-000000000001' $$,
+  '23514',
+  null::text,
+  'postcode_never_stored_check: check (postcode is null) holds without the trigger'
+);
+alter table public.profiles enable trigger profiles_resolve_and_coarsen;
 
 -- ---------------------------------------------------------------------------
 -- matchable_truth_table (as postgres, so every row is visible)

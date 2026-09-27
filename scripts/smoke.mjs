@@ -2,6 +2,7 @@
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
 // SMOKE_READONLY=1 runs only the steps that create no accounts, for production.
 // A step's expected location is a prefix match, unless the step sets `exact: true`.
+// A step may set `bodyExcludes` to assert the response body does not contain a string.
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const READONLY = process.env.SMOKE_READONLY === "1";
@@ -35,7 +36,7 @@ async function request(path, { method = "GET", form } = {}) {
     body: form ? new URLSearchParams(form).toString() : undefined,
   });
   storeCookies(response);
-  return { status: response.status, location: response.headers.get("location") ?? "" };
+  return { status: response.status, location: response.headers.get("location") ?? "", body: await response.text() };
 }
 
 const readonlySteps = [
@@ -89,6 +90,34 @@ const writeSteps = [
       }),
     { status: 302, location: "/profil?zapisano=1", exact: true },
   ],
+  [
+    "profile save accepts postcode",
+    () =>
+      request("/api/profile", {
+        method: "POST",
+        form: [
+          ["location_source", "postcode"],
+          ["postcode", "31-001"],
+          ["skill", "elektryk:2"],
+        ],
+      }),
+    { status: 302, location: "/profil?zapisano=1", exact: true },
+  ],
+  // The postcode is never stored, so the page (including serialised island props) cannot echo it.
+  ["profil does not echo the postcode", () => request("/profil"), { status: 200, bodyExcludes: "31-001" }],
+  [
+    "profile re-save keeps postcode location",
+    () =>
+      request("/api/profile", {
+        method: "POST",
+        form: [
+          ["location_source", "postcode"],
+          ["postcode", ""],
+          ["skill", "elektryk:3"],
+        ],
+      }),
+    { status: 302, location: "/profil?zapisano=1", exact: true },
+  ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   [
     "signin redirects complete user home",
@@ -108,7 +137,8 @@ for (const [name, run, expected] of steps) {
   const ok =
     actual.status === expected.status &&
     (expected.location === undefined ||
-      (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location)));
+      (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location))) &&
+    (expected.bodyExcludes === undefined || !actual.body.includes(expected.bodyExcludes));
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;
