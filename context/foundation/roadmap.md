@@ -55,7 +55,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked     |
 | S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | proposed    |
 | S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | proposed    |
-| S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | in-progress |
+| S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done        |
 
 ## Streams
 
@@ -285,7 +285,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Found by the S-01 implementation review (F1, `context/archive/2026-09-27-resident-skills-profile/reviews/impl-review.md`). 981 postcodes cover a single PRG address and 3,217 cover 5 or fewer, so a stored postcode can identify a building. S-03's security-definer ranking RPC would be the first cross-user reader, so this must land before S-03.
-- **Status:** in-progress
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -336,3 +336,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 ## Done
 
 - **S-01: a signed-in resident can pick skills from the predefined taxonomy (medical, technical, logistics, language, military/reserve, tools/equipment) with a self-declared level of 1–3, and set an approximate location by postcode or map pin, in a Polish interface that works on a phone.** — Archived 2026-09-27 → `context/archive/2026-09-27-resident-skills-profile/`. Lesson: Public cache headers on routes that pass through the auth middleware.
+- **S-15: when a resident sets their location by postcode, only the coarsened 500 m point and `location_source = 'postcode'` are stored; the typed postcode is discarded, and `/profil` shows "Ustawiono z kodu pocztowego" instead of the code.** — Archived 2026-09-27 → `context/archive/2026-09-27-profile-postcode-minimisation/`. Lesson: —.
