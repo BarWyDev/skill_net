@@ -58,7 +58,7 @@ function ClickToPin({ onPin }: { onPin: (lat: number, lng: number) => void }) {
 
 interface Props {
   value: LocationValue;
-  /** The location loaded with the page. An emptied postcode field goes back to it. */
+  /** The location loaded with the page. An emptied postcode field goes back to it, or to a later pin. */
   initial: LocationValue;
   onChange: (next: LocationValue) => void;
 }
@@ -66,6 +66,8 @@ interface Props {
 export function LocationPicker({ value, initial, onChange }: Props) {
   const [lookup, setLookup] = useState<LookupStatus>("idle");
   const [viewTarget, setViewTarget] = useState<ViewTarget | null>(null);
+  // What an emptied postcode field goes back to: the loaded location, or a later map pin.
+  const [revertTo, setRevertTo] = useState<LocationValue>(initial);
   const latestLookup = useRef(0);
 
   const hasPoint = value.lat !== null && value.lng !== null;
@@ -74,12 +76,12 @@ export function LocationPicker({ value, initial, onChange }: Props) {
   async function handlePostcodeChange(raw: string) {
     const request = ++latestLookup.current;
     // Typing a postcode makes it the location (last edit wins). Clearing the field goes back to
-    // the stored location, so an abandoned edit never removes it.
+    // the stored location or a later pin, so an abandoned edit never removes it.
     if (!raw.trim()) {
       setLookup("idle");
-      onChange(initial);
-      if (initial.lat !== null && initial.lng !== null) {
-        setViewTarget({ lat: initial.lat, lng: initial.lng, zoom: POINT_ZOOM });
+      onChange(revertTo);
+      if (revertTo.lat !== null && revertTo.lng !== null) {
+        setViewTarget({ lat: revertTo.lat, lng: revertTo.lng, zoom: POINT_ZOOM });
       }
       return;
     }
@@ -114,7 +116,9 @@ export function LocationPicker({ value, initial, onChange }: Props) {
   function handlePin(lat: number, lng: number) {
     latestLookup.current++;
     setLookup("idle");
-    onChange({ source: "pin", postcode: "", lat, lng });
+    const pinned: LocationValue = { source: "pin", postcode: "", lat, lng };
+    setRevertTo(pinned);
+    onChange(pinned);
   }
 
   // The stored postcode is never read back, so a postcode location loads with an empty field.
