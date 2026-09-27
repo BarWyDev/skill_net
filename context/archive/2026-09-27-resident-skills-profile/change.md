@@ -1,10 +1,10 @@
 ---
 change_id: resident-skills-profile
 title: Resident records skills and approximate location (roadmap S-01)
-status: implemented
+status: archived
 created: 2026-09-27
 updated: 2026-09-27
-archived_at: null
+archived_at: 2026-09-27T14:54:42Z
 ---
 
 ## Notes
