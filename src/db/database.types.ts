@@ -34,6 +34,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      coordinator_role_events: {
+        Row: {
+          action: string
+          id: number
+          note: string
+          occurred_at: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          id?: never
+          note: string
+          occurred_at?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          id?: never
+          note?: string
+          occurred_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       postcodes: {
         Row: {
           address_count: number
@@ -162,6 +186,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -169,6 +214,11 @@ export type Database = {
     Functions: {
       coarsen_point: { Args: { p: unknown }; Returns: unknown }
       get_my_profile: { Args: never; Returns: Json }
+      grant_coordinator: {
+        Args: { p_email: string; p_note: string }
+        Returns: undefined
+      }
+      is_coordinator: { Args: never; Returns: boolean }
       lookup_postcode: {
         Args: { p_postcode: string }
         Returns: {
@@ -177,6 +227,14 @@ export type Database = {
         }[]
       }
       profile_is_matchable: { Args: { p_user_id: string }; Returns: boolean }
+      revoke_coordinator: {
+        Args: { p_email: string; p_note: string }
+        Returns: undefined
+      }
+      role_change_target: {
+        Args: { p_email: string; p_note: string }
+        Returns: string
+      }
       save_my_profile: {
         Args: {
           p_lat: number
