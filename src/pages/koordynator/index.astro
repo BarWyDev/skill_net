@@ -1,0 +1,21 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+
+// The middleware gates this route: only coordinators get here.
+---
+
+<Layout title="Panel koordynatora">
+  <div class="bg-cosmic min-h-screen w-full">
+    <div class="mx-auto max-w-2xl p-4 sm:p-8">
+      <Topbar />
+
+      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+        <h1 class="mb-4 text-2xl font-bold">Panel koordynatora</h1>
+        <p class="text-blue-100/80">
+          Aktywacja trybu kryzysowego i lista dopasowanych mieszkańców pojawią się tu w kolejnej wersji.
+        </p>
+      </main>
+    </div>
+  </div>
+</Layout>
