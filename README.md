@@ -163,6 +163,23 @@ The `postcodes` table holds one centroid per Polish postcode (the mean of that p
 
   The script needs only Node and `unzip`. For other inputs (for example the official GML converted with `ogr2ogr`), see the options in the script's header comment. The migration is an idempotent upsert, but an already applied migration is not re-run by `db push`, so ship updated data in a new migration with a fresh timestamp.
 
+### Rola koordynatora
+
+The operator (the product owner) grants and revokes the coordinator role in the Supabase SQL editor (local Studio at http://localhost:54323, or the hosted dashboard). The app has no operator screen, and no client can call these functions.
+
+```sql
+select public.grant_coordinator('jan@example.com', 'operator: OPS Kraków request, 2026-09-28');
+select public.revoke_coordinator('jan@example.com', 'operator: pilot ended');
+```
+
+- The note is required. Say who is acting and why, and keep personal data out of it.
+- `unknown_email`: no account has that email. The user has to sign up first.
+- Notice `already_coordinator` / `not_coordinator`: nothing changed and nothing was logged.
+- A revoke takes effect on the user's next request.
+- **Never** `insert` into or `delete` from `public.user_roles` by hand. That bypasses the append-only history in `public.coordinator_role_events`.
+- History: `select e.*, u.email from public.coordinator_role_events e left join auth.users u on u.id = e.user_id order by e.occurred_at;`
+- On production, a grant or revoke is a production data change. Only the operator does it.
+
 ## Deployment
 
 SkillNet runs on [Cloudflare Workers](https://workers.cloudflare.com/) (Workers + static assets, not Pages) at **https://skillnet.barwy.workers.dev**.
