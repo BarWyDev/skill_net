@@ -346,23 +346,23 @@ There is one extra PostgREST round trip (`is_coordinator`, a primary-key lookup)
 #### Manual
 
 - [x] 1.6 In local Studio, a second `grant_coordinator` for the same email shows the `already_coordinator` notice — e0e3b34
-- [ ] 1.7 Before merging Phase 2: migration pushed to production with `npx supabase db push`, and `is_coordinator()` present in the hosted SQL editor
+- [x] 1.7 Before merging Phase 2: migration pushed to production with `npx supabase db push`, and `is_coordinator()` present in the hosted SQL editor
 
 ### Phase 2: Coordinator area and gate
 
 #### Automated
 
-- [x] 2.1 Type check passes: `npx astro check`
-- [x] 2.2 Lint passes: `npm run lint`
-- [x] 2.3 Build passes: `npm run build`
-- [x] 2.4 DB tests still pass: `npm run test:db`
-- [x] 2.5 Full smoke passes against local dev with local Supabase: `npm run smoke`
-- [x] 2.6 Readonly smoke passes against the local preview build: `SMOKE_READONLY=1 npm run smoke`
+- [x] 2.1 Type check passes: `npx astro check` — 9127ab8
+- [x] 2.2 Lint passes: `npm run lint` — 9127ab8
+- [x] 2.3 Build passes: `npm run build` — 9127ab8
+- [x] 2.4 DB tests still pass: `npm run test:db` — 9127ab8
+- [x] 2.5 Full smoke passes against local dev with local Supabase: `npm run smoke` — 9127ab8
+- [x] 2.6 Readonly smoke passes against the local preview build: `SMOKE_READONLY=1 npm run smoke` — 9127ab8
 
 #### Manual
 
-- [x] 2.7 Local resident: `/koordynator` shows "Brak dostępu" and there is no Topbar link
-- [x] 2.8 Local grant in Studio: link appears and `/koordynator` shows "Panel koordynatora"
-- [x] 2.9 Local revoke: next reload gives 403 and the link is gone
-- [x] 2.10 Supabase stopped: `/koordynator` never shows the panel
-- [ ] 2.11 After merge: production readonly smoke passes, and the first real coordinator is granted by the operator
+- [x] 2.7 Local resident: `/koordynator` shows "Brak dostępu" and there is no Topbar link — 9127ab8
+- [x] 2.8 Local grant in Studio: link appears and `/koordynator` shows "Panel koordynatora" — 9127ab8
+- [x] 2.9 Local revoke: next reload gives 403 and the link is gone — 9127ab8
+- [x] 2.10 Supabase stopped: `/koordynator` never shows the panel — 9127ab8
+- [x] 2.11 After merge: production readonly smoke passes, and the first real coordinator is granted by the operator
