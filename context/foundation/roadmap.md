@@ -42,7 +42,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | ID   | Change ID                       | Outcome (user can …)                                                                   | Prerequisites                 | PRD refs              | Status      |
 | ---- | ------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------- | --------------------- | ----------- |
 | S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location          | —                             | FR-002, FR-003        | done        |
-| S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | in-progress |
+| S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | done        |
 | S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents        | S-01, S-02, S-15              | US-01, FR-009, FR-010 | proposed    |
 | S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | proposed    |
 | S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | ready       |
@@ -117,7 +117,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - What does an unauthenticated visitor see at a gated route (PRD Open Question 6)? — Owner: user. Block: no; the current redirect to sign-in is the default.
 - **Risk:** Small, but it gates the north star: without a role boundary, the ranked list (which holds personal data) has no one it can safely be shown to.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-03: Coordinator activates crisis mode and sees a ranked list
 
@@ -337,3 +337,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 
 - **S-01: a signed-in resident can pick skills from the predefined taxonomy (medical, technical, logistics, language, military/reserve, tools/equipment) with a self-declared level of 1–3, and set an approximate location by postcode or map pin, in a Polish interface that works on a phone.** — Archived 2026-09-27 → `context/archive/2026-09-27-resident-skills-profile/`. Lesson: Public cache headers on routes that pass through the auth middleware.
 - **S-15: when a resident sets their location by postcode, only the coarsened 500 m point and `location_source = 'postcode'` are stored; the typed postcode is discarded, and `/profil` shows "Ustawiono z kodu pocztowego" instead of the code.** — Archived 2026-09-27 → `context/archive/2026-09-27-profile-postcode-minimisation/`. Lesson: —.
+- **S-02: the operator can grant a registered user the coordinator role; a coordinator sees a coordinator-only area that residents and anonymous visitors cannot open.** — Archived 2026-09-28 → `context/archive/2026-09-28-coordinator-role-grant/`. Lesson: —.
