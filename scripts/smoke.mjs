@@ -2,7 +2,8 @@
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
 // SMOKE_READONLY=1 runs only the steps that create no accounts, for production.
 // A step's expected location is a prefix match, unless the step sets `exact: true`.
-// A step may set `bodyIncludes` / `bodyExcludes` to assert the response body does / does not contain a string.
+// A step may set `bodyIncludes` / `bodyExcludes` to assert the response body does / does not contain a string,
+// and `cacheControlIncludes` to assert the Cache-Control header contains a string.
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const READONLY = process.env.SMOKE_READONLY === "1";
@@ -49,13 +50,19 @@ async function request(path, { method = "GET", form, json, rawBody, contentType 
     body,
   });
   storeCookies(response);
-  return { status: response.status, location: response.headers.get("location") ?? "", body: await response.text() };
+  return {
+    status: response.status,
+    location: response.headers.get("location") ?? "",
+    cacheControl: response.headers.get("cache-control") ?? "",
+    body: await response.text(),
+  };
 }
 
 const readonlySteps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["profil redirects anonymous user", () => request("/profil"), { status: 302, location: "/auth/signin" }],
+  ["koordynator redirects anonymous user", () => request("/koordynator"), { status: 302, location: "/auth/signin" }],
   // The lookup takes the postcode in a POST body, so it never appears in a request URL.
   [
     "postcode lookup finds known code",
@@ -91,6 +98,17 @@ const writeSteps = [
     { status: 302, location: "/profil", exact: true },
   ],
   ["profil renders for signed-in user", () => request("/profil"), { status: 200 }],
+  // A fresh account is a resident. The positive coordinator path needs a grant, so pgTAP covers it.
+  [
+    "koordynator denies resident",
+    () => request("/koordynator"),
+    { status: 403, bodyIncludes: "Brak dostępu", cacheControlIncludes: "no-store" },
+  ],
+  [
+    "profil hides koordynator link from resident",
+    () => request("/profil"),
+    { status: 200, bodyExcludes: 'href="/koordynator"' },
+  ],
   [
     "profile save rejects bad level",
     () =>
@@ -168,13 +186,18 @@ for (const [name, run, expected] of steps) {
     (expected.location === undefined ||
       (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location))) &&
     (expected.bodyIncludes === undefined || actual.body.includes(expected.bodyIncludes)) &&
-    (expected.bodyExcludes === undefined || !actual.body.includes(expected.bodyExcludes));
+    (expected.bodyExcludes === undefined || !actual.body.includes(expected.bodyExcludes)) &&
+    (expected.cacheControlIncludes === undefined || actual.cacheControl.includes(expected.cacheControlIncludes));
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;
     console.log(`      expected ${expected.status} ${expected.location ?? ""}`);
     if (expected.bodyIncludes !== undefined) console.log(`      expected body to include ${expected.bodyIncludes}`);
     if (expected.bodyExcludes !== undefined) console.log(`      expected body to exclude ${expected.bodyExcludes}`);
+    if (expected.cacheControlIncludes !== undefined)
+      console.log(
+        `      expected Cache-Control to include ${expected.cacheControlIncludes}, got "${actual.cacheControl}"`,
+      );
   }
 }
 

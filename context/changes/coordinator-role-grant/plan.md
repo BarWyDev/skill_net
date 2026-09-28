@@ -337,32 +337,32 @@ There is one extra PostgREST round trip (`is_coordinator`, a primary-key lookup)
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly on a fresh local DB: `npx supabase db reset`
-- [x] 1.2 DB tests pass, both suites: `npm run test:db`
-- [x] 1.3 Types regenerate with no diff beyond the new objects: `npm run db:types && git diff --stat src/db/database.types.ts`
-- [x] 1.4 Type check passes: `npx astro check`
-- [x] 1.5 Lint passes: `npm run lint`
+- [x] 1.1 Migration applies cleanly on a fresh local DB: `npx supabase db reset` — e0e3b34
+- [x] 1.2 DB tests pass, both suites: `npm run test:db` — e0e3b34
+- [x] 1.3 Types regenerate with no diff beyond the new objects: `npm run db:types && git diff --stat src/db/database.types.ts` — e0e3b34
+- [x] 1.4 Type check passes: `npx astro check` — e0e3b34
+- [x] 1.5 Lint passes: `npm run lint` — e0e3b34
 
 #### Manual
 
-- [x] 1.6 In local Studio, a second `grant_coordinator` for the same email shows the `already_coordinator` notice
+- [x] 1.6 In local Studio, a second `grant_coordinator` for the same email shows the `already_coordinator` notice — e0e3b34
 - [ ] 1.7 Before merging Phase 2: migration pushed to production with `npx supabase db push`, and `is_coordinator()` present in the hosted SQL editor
 
 ### Phase 2: Coordinator area and gate
 
 #### Automated
 
-- [ ] 2.1 Type check passes: `npx astro check`
-- [ ] 2.2 Lint passes: `npm run lint`
-- [ ] 2.3 Build passes: `npm run build`
-- [ ] 2.4 DB tests still pass: `npm run test:db`
-- [ ] 2.5 Full smoke passes against local dev with local Supabase: `npm run smoke`
-- [ ] 2.6 Readonly smoke passes against the local preview build: `SMOKE_READONLY=1 npm run smoke`
+- [x] 2.1 Type check passes: `npx astro check`
+- [x] 2.2 Lint passes: `npm run lint`
+- [x] 2.3 Build passes: `npm run build`
+- [x] 2.4 DB tests still pass: `npm run test:db`
+- [x] 2.5 Full smoke passes against local dev with local Supabase: `npm run smoke`
+- [x] 2.6 Readonly smoke passes against the local preview build: `SMOKE_READONLY=1 npm run smoke`
 
 #### Manual
 
-- [ ] 2.7 Local resident: `/koordynator` shows "Brak dostępu" and there is no Topbar link
-- [ ] 2.8 Local grant in Studio: link appears and `/koordynator` shows "Panel koordynatora"
-- [ ] 2.9 Local revoke: next reload gives 403 and the link is gone
-- [ ] 2.10 Supabase stopped: `/koordynator` never shows the panel
+- [x] 2.7 Local resident: `/koordynator` shows "Brak dostępu" and there is no Topbar link
+- [x] 2.8 Local grant in Studio: link appears and `/koordynator` shows "Panel koordynatora"
+- [x] 2.9 Local revoke: next reload gives 403 and the link is gone
+- [x] 2.10 Supabase stopped: `/koordynator` never shows the panel
 - [ ] 2.11 After merge: production readonly smoke passes, and the first real coordinator is granted by the operator

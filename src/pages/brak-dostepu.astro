@@ -1,0 +1,25 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+
+// Rendered in place by the middleware for signed-in users without the coordinator role.
+Astro.response.status = 403;
+---
+
+<Layout title="Brak dostępu">
+  <div class="bg-cosmic min-h-screen w-full">
+    <div class="mx-auto max-w-2xl p-4 sm:p-8">
+      <Topbar />
+
+      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+        <h1 class="mb-4 text-2xl font-bold">Brak dostępu</h1>
+        <p class="mb-4 text-blue-100/80">
+          Ta część serwisu jest dostępna tylko dla koordynatorów wyznaczonych przez operatora.
+        </p>
+        <a href="/profil" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
+          Wróć do profilu
+        </a>
+      </main>
+    </div>
+  </div>
+</Layout>
