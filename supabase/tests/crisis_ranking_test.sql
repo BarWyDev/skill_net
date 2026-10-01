@@ -11,6 +11,10 @@ select plan(45);
 -- Fixtures (as postgres: bypasses RLS, triggers still apply)
 -- ---------------------------------------------------------------------------
 
+-- Isolate the fixtures from the local demo seed (supabase/seed.sql), which places residents
+-- around the same Kraków epicentre. Rolled back with everything else.
+delete from public.profiles;
+
 -- C: coordinator, R: resident without a profile, 01-12: ranked fixtures.
 insert into auth.users (id, email) values
   ('cccccccc-0000-0000-0000-000000000000', 'coord@test.local'),
