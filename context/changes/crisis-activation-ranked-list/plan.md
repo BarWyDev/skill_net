@@ -441,28 +441,28 @@ The activation is a single SQL statement chain. The candidate set comes from `st
 
 #### Automated
 
-- [x] 1.1 Migrations apply cleanly: `npx supabase db reset`
-- [x] 1.2 pgTAP suites pass (new and existing): `npm run test:db`
-- [x] 1.3 Types regenerate with no diff after a second run
-- [x] 1.4 Type check passes: `npx astro check`
-- [x] 1.5 Lint passes: `npm run lint`
+- [x] 1.1 Migrations apply cleanly: `npx supabase db reset` — 3673f80
+- [x] 1.2 pgTAP suites pass (new and existing): `npm run test:db` — 3673f80
+- [x] 1.3 Types regenerate with no diff after a second run — 3673f80
+- [x] 1.4 Type check passes: `npx astro check` — 3673f80
+- [x] 1.5 Lint passes: `npm run lint` — 3673f80
 
 #### Manual
 
-- [x] 1.6 `crisis_type_skills` matches the plan's mapping table
+- [x] 1.6 `crisis_type_skills` matches the plan's mapping table — 3673f80
 - [ ] 1.7 Migrations pushed to the production database before Phase 3 merges
 
 ### Phase 2: Demo data and performance check
 
 #### Automated
 
-- [ ] 2.1 The reset seeds about 500 matchable profiles: `npx supabase db reset`
-- [ ] 2.2 pgTAP still passes with the seed loaded: `npm run test:db`
+- [x] 2.1 The reset seeds about 500 matchable profiles: `npx supabase db reset`
+- [x] 2.2 pgTAP still passes with the seed loaded: `npm run test:db`
 
 #### Manual
 
-- [ ] 2.3 Perf script: `activate_crisis` under 1 s on 20k profiles at 20 km, GIST index used
-- [ ] 2.4 Coordinator activation at 31-001 with 5 km returns a plausible ranking
+- [x] 2.3 Perf script: `activate_crisis` under 1 s on 20k profiles at 20 km, GIST index used
+- [x] 2.4 Coordinator activation at 31-001 with 5 km returns a plausible ranking
 
 ### Phase 3: Activation and ranked list UI
 

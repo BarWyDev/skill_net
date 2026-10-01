@@ -139,8 +139,9 @@ begin
   returning id into v_crisis_id;
 
   insert into public.crisis_matches (crisis_id, user_id, rank, position, score, distance_m, matched_skills)
-  with candidates as (
-    -- The driving filter: st_dwithin on the GIST-indexed location.
+  -- Materialized so the radius filter on the GIST-indexed location drives the query; the
+  -- planner would otherwise start from a scan over all of profile_skills.
+  with candidates as materialized (
     select p.user_id, extensions.st_distance(p.location, v_epicentre)::numeric as d
     from public.profiles p
     where extensions.st_dwithin(p.location, v_epicentre, v_radius_m)
@@ -159,41 +160,36 @@ begin
     join public.crisis_type_skills cts
       on cts.skill_slug = ps.skill_slug
      and cts.crisis_type_slug = v_type.slug
-    where public.profile_is_matchable(c.user_id)
   ),
-  ordered as (
+  -- One row per resident. Every aggregate orders the matched skills best first.
+  per_user as (
     select
-      m.*,
-      row_number() over (
-        partition by m.user_id
+      m.user_id,
+      min(m.d) as d,
+      count(*) as match_n,
+      (array_agg(m.tier_value order by m.tier_value desc, m.level_value desc, m.skill_slug))[1] as best_tier,
+      (array_agg(m.level_value order by m.tier_value desc, m.level_value desc, m.skill_slug))[1] as best_level,
+      jsonb_agg(
+        jsonb_build_object('slug', m.skill_slug, 'tier', m.tier, 'level', m.level)
         order by m.tier_value desc, m.level_value desc, m.skill_slug
-      ) as skill_rank,
-      count(*) over (partition by m.user_id) as match_n
+      ) as matched_skills
     from matched m
+    group by m.user_id
+    having public.profile_is_matchable(m.user_id)
   ),
   scored as (
     select
-      o.user_id,
-      o.d,
+      u.user_id,
+      u.d,
+      u.matched_skills,
       round(
-        v_type.w_distance * (1 - o.d / v_radius_m)
-        + v_type.w_skill * (o.tier_value + least(0.10, 0.05 * (o.match_n - 1))) / 1.10
-        + v_type.w_level * o.level_value
+        v_type.w_distance * (1 - u.d / v_radius_m)
+        + v_type.w_skill * (u.best_tier + least(0.10, 0.05 * (u.match_n - 1))) / 1.10
+        + v_type.w_level * u.best_level
         + v_type.w_availability * 0,
         6
       ) as score
-    from ordered o
-    where o.skill_rank = 1
-  ),
-  skills_json as (
-    select
-      o.user_id,
-      jsonb_agg(
-        jsonb_build_object('slug', o.skill_slug, 'tier', o.tier, 'level', o.level)
-        order by o.skill_rank
-      ) as matched_skills
-    from ordered o
-    group by o.user_id
+    from per_user u
   )
   select
     v_crisis_id,
@@ -202,9 +198,8 @@ begin
     row_number() over (order by s.score desc, md5(v_crisis_id::text || s.user_id::text)),
     s.score,
     round(s.d)::integer,
-    j.matched_skills
-  from scored s
-  join skills_json j on j.user_id = s.user_id;
+    s.matched_skills
+  from scored s;
 
   get diagnostics v_count = row_count;
 
