@@ -43,3 +43,42 @@ export interface SaveProfileInput {
   lng: number | null;
   skills: ProfileSkillDTO[];
 }
+
+export interface CrisisTypeDTO {
+  slug: string;
+  name: string;
+}
+
+export type RadiusKm = 1 | 2 | 5 | 10 | 20;
+
+/** Parsed crisis activation form, ready for the `activate_crisis` RPC. */
+export interface ActivateCrisisInput {
+  crisisType: string;
+  locationSource: LocationSource;
+  /** Set for `locationSource: "postcode"`; the server resolves the raw centroid from it. */
+  postcode: string | null;
+  lat: number | null;
+  lng: number | null;
+  radiusKm: RadiusKm;
+}
+
+export interface CrisisDTO {
+  id: string;
+  typeName: string;
+  radiusKm: number;
+  activatedAt: string;
+  matchCount: number;
+  status: "active" | "ended";
+}
+
+export type CrisisSkillTier = "priority" | "supporting";
+
+/** One ranked row. No identity, no coordinates and no score: only what the coordinator needs. */
+export interface CrisisMatchDTO {
+  rank: number;
+  /** The stable per-crisis order behind the "Osoba #N" pseudonym. */
+  position: number;
+  /** Rounded to 0.5 km in the database. */
+  distanceKm: number;
+  skills: { slug: string; name: string; tier: CrisisSkillTier; level: SkillLevel | null }[];
+}
