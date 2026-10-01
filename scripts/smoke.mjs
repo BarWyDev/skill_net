@@ -10,6 +10,8 @@ const READONLY = process.env.SMOKE_READONLY === "1";
 const email = `smoke-${Date.now()}@example.com`;
 const password = "Smoke-Test-Passw0rd!";
 const jar = new Map();
+// A valid activation body: the gates must refuse it before it reaches the RPC.
+const CRISIS_FORM = { crisis_type: "awaria-pradu", location_source: "postcode", postcode: "31-001", radius_km: "5" };
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -63,6 +65,16 @@ const readonlySteps = [
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["profil redirects anonymous user", () => request("/profil"), { status: 302, location: "/auth/signin" }],
   ["koordynator redirects anonymous user", () => request("/koordynator"), { status: 302, location: "/auth/signin" }],
+  [
+    "koordynator crisis page redirects anonymous user",
+    () => request("/koordynator/kryzys/00000000-0000-0000-0000-000000000000"),
+    { status: 302, location: "/auth/signin" },
+  ],
+  [
+    "crisis activation redirects anonymous user",
+    () => request("/api/koordynator/kryzysy", { method: "POST", form: CRISIS_FORM }),
+    { status: 302, location: "/auth/signin" },
+  ],
   // The lookup takes the postcode in a POST body, so it never appears in a request URL.
   [
     "postcode lookup finds known code",
@@ -102,6 +114,16 @@ const writeSteps = [
   [
     "koordynator denies resident",
     () => request("/koordynator"),
+    { status: 403, bodyIncludes: "Brak dostępu", cacheControlIncludes: "no-store" },
+  ],
+  [
+    "crisis activation denies resident",
+    () => request("/api/koordynator/kryzysy", { method: "POST", form: CRISIS_FORM }),
+    { status: 403, cacheControlIncludes: "no-store" },
+  ],
+  [
+    "crisis page denies resident",
+    () => request("/koordynator/kryzys/00000000-0000-0000-0000-000000000000"),
     { status: 403, bodyIncludes: "Brak dostępu", cacheControlIncludes: "no-store" },
   ],
   [

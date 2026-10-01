@@ -58,6 +58,158 @@ export type Database = {
         }
         Relationships: []
       }
+      crises: {
+        Row: {
+          activated_at: string
+          activated_by: string
+          crisis_type_slug: string
+          ended_at: string | null
+          epicentre: unknown
+          id: string
+          match_count: number
+          radius_m: number
+          status: string
+        }
+        Insert: {
+          activated_at?: string
+          activated_by: string
+          crisis_type_slug: string
+          ended_at?: string | null
+          epicentre: unknown
+          id?: string
+          match_count?: number
+          radius_m: number
+          status?: string
+        }
+        Update: {
+          activated_at?: string
+          activated_by?: string
+          crisis_type_slug?: string
+          ended_at?: string | null
+          epicentre?: unknown
+          id?: string
+          match_count?: number
+          radius_m?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crises_crisis_type_slug_fkey"
+            columns: ["crisis_type_slug"]
+            isOneToOne: false
+            referencedRelation: "crisis_types"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      crisis_matches: {
+        Row: {
+          crisis_id: string
+          distance_m: number
+          matched_skills: Json
+          position: number
+          rank: number
+          score: number
+          user_id: string
+        }
+        Insert: {
+          crisis_id: string
+          distance_m: number
+          matched_skills: Json
+          position: number
+          rank: number
+          score: number
+          user_id: string
+        }
+        Update: {
+          crisis_id?: string
+          distance_m?: number
+          matched_skills?: Json
+          position?: number
+          rank?: number
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crisis_matches_crisis_id_fkey"
+            columns: ["crisis_id"]
+            isOneToOne: false
+            referencedRelation: "crises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crisis_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      crisis_type_skills: {
+        Row: {
+          crisis_type_slug: string
+          skill_slug: string
+          tier: string
+        }
+        Insert: {
+          crisis_type_slug: string
+          skill_slug: string
+          tier: string
+        }
+        Update: {
+          crisis_type_slug?: string
+          skill_slug?: string
+          tier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crisis_type_skills_crisis_type_slug_fkey"
+            columns: ["crisis_type_slug"]
+            isOneToOne: false
+            referencedRelation: "crisis_types"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "crisis_type_skills_skill_slug_fkey"
+            columns: ["skill_slug"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      crisis_types: {
+        Row: {
+          name_pl: string
+          slug: string
+          sort: number
+          w_availability: number
+          w_distance: number
+          w_level: number
+          w_skill: number
+        }
+        Insert: {
+          name_pl: string
+          slug: string
+          sort: number
+          w_availability: number
+          w_distance: number
+          w_level: number
+          w_skill: number
+        }
+        Update: {
+          name_pl?: string
+          slug?: string
+          sort?: number
+          w_availability?: number
+          w_distance?: number
+          w_level?: number
+          w_skill?: number
+        }
+        Relationships: []
+      }
       postcodes: {
         Row: {
           address_count: number
@@ -212,7 +364,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_crisis: {
+        Args: {
+          p_crisis_type: string
+          p_lat: number
+          p_lng: number
+          p_location_source: string
+          p_postcode: string
+          p_radius_km: number
+        }
+        Returns: string
+      }
       coarsen_point: { Args: { p: unknown }; Returns: unknown }
+      get_crisis_matches: {
+        Args: { p_crisis_id: string; p_limit?: number }
+        Returns: {
+          distance_km_rounded: number
+          matched_skills: Json
+          position: number
+          rank: number
+        }[]
+      }
       get_my_profile: { Args: never; Returns: Json }
       grant_coordinator: {
         Args: { p_email: string; p_note: string }

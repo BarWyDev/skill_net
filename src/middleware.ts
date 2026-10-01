@@ -2,9 +2,9 @@ import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@/lib/supabase";
 import { isCoordinator } from "@/lib/services/roles";
 
-const PROTECTED_ROUTES = ["/dashboard", "/profil", "/koordynator"];
+const PROTECTED_ROUTES = ["/dashboard", "/profil", "/koordynator", "/api/koordynator"];
 // Signed-in users without the coordinator role get a 403 here.
-const COORDINATOR_ROUTES = ["/koordynator"];
+const COORDINATOR_ROUTES = ["/koordynator", "/api/koordynator"];
 const ACCESS_DENIED_PAGE = "/brak-dostepu";
 
 export const onRequest = defineMiddleware(async (context, next) => {

@@ -180,6 +180,48 @@ select public.revoke_coordinator('jan@example.com', 'operator: pilot ended');
 - History: `select e.*, u.email from public.coordinator_role_events e left join auth.users u on u.id = e.user_id order by e.occurred_at;`
 - On production, a grant or revoke is a production data change. Only the operator does it.
 
+### Demo trybu kryzysowego (lokalnie)
+
+`supabase/seed.sql` loads about 500 synthetic residents around Kraków (within about 15 km of 31-001) on every `npx supabase db reset`. The data is the same on every reset. It is **local only**: `supabase db push` never runs seeds, so production never gets it. The synthetic accounts use `@seed.skillnet.test` emails and have no password, so nobody can sign in as them.
+
+1. Reset the local database (migrations plus the seed):
+
+   ```bash
+   npx supabase db reset
+   ```
+
+   In Studio (http://localhost:54323), the SQL editor should report 500:
+
+   ```sql
+   select count(*) from public.profiles where public.profile_is_matchable(user_id);
+   ```
+
+2. Start the app with `npm run dev`, sign up at http://localhost:4321/auth/signup, then grant yourself the role in Studio:
+
+   ```sql
+   select public.grant_coordinator('<your email>', 'local demo');
+   ```
+
+3. Open http://localhost:4321/koordynator and activate **Awaria prądu** at postcode 31-001 with a 5 km radius. Electricians and generator owners should lead the list.
+
+   Without the UI, activate as yourself in the Studio SQL editor instead (run the whole block at once):
+
+   ```sql
+   begin;
+   select set_config('request.jwt.claims', json_build_object('sub', id, 'role', 'authenticated')::text, true)
+   from auth.users where email = '<your email>';
+   set local role authenticated;
+   select public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 5);
+   select * from public.get_crisis_matches((select id from public.crises order by activated_at desc limit 1), 20);
+   commit;
+   ```
+
+4. Performance check: `scripts/perf-crisis.sql` adds 20,000 residents in a rolled-back transaction and times a 20 km activation. The target is under 1 s, with `profiles_location_idx` in the printed plan. It runs as the local superuser, because loading `auto_explain` needs it:
+
+   ```bash
+   docker exec -i supabase_db_10x-astro-starter psql -U supabase_admin -d postgres < scripts/perf-crisis.sql
+   ```
+
 ## Deployment
 
 SkillNet runs on [Cloudflare Workers](https://workers.cloudflare.com/) (Workers + static assets, not Pages) at **https://skillnet.barwy.workers.dev**.

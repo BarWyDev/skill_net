@@ -1,8 +1,30 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import Topbar from "@/components/Topbar.astro";
+import CrisisActivationForm from "@/components/crisis/CrisisActivationForm";
+import { createClient } from "@/lib/supabase";
+import { getCrisisTypes, listActiveCrises } from "@/lib/services/crisis";
+import { formatActivatedAt, formatPeople } from "@/lib/crisis-format";
+import type { CrisisDTO, CrisisTypeDTO } from "@/types";
 
 // The middleware gates this route: only coordinators get here.
+
+const error = Astro.url.searchParams.get("error");
+
+let crisisTypes: CrisisTypeDTO[] | null = null;
+let activeCrises: CrisisDTO[] | null = null;
+let loadError: string | null = null;
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (!supabase) {
+  loadError = "Supabase nie jest skonfigurowany.";
+} else {
+  try {
+    [crisisTypes, activeCrises] = await Promise.all([getCrisisTypes(supabase), listActiveCrises(supabase)]);
+  } catch {
+    loadError = "Nie udało się wczytać panelu. Odśwież stronę.";
+  }
+}
 ---
 
 <Layout title="Panel koordynatora">
@@ -10,11 +32,61 @@ import Topbar from "@/components/Topbar.astro";
     <div class="mx-auto max-w-2xl p-4 sm:p-8">
       <Topbar />
 
-      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
-        <h1 class="mb-4 text-2xl font-bold">Panel koordynatora</h1>
-        <p class="text-blue-100/80">
-          Aktywacja trybu kryzysowego i lista dopasowanych mieszkańców pojawią się tu w kolejnej wersji.
-        </p>
+      <main class="space-y-6">
+        <section class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+          <h1 class="mb-4 text-2xl font-bold">Aktywuj tryb kryzysowy</h1>
+
+          {error && (
+            <p role="alert" class="mb-4 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
+              {error}
+            </p>
+          )}
+          {loadError && (
+            <p role="alert" class="text-red-200">
+              {loadError}
+            </p>
+          )}
+
+          {crisisTypes && (
+            <CrisisActivationForm client:only="react" crisisTypes={crisisTypes}>
+              <p slot="fallback" class="text-blue-100/70">
+                Ładowanie formularza…
+              </p>
+            </CrisisActivationForm>
+          )}
+        </section>
+
+        {activeCrises && (
+          <section
+            aria-labelledby="active-heading"
+            class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6"
+          >
+            <h2 id="active-heading" class="mb-4 text-xl font-semibold">
+              Aktywne kryzysy
+            </h2>
+            {activeCrises.length === 0 ? (
+              <p class="text-blue-100/70">Brak aktywnych kryzysów.</p>
+            ) : (
+              <ul class="space-y-2">
+                {activeCrises.map((c) => (
+                  <li>
+                    <a
+                      href={`/koordynator/kryzys/${c.id}`}
+                      class="block rounded-xl border border-white/10 bg-white/5 p-3 transition-colors hover:bg-white/15"
+                    >
+                      <span class="block font-medium text-white">
+                        {c.typeName} · {c.radiusKm} km
+                      </span>
+                      <span class="block text-sm text-blue-100/70">
+                        {formatActivatedAt(c.activatedAt)} · {formatPeople(c.matchCount)}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
       </main>
     </div>
   </div>
