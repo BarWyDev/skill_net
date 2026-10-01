@@ -1,0 +1,127 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
+import { createClient } from "@/lib/supabase";
+import { getCrisis, getCrisisMatches, MATCHES_PAGE_SIZE } from "@/lib/services/crisis";
+import { formatActivatedAt, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
+import { cn } from "@/lib/utils";
+import type { CrisisDTO, CrisisMatchDTO } from "@/types";
+
+// The middleware gates this route (coordinators only) and sends Cache-Control: private, no-store.
+// The list is a snapshot from activation: no identity, coordinates or score reach this page.
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const id = Astro.params.id ?? "";
+
+let crisis: CrisisDTO | null = null;
+let matches: CrisisMatchDTO[] = [];
+let loadError: string | null = null;
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (!supabase) {
+  loadError = "Supabase nie jest skonfigurowany.";
+} else if (UUID_RE.test(id)) {
+  try {
+    crisis = await getCrisis(supabase, id);
+    if (crisis) matches = await getCrisisMatches(supabase, id);
+  } catch {
+    loadError = "Nie udało się wczytać listy. Odśwież stronę.";
+  }
+}
+
+if (!crisis && !loadError) Astro.response.status = 404;
+const hidden = crisis ? Math.max(0, crisis.matchCount - matches.length) : 0;
+---
+
+<Layout title={crisis ? `Kryzys: ${crisis.typeName}` : "Nie znaleziono kryzysu"}>
+  <div class="bg-cosmic min-h-screen w-full">
+    <div class="mx-auto max-w-2xl p-4 sm:p-8">
+      <Topbar />
+
+      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+        <a href="/koordynator" class="mb-4 inline-block text-sm text-purple-300 hover:text-purple-100 hover:underline">
+          ← Panel koordynatora
+        </a>
+
+        {loadError && (
+          <p role="alert" class="text-red-200">
+            {loadError}
+          </p>
+        )}
+
+        {!crisis && !loadError && (
+          <>
+            <h1 class="mb-2 text-2xl font-bold">Nie znaleziono kryzysu</h1>
+            <p class="text-blue-100/80">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
+          </>
+        )}
+
+        {crisis && (
+          <>
+            <h1 class="mb-1 text-2xl font-bold">{crisis.typeName}</h1>
+            <p class="mb-4 text-sm text-blue-100/80">
+              Promień {crisis.radiusKm} km · aktywowano {formatActivatedAt(crisis.activatedAt)} ·{" "}
+              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> dopasowanych
+            </p>
+
+            <p class="mb-6 rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm text-blue-100">
+              Lista to stan z chwili aktywacji. Dane kontaktowe będą dostępne po potwierdzeniu gotowości przez
+              mieszkańca (w kolejnych wersjach).
+            </p>
+
+            {matches.length === 0 ? (
+              <p class="text-blue-100/80">W tym promieniu nie ma dopasowanych mieszkańców.</p>
+            ) : (
+              <ol class="space-y-2">
+                {matches.map((m) => (
+                  <li class="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                    <span
+                      class="w-8 shrink-0 text-right text-lg font-bold text-purple-200"
+                      aria-label={`Miejsce ${m.rank}`}
+                    >
+                      {m.rank}.
+                    </span>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+                        <span class="font-medium">Osoba #{m.position}</span>
+                        <span class="text-sm text-blue-100/80">{formatDistanceKm(m.distanceKm)}</span>
+                      </div>
+                      <ul class="mt-2 flex flex-wrap gap-1.5">
+                        {m.skills.map((s) => (
+                          <li
+                            class:list={cn(
+                              "rounded-full border px-2.5 py-0.5 text-xs",
+                              s.tier === "priority"
+                                ? "border-purple-300/60 bg-purple-600/40 text-white"
+                                : "border-white/20 bg-white/5 text-blue-100",
+                            )}
+                          >
+                            {s.tier === "priority" ? "★ " : ""}
+                            {s.name}
+                            {s.level !== null && <span class="text-white/70"> · {LEVEL_LABELS[s.level]}</span>}
+                            <span class="sr-only">
+                              {s.tier === "priority" ? " (umiejętność priorytetowa)" : " (umiejętność wspierająca)"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+
+            {hidden > 0 && (
+              <p class="mt-4 text-sm text-blue-100/70">
+                Pokazano pierwsze {MATCHES_PAGE_SIZE}. Niewyświetlonych: {formatPeople(hidden)}.
+              </p>
+            )}
+
+            <p class="mt-4 text-xs text-blue-100/60">★ umiejętność priorytetowa dla tego rodzaju kryzysu</p>
+          </>
+        )}
+      </main>
+    </div>
+  </div>
+</Layout>
