@@ -468,16 +468,16 @@ The activation is a single SQL statement chain. The candidate set comes from `st
 
 #### Automated
 
-- [x] 3.1 Lint passes: `npm run lint`
-- [x] 3.2 Type check passes: `npx astro check`
-- [x] 3.3 Build passes: `npm run build`
-- [x] 3.4 Smoke passes against the local dev server: `npm run smoke`
-- [x] 3.5 pgTAP still passes: `npm run test:db`
+- [x] 3.1 Lint passes: `npm run lint` — 855417d
+- [x] 3.2 Type check passes: `npx astro check` — 855417d
+- [x] 3.3 Build passes: `npm run build` — 855417d
+- [x] 3.4 Smoke passes against the local dev server: `npm run smoke` — 855417d
+- [x] 3.5 pgTAP still passes: `npm run test:db` — 855417d
 
 #### Manual
 
-- [x] 3.6 From activation to the rendered list ≤ 3 s with the seed loaded
-- [x] 3.7 Activation by postcode works with map tiles blocked
-- [x] 3.8 Rows show tied places, pseudonyms, tiers, levels and rounded distances, with no identifying data in the HTML
-- [x] 3.9 A second coordinator sees and opens the same crisis
-- [x] 3.10 Form and list usable at 375 px with no horizontal scroll
+- [x] 3.6 From activation to the rendered list ≤ 3 s with the seed loaded — 855417d
+- [x] 3.7 Activation by postcode works with map tiles blocked — 855417d
+- [x] 3.8 Rows show tied places, pseudonyms, tiers, levels and rounded distances, with no identifying data in the HTML — 855417d
+- [x] 3.9 A second coordinator sees and opens the same crisis — 855417d
+- [x] 3.10 Form and list usable at 375 px with no horizontal scroll — 855417d
