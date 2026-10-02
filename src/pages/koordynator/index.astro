@@ -3,16 +3,20 @@ import Layout from "@/layouts/Layout.astro";
 import Topbar from "@/components/Topbar.astro";
 import CrisisActivationForm from "@/components/crisis/CrisisActivationForm";
 import { createClient } from "@/lib/supabase";
-import { getCrisisTypes, listActiveCrises } from "@/lib/services/crisis";
-import { formatActivatedAt, formatPeople } from "@/lib/crisis-format";
+import { getCrisisTypes, listActiveCrises, listRecentEndedCrises } from "@/lib/services/crisis";
+import { formatActivatedAt, formatActiveFor, formatPeople, isStale } from "@/lib/crisis-format";
+import { cn } from "@/lib/utils";
 import type { CrisisDTO, CrisisTypeDTO } from "@/types";
 
 // The middleware gates this route: only coordinators get here.
 
 const error = Astro.url.searchParams.get("error");
+const ended = Astro.url.searchParams.get("ended") === "1";
+const now = new Date();
 
 let crisisTypes: CrisisTypeDTO[] | null = null;
 let activeCrises: CrisisDTO[] | null = null;
+let endedCrises: CrisisDTO[] | null = null;
 let loadError: string | null = null;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
@@ -20,7 +24,11 @@ if (!supabase) {
   loadError = "Supabase nie jest skonfigurowany.";
 } else {
   try {
-    [crisisTypes, activeCrises] = await Promise.all([getCrisisTypes(supabase), listActiveCrises(supabase)]);
+    [crisisTypes, activeCrises, endedCrises] = await Promise.all([
+      getCrisisTypes(supabase),
+      listActiveCrises(supabase),
+      listRecentEndedCrises(supabase),
+    ]);
   } catch {
     loadError = "Nie udało się wczytać panelu. Odśwież stronę.";
   }
@@ -36,6 +44,14 @@ if (!supabase) {
         <section class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
           <h1 class="mb-4 text-2xl font-bold">Aktywuj tryb kryzysowy</h1>
 
+          {ended && (
+            <p
+              role="status"
+              class="mb-4 rounded-lg border border-green-400/50 bg-green-500/15 p-3 text-sm text-green-100"
+            >
+              Kryzys zakończony. Lista dopasowanych osób została usunięta.
+            </p>
+          )}
           {error && (
             <p role="alert" class="mb-4 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
               {error}
@@ -68,23 +84,65 @@ if (!supabase) {
               <p class="text-blue-100/70">Brak aktywnych kryzysów.</p>
             ) : (
               <ul class="space-y-2">
-                {activeCrises.map((c) => (
-                  <li>
-                    <a
-                      href={`/koordynator/kryzys/${c.id}`}
-                      class="block rounded-xl border border-white/10 bg-white/5 p-3 transition-colors hover:bg-white/15"
-                    >
-                      <span class="block font-medium text-white">
-                        {c.typeName} · {c.radiusKm} km
-                      </span>
-                      <span class="block text-sm text-blue-100/70">
-                        {formatActivatedAt(c.activatedAt)} · {formatPeople(c.matchCount)}
-                      </span>
-                    </a>
-                  </li>
-                ))}
+                {activeCrises.map((c) => {
+                  const stale = isStale(c.activatedAt, now);
+                  return (
+                    <li>
+                      <a
+                        href={`/koordynator/kryzys/${c.id}`}
+                        class:list={cn(
+                          "block rounded-xl border p-3 transition-colors hover:bg-white/15",
+                          stale ? "border-amber-400/60 bg-amber-500/15" : "border-white/10 bg-white/5",
+                        )}
+                      >
+                        <span class="block font-medium text-white">
+                          {c.typeName} · {c.radiusKm} km
+                        </span>
+                        <span class="block text-sm text-blue-100/70">
+                          {formatActivatedAt(c.activatedAt)} · {formatPeople(c.matchCount)}
+                        </span>
+                        <span
+                          class:list={cn("block text-sm", stale ? "font-medium text-amber-200" : "text-blue-100/70")}
+                        >
+                          {formatActiveFor(c.activatedAt, now)}
+                          {stale && " — sprawdź, czy nadal trwa"}
+                        </span>
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             )}
+          </section>
+        )}
+
+        {endedCrises && endedCrises.length > 0 && (
+          <section
+            aria-labelledby="ended-heading"
+            class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6"
+          >
+            <h2 id="ended-heading" class="mb-4 text-xl font-semibold">
+              Zakończone
+            </h2>
+            <ul class="space-y-2">
+              {endedCrises.map((c) => (
+                <li>
+                  <a
+                    href={`/koordynator/kryzys/${c.id}`}
+                    class="block rounded-xl border border-white/10 bg-white/5 p-3 transition-colors hover:bg-white/15"
+                  >
+                    <span class="block font-medium text-white">
+                      {c.typeName} · {c.radiusKm} km
+                    </span>
+                    <span class="block text-sm text-blue-100/70">
+                      aktywowano {formatActivatedAt(c.activatedAt)}
+                      {c.endedAt && <> · zakończono {formatActivatedAt(c.endedAt)}</>}
+                    </span>
+                    <span class="block text-sm text-blue-100/70">{formatPeople(c.matchCount)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
       </main>
