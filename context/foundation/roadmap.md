@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-10-01
+updated: 2026-10-02
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -338,3 +338,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-01: a signed-in resident can pick skills from the predefined taxonomy (medical, technical, logistics, language, military/reserve, tools/equipment) with a self-declared level of 1–3, and set an approximate location by postcode or map pin, in a Polish interface that works on a phone.** — Archived 2026-09-27 → `context/archive/2026-09-27-resident-skills-profile/`. Lesson: Public cache headers on routes that pass through the auth middleware.
 - **S-15: when a resident sets their location by postcode, only the coarsened 500 m point and `location_source = 'postcode'` are stored; the typed postcode is discarded, and `/profil` shows "Ustawiono z kodu pocztowego" instead of the code.** — Archived 2026-09-27 → `context/archive/2026-09-27-profile-postcode-minimisation/`. Lesson: —.
 - **S-02: the operator can grant a registered user the coordinator role; a coordinator sees a coordinator-only area that residents and anonymous visitors cannot open.** — Archived 2026-09-28 → `context/archive/2026-09-28-coordinator-role-grant/`. Lesson: —.
+- **S-03: a coordinator can activate crisis mode by choosing the incident type, location and radius, and within 3 seconds sees residents matched to that crisis type, ranked by the weighted score (distance, skill match, skill level, availability confirmation), even when optional external services are down.** — Archived 2026-10-02 → `context/archive/2026-10-01-crisis-activation-ranked-list/`. Lesson: —.
