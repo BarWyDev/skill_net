@@ -1,7 +1,7 @@
 ---
 change_id: crisis-deactivation
 title: Crisis deactivation
-status: implemented
+status: impl_reviewed
 created: 2026-10-02
 updated: 2026-10-02
 archived_at: null
