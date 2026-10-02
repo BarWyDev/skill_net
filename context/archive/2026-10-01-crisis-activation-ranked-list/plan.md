@@ -450,7 +450,7 @@ The activation is a single SQL statement chain. The candidate set comes from `st
 #### Manual
 
 - [x] 1.6 `crisis_type_skills` matches the plan's mapping table — 3673f80
-- [ ] 1.7 Migrations pushed to the production database before Phase 3 merges
+- [x] 1.7 Migrations pushed to the production database before Phase 3 merges (verified 2026-10-02 via `supabase migration list --linked`)
 
 ### Phase 2: Demo data and performance check
 

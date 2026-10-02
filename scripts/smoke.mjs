@@ -12,6 +12,8 @@ const password = "Smoke-Test-Passw0rd!";
 const jar = new Map();
 // A valid activation body: the gates must refuse it before it reaches the RPC.
 const CRISIS_FORM = { crisis_type: "awaria-pradu", location_source: "postcode", postcode: "31-001", radius_km: "5" };
+// An unknown crisis: the gates must refuse the end request before it reaches the RPC.
+const CRISIS_END_PATH = "/api/koordynator/kryzysy/00000000-0000-0000-0000-000000000000/zakoncz";
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -75,6 +77,11 @@ const readonlySteps = [
     () => request("/api/koordynator/kryzysy", { method: "POST", form: CRISIS_FORM }),
     { status: 302, location: "/auth/signin" },
   ],
+  [
+    "crisis end redirects anonymous user",
+    () => request(CRISIS_END_PATH, { method: "POST" }),
+    { status: 302, location: "/auth/signin" },
+  ],
   // The lookup takes the postcode in a POST body, so it never appears in a request URL.
   [
     "postcode lookup finds known code",
@@ -119,6 +126,11 @@ const writeSteps = [
   [
     "crisis activation denies resident",
     () => request("/api/koordynator/kryzysy", { method: "POST", form: CRISIS_FORM }),
+    { status: 403, cacheControlIncludes: "no-store" },
+  ],
+  [
+    "crisis end denies resident",
+    () => request(CRISIS_END_PATH, { method: "POST" }),
     { status: 403, cacheControlIncludes: "no-store" },
   ],
   [

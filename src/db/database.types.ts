@@ -64,6 +64,7 @@ export type Database = {
           activated_by: string
           crisis_type_slug: string
           ended_at: string | null
+          ended_by: string | null
           epicentre: unknown
           id: string
           match_count: number
@@ -75,6 +76,7 @@ export type Database = {
           activated_by: string
           crisis_type_slug: string
           ended_at?: string | null
+          ended_by?: string | null
           epicentre: unknown
           id?: string
           match_count?: number
@@ -86,6 +88,7 @@ export type Database = {
           activated_by?: string
           crisis_type_slug?: string
           ended_at?: string | null
+          ended_by?: string | null
           epicentre?: unknown
           id?: string
           match_count?: number
@@ -376,6 +379,7 @@ export type Database = {
         Returns: string
       }
       coarsen_point: { Args: { p: unknown }; Returns: unknown }
+      end_crisis: { Args: { p_crisis_id: string }; Returns: boolean }
       get_crisis_matches: {
         Args: { p_crisis_id: string; p_limit?: number }
         Returns: {

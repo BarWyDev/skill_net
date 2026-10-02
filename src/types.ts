@@ -67,6 +67,7 @@ export interface CrisisDTO {
   typeName: string;
   radiusKm: number;
   activatedAt: string;
+  endedAt: string | null;
   matchCount: number;
   status: "active" | "ended";
 }

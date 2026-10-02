@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-10-01
+updated: 2026-10-02
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -44,7 +44,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location          | —                             | FR-002, FR-003        | done        |
 | S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | done        |
 | S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents        | S-01, S-02, S-15              | US-01, FR-009, FR-010 | done        |
-| S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | proposed    |
+| S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | in-progress |
 | S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | ready       |
 | S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | proposed    |
 | S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | blocked     |
@@ -145,7 +145,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - Should a forgotten crisis expire on its own, and should revealed contact details be hidden again after deactivation? The PRD records both counter-arguments but adopts neither. — Owner: user. Block: no.
 - **Risk:** Sequenced right after the north star so a demo crisis can be closed cleanly. Low risk on its own.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-05: Resident signs up with a verified email and consent
 
@@ -338,3 +338,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-01: a signed-in resident can pick skills from the predefined taxonomy (medical, technical, logistics, language, military/reserve, tools/equipment) with a self-declared level of 1–3, and set an approximate location by postcode or map pin, in a Polish interface that works on a phone.** — Archived 2026-09-27 → `context/archive/2026-09-27-resident-skills-profile/`. Lesson: Public cache headers on routes that pass through the auth middleware.
 - **S-15: when a resident sets their location by postcode, only the coarsened 500 m point and `location_source = 'postcode'` are stored; the typed postcode is discarded, and `/profil` shows "Ustawiono z kodu pocztowego" instead of the code.** — Archived 2026-09-27 → `context/archive/2026-09-27-profile-postcode-minimisation/`. Lesson: —.
 - **S-02: the operator can grant a registered user the coordinator role; a coordinator sees a coordinator-only area that residents and anonymous visitors cannot open.** — Archived 2026-09-28 → `context/archive/2026-09-28-coordinator-role-grant/`. Lesson: —.
+- **S-03: a coordinator can activate crisis mode by choosing the incident type, location and radius, and within 3 seconds sees residents matched to that crisis type, ranked by the weighted score (distance, skill match, skill level, availability confirmation), even when optional external services are down.** — Archived 2026-10-02 → `context/archive/2026-10-01-crisis-activation-ranked-list/`. Lesson: —.
