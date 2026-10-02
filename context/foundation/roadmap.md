@@ -44,7 +44,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location          | —                             | FR-002, FR-003        | done        |
 | S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | done        |
 | S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents        | S-01, S-02, S-15              | US-01, FR-009, FR-010 | done        |
-| S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | proposed    |
+| S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | in-progress |
 | S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | ready       |
 | S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | proposed    |
 | S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | blocked     |
@@ -145,7 +145,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - Should a forgotten crisis expire on its own, and should revealed contact details be hidden again after deactivation? The PRD records both counter-arguments but adopts neither. — Owner: user. Block: no.
 - **Risk:** Sequenced right after the north star so a demo crisis can be closed cleanly. Low risk on its own.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-05: Resident signs up with a verified email and consent
 
