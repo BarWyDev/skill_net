@@ -263,16 +263,16 @@ Additive: one nullable column, one check constraint that all existing rows satis
 
 #### Automated
 
-- [x] 2.1 Lint passes: `npm run lint`
-- [x] 2.2 Type check passes: `npx astro check`
-- [x] 2.3 Build passes: `npm run build`
-- [x] 2.4 Smoke passes against the local dev server: `npm run smoke`
-- [x] 2.5 pgTAP still passes: `npm run test:db`
+- [x] 2.1 Lint passes: `npm run lint` — adfcda2
+- [x] 2.2 Type check passes: `npx astro check` — adfcda2
+- [x] 2.3 Build passes: `npm run build` — adfcda2
+- [x] 2.4 Smoke passes against the local dev server: `npm run smoke` — adfcda2
+- [x] 2.5 pgTAP still passes: `npm run test:db` — adfcda2
 
 #### Manual
 
-- [x] 2.6 End through the dialog: success message, "Zakończone" entry, summary-only page
-- [x] 2.7 "Anuluj" closes the dialog and nothing changes
-- [x] 2.8 A second end of the same crisis shows "already ended"
-- [x] 2.9 A crisis active for more than 24 h shows the stale warning
-- [x] 2.10 Dialog, panel and summary usable at 375 px with no horizontal scroll
+- [x] 2.6 End through the dialog: success message, "Zakończone" entry, summary-only page — adfcda2
+- [x] 2.7 "Anuluj" closes the dialog and nothing changes — adfcda2
+- [x] 2.8 A second end of the same crisis shows "already ended" — adfcda2
+- [x] 2.9 A crisis active for more than 24 h shows the stale warning — adfcda2
+- [x] 2.10 Dialog, panel and summary usable at 375 px with no horizontal scroll — adfcda2
