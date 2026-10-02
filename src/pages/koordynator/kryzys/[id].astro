@@ -1,18 +1,21 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import Topbar from "@/components/Topbar.astro";
+import EndCrisisDialog from "@/components/crisis/EndCrisisDialog.astro";
 import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
 import { createClient } from "@/lib/supabase";
 import { getCrisis, getCrisisMatches, MATCHES_PAGE_SIZE } from "@/lib/services/crisis";
-import { formatActivatedAt, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
+import { formatActivatedAt, formatActiveFor, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
 import { cn } from "@/lib/utils";
 import type { CrisisDTO, CrisisMatchDTO } from "@/types";
 
 // The middleware gates this route (coordinators only) and sends Cache-Control: private, no-store.
 // The list is a snapshot from activation: no identity, coordinates or score reach this page.
+// Ending a crisis deletes the snapshot, so an ended crisis shows only its summary.
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const id = Astro.params.id ?? "";
+const error = Astro.url.searchParams.get("error");
 
 let crisis: CrisisDTO | null = null;
 let matches: CrisisMatchDTO[] = [];
@@ -24,14 +27,14 @@ if (!supabase) {
 } else if (UUID_RE.test(id)) {
   try {
     crisis = await getCrisis(supabase, id);
-    if (crisis) matches = await getCrisisMatches(supabase, id);
+    if (crisis?.status === "active") matches = await getCrisisMatches(supabase, id);
   } catch {
     loadError = "Nie udało się wczytać listy. Odśwież stronę.";
   }
 }
 
 if (!crisis && !loadError) Astro.response.status = 404;
-const hidden = crisis ? Math.max(0, crisis.matchCount - matches.length) : 0;
+const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - matches.length) : 0;
 ---
 
 <Layout title={crisis ? `Kryzys: ${crisis.typeName}` : "Nie znaleziono kryzysu"}>
@@ -57,11 +60,39 @@ const hidden = crisis ? Math.max(0, crisis.matchCount - matches.length) : 0;
           </>
         )}
 
-        {crisis && (
+        {crisis?.status === "ended" && (
           <>
-            <h1 class="mb-1 text-2xl font-bold">{crisis.typeName}</h1>
+            <div class="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 class="text-2xl font-bold">{crisis.typeName}</h1>
+              <span class="rounded-full border border-white/25 bg-white/10 px-2.5 py-0.5 text-xs text-blue-100">
+                Zakończony
+              </span>
+            </div>
+            <p class="mb-4 text-sm text-blue-100/80">
+              Promień {crisis.radiusKm} km · aktywowano {formatActivatedAt(crisis.activatedAt)}
+              {crisis.endedAt && <> · zakończono {formatActivatedAt(crisis.endedAt)}</>} ·{" "}
+              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> dopasowanych
+            </p>
+            <p class="rounded-lg border border-white/15 bg-white/5 p-3 text-sm text-blue-100">
+              Lista osób została usunięta po zakończeniu kryzysu.
+            </p>
+          </>
+        )}
+
+        {crisis?.status === "active" && (
+          <>
+            {error && (
+              <p role="alert" class="mb-4 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
+                {error}
+              </p>
+            )}
+            <div class="mb-1 flex flex-wrap items-start justify-between gap-3">
+              <h1 class="text-2xl font-bold">{crisis.typeName}</h1>
+              <EndCrisisDialog crisis={crisis} />
+            </div>
             <p class="mb-4 text-sm text-blue-100/80">
               Promień {crisis.radiusKm} km · aktywowano {formatActivatedAt(crisis.activatedAt)} ·{" "}
+              {formatActiveFor(crisis.activatedAt)} ·{" "}
               <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> dopasowanych
             </p>
 
