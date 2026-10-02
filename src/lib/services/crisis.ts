@@ -49,12 +49,37 @@ export async function activateCrisis(
   return error ? { ok: false, message: activateErrorMessage(error) } : { ok: true, id: data };
 }
 
-const CRISIS_COLUMNS = "id, radius_m, activated_at, match_count, status, crisis_types(name_pl)";
+const GENERIC_END_ERROR = "Nie udało się zakończyć kryzysu. Spróbuj ponownie.";
+
+// Messages raised by end_crisis in the crisis deactivation migration.
+const END_DB_ERROR_MESSAGES: Record<string, string> = {
+  not_coordinator: "Tylko koordynator może zakończyć tryb kryzysowy.",
+  unknown_crisis: "Nie znaleziono kryzysu.",
+};
+
+function endErrorMessage(error: { message?: string }): string {
+  return (error.message && END_DB_ERROR_MESSAGES[error.message]) ?? GENERIC_END_ERROR;
+}
+
+/**
+ * Ends a crisis and deletes its ranking snapshot. `ended: false` means it was already ended.
+ * Returns a Polish message on failure.
+ */
+export async function endCrisis(
+  supabase: SupabaseClient,
+  id: string,
+): Promise<{ ok: true; ended: boolean } | { ok: false; message: string }> {
+  const { data, error } = await supabase.rpc("end_crisis", { p_crisis_id: id });
+  return error ? { ok: false, message: endErrorMessage(error) } : { ok: true, ended: data };
+}
+
+const CRISIS_COLUMNS = "id, radius_m, activated_at, ended_at, match_count, status, crisis_types(name_pl)";
 
 interface CrisisRow {
   id: string;
   radius_m: number;
   activated_at: string;
+  ended_at: string | null;
   match_count: number;
   status: string;
   crisis_types: { name_pl: string } | null;
@@ -66,6 +91,7 @@ function toCrisisDTO(row: CrisisRow): CrisisDTO {
     typeName: row.crisis_types?.name_pl ?? "",
     radiusKm: row.radius_m / 1000,
     activatedAt: row.activated_at,
+    endedAt: row.ended_at,
     matchCount: row.match_count,
     status: row.status === "ended" ? "ended" : "active",
   };
@@ -79,6 +105,18 @@ export async function listActiveCrises(supabase: SupabaseClient): Promise<Crisis
     .eq("status", "active")
     .order("activated_at", { ascending: false });
   if (error) throw new Error(`listActiveCrises: ${error.code}`);
+  return data.map(toCrisisDTO);
+}
+
+/** The most recently ended crises, newest end first. */
+export async function listRecentEndedCrises(supabase: SupabaseClient, limit = 10): Promise<CrisisDTO[]> {
+  const { data, error } = await supabase
+    .from("crises")
+    .select(CRISIS_COLUMNS)
+    .eq("status", "ended")
+    .order("ended_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`listRecentEndedCrises: ${error.code}`);
   return data.map(toCrisisDTO);
 }
 
