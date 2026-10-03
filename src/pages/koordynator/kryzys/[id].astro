@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import Topbar from "@/components/Topbar.astro";
 import EndCrisisDialog from "@/components/crisis/EndCrisisDialog.astro";
 import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
+import { formatAvailabilitySummary } from "@/lib/availability";
 import { createClient } from "@/lib/supabase";
 import { getCrisis, getCrisisMatches, MATCHES_PAGE_SIZE } from "@/lib/services/crisis";
 import { formatActivatedAt, formatActiveFor, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
@@ -11,6 +12,8 @@ import type { CrisisDTO, CrisisMatchDTO } from "@/types";
 
 // The middleware gates this route (coordinators only) and sends Cache-Control: private, no-store.
 // The list is a snapshot from activation: no identity, coordinates or score reach this page.
+// Availability and phone presence are read live and are display-only: they never change the order.
+// No phone number reaches this page, only whether one exists.
 // Ending a crisis deletes the snapshot, so an ended crisis shows only its summary.
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -35,6 +38,19 @@ if (!supabase) {
 
 if (!crisis && !loadError) Astro.response.status = 404;
 const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - matches.length) : 0;
+
+function availabilityBadge(availableNow: boolean | null): { label: string; className: string } {
+  if (availableNow === true) {
+    return {
+      label: "Deklaruje dostępność teraz",
+      className: "border-emerald-300/60 bg-emerald-500/25 text-emerald-50",
+    };
+  }
+  if (availableNow === false) {
+    return { label: "Teraz poza deklarowaną dostępnością", className: "border-white/25 bg-white/10 text-blue-100" };
+  }
+  return { label: "Nie podano", className: "border-white/10 bg-transparent text-blue-100/60" };
+}
 ---
 
 <Layout title={crisis ? `Kryzys: ${crisis.typeName}` : "Nie znaleziono kryzysu"}>
@@ -97,8 +113,9 @@ const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - mat
             </p>
 
             <p class="mb-6 rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm text-blue-100">
-              Lista to stan z chwili aktywacji. Dane kontaktowe będą dostępne po potwierdzeniu gotowości przez
-              mieszkańca (w kolejnych wersjach).
+              Kolejność i umiejętności to stan z chwili aktywacji. Dostępność to aktualna deklaracja mieszkańca,
+              sprawdzana względem bieżącej godziny, i nie wpływa na kolejność. Numery telefonów nie są pokazywane; „bez
+              telefonu” oznacza, że ta osoba nie otrzyma alertu.
             </p>
 
             {matches.length === 0 ? (
@@ -137,6 +154,27 @@ const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - mat
                           </li>
                         ))}
                       </ul>
+                      <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                        <span
+                          class:list={cn(
+                            "rounded-full border px-2.5 py-0.5",
+                            availabilityBadge(m.availableNow).className,
+                          )}
+                        >
+                          {availabilityBadge(m.availableNow).label}
+                        </span>
+                        {m.availabilitySlots !== null && (
+                          <span class="text-blue-100/80">
+                            <span class="sr-only">Deklarowana dostępność: </span>
+                            {formatAvailabilitySummary(m.availabilitySlots)}
+                          </span>
+                        )}
+                        {!m.hasPhone && (
+                          <span class="rounded-full border border-amber-300/50 bg-amber-500/15 px-2.5 py-0.5 text-amber-100">
+                            bez telefonu
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </li>
                 ))}

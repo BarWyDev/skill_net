@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { SLOT_COUNT, slotsToMask } from "@/lib/availability";
+import { normalisePhone, PHONE_ERROR } from "@/lib/phone";
 import type { SaveProfileInput } from "@/types";
 
 export const MAX_SKILLS = 40;
@@ -35,6 +37,31 @@ const skillsSchema = z
   .max(MAX_SKILLS, `Możesz wybrać najwyżej ${MAX_SKILLS} umiejętności.`)
   .refine((skills) => new Set(skills.map((s) => s.slug)).size === skills.length, "Umiejętności się powtarzają.");
 
+// Empty means "no phone" (the stored one is deleted). The message never contains the input.
+const phoneSchema = z.string().transform((value, ctx) => {
+  if (value.trim() === "") return null;
+  const phone = normalisePhone(value);
+  if (phone === null) {
+    ctx.addIssue({ code: "custom", message: PHONE_ERROR });
+    return z.NEVER;
+  }
+  return phone;
+});
+
+// Repeated bit indexes 0–27, folded into a mask. None means "not declared".
+const availabilitySchema = z
+  .array(
+    z
+      .string()
+      .regex(/^\d{1,2}$/, "Nieprawidłowa dostępność.")
+      .transform(Number)
+      .refine((bit) => bit < SLOT_COUNT, "Nieprawidłowa dostępność."),
+  )
+  .max(SLOT_COUNT, "Nieprawidłowa dostępność.")
+  .transform((bits) => slotsToMask(bits) || null);
+
+const contactFields = { phone: phoneSchema, availability: availabilitySchema, skill: skillsSchema };
+
 const profileFormSchema = z.discriminatedUnion("location_source", [
   z.object({
     location_source: z.literal("postcode"),
@@ -48,17 +75,17 @@ const profileFormSchema = z.discriminatedUnion("location_source", [
       }
       return postcode;
     }),
-    skill: skillsSchema,
+    ...contactFields,
   }),
   z.object({
     location_source: z.literal("pin"),
     lat: coordinate(-90, 90),
     lng: coordinate(-180, 180),
-    skill: skillsSchema,
+    ...contactFields,
   }),
   z.object({
     location_source: z.literal(""),
-    skill: skillsSchema,
+    ...contactFields,
   }),
 ]);
 
@@ -77,6 +104,8 @@ export function parseProfileForm(form: FormData): ParseResult {
     lat: text("lat"),
     lng: text("lng"),
     skill: form.getAll("skill").filter((value) => typeof value === "string"),
+    phone: text("phone"),
+    availability: form.getAll("availability").filter((value) => typeof value === "string"),
   });
 
   if (!result.success) {
@@ -84,21 +113,22 @@ export function parseProfileForm(form: FormData): ParseResult {
   }
 
   const parsed = result.data;
+  const extras = { skills: parsed.skill, phone: parsed.phone, availabilitySlots: parsed.availability };
   switch (parsed.location_source) {
     case "postcode":
       return {
         success: true,
-        data: { locationSource: "postcode", postcode: parsed.postcode, lat: null, lng: null, skills: parsed.skill },
+        data: { locationSource: "postcode", postcode: parsed.postcode, lat: null, lng: null, ...extras },
       };
     case "pin":
       return {
         success: true,
-        data: { locationSource: "pin", postcode: null, lat: parsed.lat, lng: parsed.lng, skills: parsed.skill },
+        data: { locationSource: "pin", postcode: null, lat: parsed.lat, lng: parsed.lng, ...extras },
       };
     default:
       return {
         success: true,
-        data: { locationSource: null, postcode: null, lat: null, lng: null, skills: parsed.skill },
+        data: { locationSource: null, postcode: null, lat: null, lng: null, ...extras },
       };
   }
 }
