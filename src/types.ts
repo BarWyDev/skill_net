@@ -91,4 +91,10 @@ export interface CrisisMatchDTO {
   /** Rounded to 0.5 km in the database. */
   distanceKm: number;
   skills: { slug: string; name: string; tier: CrisisSkillTier; level: SkillLevel | null }[];
+  /** Whether the resident left a phone number. The number itself never reaches the coordinator. */
+  hasPhone: boolean;
+  /** The resident's current declaration (see src/lib/availability.ts); null = not declared. */
+  availabilitySlots: number | null;
+  /** The declaration checked against the Warsaw clock when the page is viewed; null = not declared. */
+  availableNow: boolean | null;
 }
