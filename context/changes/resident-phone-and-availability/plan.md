@@ -340,15 +340,15 @@ The changes are additive for existing data: existing profiles get `availability_
 
 #### Automated
 
-- [x] 3.1 Type check passes: `npx astro check`
-- [x] 3.2 Lint passes: `npm run lint`
-- [x] 3.3 Build passes: `npm run build`
-- [x] 3.4 DB tests still pass: `npm run test:db`
-- [x] 3.5 Smoke passes: `npm run smoke`
+- [x] 3.1 Type check passes: `npx astro check` — 84b54d9
+- [x] 3.2 Lint passes: `npm run lint` — 84b54d9
+- [x] 3.3 Build passes: `npm run build` — 84b54d9
+- [x] 3.4 DB tests still pass: `npm run test:db` — 84b54d9
+- [x] 3.5 Smoke passes: `npm run smoke` — 84b54d9
 
 #### Manual
 
-- [x] 3.6 Seed crisis at 31-001, 5 km shows all three badge states and some "bez telefonu" rows
-- [x] 3.7 Changing own availability updates that row's badge on reload; ranking order unchanged
-- [x] 3.8 The crisis page source contains no `+48` string
-- [x] 3.9 At 375 px width, rows with badges and the marker wrap cleanly
+- [x] 3.6 Seed crisis at 31-001, 5 km shows all three badge states and some "bez telefonu" rows — 84b54d9
+- [x] 3.7 Changing own availability updates that row's badge on reload; ranking order unchanged — 84b54d9
+- [x] 3.8 The crisis page source contains no `+48` string — 84b54d9
+- [x] 3.9 At 375 px width, rows with badges and the marker wrap cleanly — 84b54d9
