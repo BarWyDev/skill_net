@@ -39,23 +39,23 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 
 ## At a glance
 
-| ID   | Change ID                       | Outcome (user can …)                                                                   | Prerequisites                 | PRD refs              | Status      |
-| ---- | ------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------- | --------------------- | ----------- |
-| S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location          | —                             | FR-002, FR-003        | done        |
-| S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | done        |
-| S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents        | S-01, S-02, S-15              | US-01, FR-009, FR-010 | done        |
-| S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | done        |
-| S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | ready       |
-| S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | in-progress |
-| S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | blocked     |
-| S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | proposed    |
-| S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | proposed    |
-| S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | proposed    |
-| S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | proposed    |
-| S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked     |
-| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | proposed    |
-| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | proposed    |
-| S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done        |
+| ID   | Change ID                       | Outcome (user can …)                                                                   | Prerequisites                 | PRD refs              | Status   |
+| ---- | ------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------- | --------------------- | -------- |
+| S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location          | —                             | FR-002, FR-003        | done     |
+| S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | done     |
+| S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents        | S-01, S-02, S-15              | US-01, FR-009, FR-010 | done     |
+| S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | done     |
+| S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | ready    |
+| S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | done     |
+| S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | blocked  |
+| S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | proposed |
+| S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | proposed |
+| S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | proposed |
+| S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | proposed |
+| S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked  |
+| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | proposed |
+| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | proposed |
+| S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
 
 ## Streams
 
@@ -170,7 +170,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** The phone number is the most sensitive field in the product. Hidden-by-default has to hold here, before any crisis flow reads it.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-07: Matched resident gets a crisis SMS and answers YES/NO
 
@@ -340,3 +340,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-02: the operator can grant a registered user the coordinator role; a coordinator sees a coordinator-only area that residents and anonymous visitors cannot open.** — Archived 2026-09-28 → `context/archive/2026-09-28-coordinator-role-grant/`. Lesson: —.
 - **S-03: a coordinator can activate crisis mode by choosing the incident type, location and radius, and within 3 seconds sees residents matched to that crisis type, ranked by the weighted score (distance, skill match, skill level, availability confirmation), even when optional external services are down.** — Archived 2026-10-02 → `context/archive/2026-10-01-crisis-activation-ranked-list/`. Lesson: —.
 - **S-04: a coordinator can deactivate crisis mode, and the app returns to everyday mode.** — Archived 2026-10-02 → `context/archive/2026-10-02-crisis-deactivation/`. Lesson: —.
+- **S-06: a resident can add an optional phone number (hidden by default) and declare availability days and hours, shown to the coordinator as information only. A resident without a phone appears on the aggregated map but gets no alerts and no operational-list presence.** — Archived 2026-10-03 → `context/archive/2026-10-03-resident-phone-and-availability/`. Lesson: —.
