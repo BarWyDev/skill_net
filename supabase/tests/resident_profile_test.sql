@@ -36,7 +36,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
 select lives_ok(
-  $$ select public.save_my_profile('pin', null, 52.2297, 21.0122, '[{"slug":"elektryk","level":2},{"slug":"agregat-pradotworczy","level":null}]') $$,
+  $$ select public.save_my_profile('pin', null, 52.2297, 21.0122, '[{"slug":"elektryk","level":2},{"slug":"agregat-pradotworczy","level":null}]', null, null) $$,
   'save_my_profile: saves a pin and two skills'
 );
 
@@ -176,7 +176,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
 -- postcode_resolves
-select public.save_my_profile('postcode', '00-950', null, null, '[{"slug":"elektryk","level":2}]');
+select public.save_my_profile('postcode', '00-950', null, null, '[{"slug":"elektryk","level":2}]', null, null);
 select ok(
   (
     select p.postcode is null
@@ -198,14 +198,14 @@ select is(
 
 -- unknown_postcode_raises
 select throws_ok(
-  $$ select public.save_my_profile('postcode', '99-999', null, null, '[]') $$,
+  $$ select public.save_my_profile('postcode', '99-999', null, null, '[]', null, null) $$,
   'P0001',
   'unknown_postcode',
   'unknown_postcode_raises'
 );
 
 -- resave_keeps_location: a postcode-source save without a code keeps the stored point
-select public.save_my_profile('postcode', null, null, null, '[{"slug":"elektryk","level":3}]');
+select public.save_my_profile('postcode', null, null, null, '[{"slug":"elektryk","level":3}]', null, null);
 select ok(
   (
     select p.location_source = 'postcode'
@@ -256,14 +256,14 @@ select is(
 
 -- keep_without_prior_raises: nothing to keep from a pin, or from no profile at all
 select throws_ok(
-  $$ select public.save_my_profile('postcode', null, null, null, '[]') $$,
+  $$ select public.save_my_profile('postcode', null, null, null, '[]', null, null) $$,
   'P0001',
   'postcode_required',
   'keep_without_prior_raises: a pin profile cannot keep a postcode location'
 );
 select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","role":"authenticated"}', true);
 select throws_ok(
-  $$ select public.save_my_profile('postcode', null, null, null, '[]') $$,
+  $$ select public.save_my_profile('postcode', null, null, null, '[]', null, null) $$,
   'P0001',
   'postcode_required',
   'keep_without_prior_raises: a user without a profile cannot keep a location'
@@ -277,7 +277,7 @@ select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-0000000
 
 -- outside_poland_raises
 select throws_ok(
-  $$ select public.save_my_profile('pin', null, 48.5, 21.0, '[]') $$,
+  $$ select public.save_my_profile('pin', null, 48.5, 21.0, '[]', null, null) $$,
   'P0001',
   'outside_poland',
   'outside_poland_raises'
@@ -311,7 +311,7 @@ select throws_ok(
 -- ---------------------------------------------------------------------------
 
 select throws_ok(
-  $$ select public.save_my_profile('postcode', '00-950', null, null, '[{"slug":"nie-istnieje","level":null}]') $$,
+  $$ select public.save_my_profile('postcode', '00-950', null, null, '[{"slug":"nie-istnieje","level":null}]', null, null) $$,
   '23503',
   null::text,
   'save_is_atomic: an unknown skill slug fails'
@@ -330,7 +330,7 @@ select is(
 -- not_authenticated
 select set_config('request.jwt.claims', '{"role":"authenticated"}', true);
 select throws_ok(
-  $$ select public.save_my_profile(null, null, null, null, '[]') $$,
+  $$ select public.save_my_profile(null, null, null, null, '[]', null, null) $$,
   'P0001',
   'not_authenticated',
   'save_my_profile: raises without a user'

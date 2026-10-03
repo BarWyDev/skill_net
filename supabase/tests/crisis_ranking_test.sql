@@ -338,8 +338,8 @@ select is(
 -- matches_hide_user_id
 select is(
   (select proargnames from pg_proc where oid = 'public.get_crisis_matches(uuid, integer)'::regprocedure),
-  array['p_crisis_id', 'p_limit', 'rank', 'position', 'distance_km_rounded', 'matched_skills'],
-  'matches_hide_user_id: the RPC returns rank, position, rounded distance and skills only'
+  array['p_crisis_id', 'p_limit', 'rank', 'position', 'distance_km_rounded', 'matched_skills', 'has_phone', 'availability_slots', 'available_now'],
+  'matches_hide_user_id: the RPC returns rank, position, rounded distance, skills, phone presence and availability only'
 );
 
 -- distance_rounded_to_half_km: 12 is about 500 m away; everyone in E's cell is at 0.

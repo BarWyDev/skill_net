@@ -79,6 +79,9 @@ export async function saveMyProfile(
     p_lat: input.lat,
     p_lng: input.lng,
     p_skills: input.skills.map((s) => ({ slug: s.slug, level: s.level })),
+    // Phase 1 bridge: the form does not send these yet.
+    p_phone: null as string | null,
+    p_availability_slots: null as number | null,
   } as SaveMyProfileArgs;
   const { error } = await supabase.rpc("save_my_profile", args);
   return error ? { ok: false, message: saveErrorMessage(error) } : { ok: true };
