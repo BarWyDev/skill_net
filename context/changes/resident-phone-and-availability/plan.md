@@ -309,32 +309,32 @@ The changes are additive for existing data: existing profiles get `availability_
 
 #### Automated
 
-- [x] 1.1 Migration and seed apply cleanly: `npx supabase db reset`
-- [x] 1.2 DB tests pass: `npm run test:db`
-- [x] 1.3 Types regenerated with no manual edits: `npm run db:types`
-- [x] 1.4 Type check passes: `npx astro check`
-- [x] 1.5 Lint passes: `npm run lint`
+- [x] 1.1 Migration and seed apply cleanly: `npx supabase db reset` — 13390d9
+- [x] 1.2 DB tests pass: `npm run test:db` — 13390d9
+- [x] 1.3 Types regenerated with no manual edits: `npm run db:types` — 13390d9
+- [x] 1.4 Type check passes: `npx astro check` — 13390d9
+- [x] 1.5 Lint passes: `npm run lint` — 13390d9
 
 #### Manual
 
-- [x] 1.6 In Studio, about 70% of seed profiles have a `profile_contacts` row and every number starts with `+48000`
-- [x] 1.7 Querying `profile_contacts` as `authenticated` with another user's JWT returns no rows
+- [x] 1.6 In Studio, about 70% of seed profiles have a `profile_contacts` row and every number starts with `+48000` — 13390d9
+- [x] 1.7 Querying `profile_contacts` as `authenticated` with another user's JWT returns no rows — 13390d9
 
 ### Phase 2: Resident Profile
 
 #### Automated
 
-- [ ] 2.1 Type check passes: `npx astro check`
-- [ ] 2.2 Lint passes: `npm run lint`
-- [ ] 2.3 Build passes: `npm run build`
-- [ ] 2.4 Smoke passes against the local dev server: `npm run smoke`
+- [x] 2.1 Type check passes: `npx astro check`
+- [x] 2.2 Lint passes: `npm run lint`
+- [x] 2.3 Build passes: `npm run build`
+- [x] 2.4 Smoke passes against the local dev server: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.5 Saving `600-123-456` shows `+48600123456` after reload; clearing removes it and shows the no-phone note
-- [ ] 2.6 An invalid number shows the Polish error; URL and page don't contain the typed value
-- [ ] 2.7 "Zawsze" ticks all 28 slots, "Wyczyść" unticks them, grid survives save and reload
-- [ ] 2.8 At 375 px width, phone and grid sections are usable with no horizontal page scroll
+- [x] 2.5 Saving `600-123-456` shows `+48600123456` after reload; clearing removes it and shows the no-phone note
+- [x] 2.6 An invalid number shows the Polish error; URL and page don't contain the typed value
+- [x] 2.7 "Zawsze" ticks all 28 slots, "Wyczyść" unticks them, grid survives save and reload
+- [x] 2.8 At 375 px width, phone and grid sections are usable with no horizontal page scroll
 
 ### Phase 3: Coordinator Ranked List
 

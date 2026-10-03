@@ -172,6 +172,56 @@ const writeSteps = [
     { status: 302, location: "/profil?zapisano=1", exact: true },
   ],
   [
+    "profile save rejects landline",
+    () =>
+      request("/api/profile", {
+        method: "POST",
+        form: [
+          ["location_source", "pin"],
+          ["lat", "52.2297"],
+          ["lng", "21.0122"],
+          ["skill", "elektryk:2"],
+          ["phone", "12 345 67 89"],
+        ],
+      }),
+    { status: 302, location: "/profil?error=" },
+  ],
+  [
+    "profile save accepts phone and availability",
+    () =>
+      request("/api/profile", {
+        method: "POST",
+        form: [
+          ["location_source", "pin"],
+          ["lat", "52.2297"],
+          ["lng", "21.0122"],
+          ["skill", "elektryk:2"],
+          ["phone", "600 000 000"],
+          ["availability", "16"],
+          ["availability", "20"],
+        ],
+      }),
+    { status: 302, location: "/profil?zapisano=1", exact: true },
+  ],
+  // The number is shown back only to its owner, on a no-store page.
+  ["profil shows own phone", () => request("/profil"), { status: 200, bodyIncludes: "+48600000000" }],
+  [
+    "profile save clears phone",
+    () =>
+      request("/api/profile", {
+        method: "POST",
+        form: [
+          ["location_source", "pin"],
+          ["lat", "52.2297"],
+          ["lng", "21.0122"],
+          ["skill", "elektryk:2"],
+          ["phone", ""],
+        ],
+      }),
+    { status: 302, location: "/profil?zapisano=1", exact: true },
+  ],
+  ["profil no longer shows phone", () => request("/profil"), { status: 200, bodyExcludes: "+48600000000" }],
+  [
     "profile save accepts postcode",
     () =>
       request("/api/profile", {

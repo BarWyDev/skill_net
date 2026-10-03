@@ -1,21 +1,23 @@
 import { z } from "zod";
 import type { Database } from "@/db/database.types";
+import { PHONE_ERROR } from "@/lib/phone";
 import type { SupabaseClient } from "@/lib/supabase";
 import type { MyProfileDTO, SaveProfileInput, TaxonomyDTO } from "@/types";
 
-// Never log input values here: postcodes, coordinates and skills are personal data.
+// Never log input values here: postcodes, coordinates, skills, phones and availability are personal data.
 
 type SaveMyProfileArgs = Database["public"]["Functions"]["save_my_profile"]["Args"];
 
 const GENERIC_SAVE_ERROR = "Nie udało się zapisać profilu. Spróbuj ponownie.";
 
-// Messages raised by the triggers in the profile schema migration.
+// Messages raised by the triggers and RPCs in the profile migrations.
 const DB_ERROR_MESSAGES: Record<string, string> = {
   unknown_postcode: "Nie znamy tego kodu pocztowego — zaznacz lokalizację na mapie.",
   postcode_required: "Podaj kod pocztowy w formacie 00-000.",
   outside_poland: "Lokalizacja musi być w Polsce.",
   level_required: "Wybierz poziom dla każdej zaznaczonej umiejętności.",
   level_not_applicable: "Ta umiejętność nie ma poziomu.",
+  invalid_phone: PHONE_ERROR,
 };
 const FOREIGN_KEY_VIOLATION = "23503";
 
@@ -51,6 +53,9 @@ const myProfileSchema = z.object({
     z.object({ slug: z.string(), level: z.union([z.literal(1), z.literal(2), z.literal(3)]).nullable() }),
   ),
   matchable: z.boolean(),
+  phone: z.string().nullable(),
+  phone_verified: z.boolean(),
+  availability_slots: z.number().int().nullable(),
 });
 
 export async function getMyProfile(supabase: SupabaseClient): Promise<MyProfileDTO> {
@@ -64,10 +69,13 @@ export async function getMyProfile(supabase: SupabaseClient): Promise<MyProfileD
     lng: profile.lng,
     skills: profile.skills,
     matchable: profile.matchable,
+    phone: profile.phone,
+    phoneVerified: profile.phone_verified,
+    availabilitySlots: profile.availability_slots,
   };
 }
 
-/** Saves the caller's location and whole skill set atomically. Returns a Polish message on failure. */
+/** Saves the caller's location, whole skill set, phone and availability atomically. Returns a Polish message on failure. */
 export async function saveMyProfile(
   supabase: SupabaseClient,
   input: SaveProfileInput,
@@ -79,9 +87,8 @@ export async function saveMyProfile(
     p_lat: input.lat,
     p_lng: input.lng,
     p_skills: input.skills.map((s) => ({ slug: s.slug, level: s.level })),
-    // Phase 1 bridge: the form does not send these yet.
-    p_phone: null as string | null,
-    p_availability_slots: null as number | null,
+    p_phone: input.phone,
+    p_availability_slots: input.availabilitySlots,
   } as SaveMyProfileArgs;
   const { error } = await supabase.rpc("save_my_profile", args);
   return error ? { ok: false, message: saveErrorMessage(error) } : { ok: true };

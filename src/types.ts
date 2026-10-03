@@ -27,6 +27,11 @@ export interface MyProfileDTO {
   lng: number | null;
   skills: ProfileSkillDTO[];
   matchable: boolean;
+  /** Normalised `+48XXXXXXXXX`. Only ever returned to its owner. */
+  phone: string | null;
+  phoneVerified: boolean;
+  /** 28-bit mask, see `src/lib/availability.ts`; null = not declared. */
+  availabilitySlots: number | null;
 }
 
 export interface TaxonomyDTO {
@@ -42,6 +47,10 @@ export interface SaveProfileInput {
   lat: number | null;
   lng: number | null;
   skills: ProfileSkillDTO[];
+  /** Normalised `+48XXXXXXXXX`; null deletes the stored number. */
+  phone: string | null;
+  /** Non-zero 28-bit mask; null = not declared. */
+  availabilitySlots: number | null;
 }
 
 export interface CrisisTypeDTO {
