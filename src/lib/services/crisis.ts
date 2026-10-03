@@ -135,6 +135,10 @@ const matchedSkillsSchema = z.array(
   }),
 );
 
+// The generated types mark these non-null, but the RPC returns null when availability is not declared.
+const availabilitySlotsSchema = z.number().int().nullable();
+const availableNowSchema = z.boolean().nullable();
+
 /** The first page of the ranked list, in position order, with skill names for display. */
 export async function getCrisisMatches(supabase: SupabaseClient, id: string): Promise<CrisisMatchDTO[]> {
   const [matches, skills] = await Promise.all([
@@ -150,5 +154,8 @@ export async function getCrisisMatches(supabase: SupabaseClient, id: string): Pr
     position: row.position,
     distanceKm: row.distance_km_rounded,
     skills: matchedSkillsSchema.parse(row.matched_skills).map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug })),
+    hasPhone: row.has_phone,
+    availabilitySlots: availabilitySlotsSchema.parse(row.availability_slots),
+    availableNow: availableNowSchema.parse(row.available_now),
   }));
 }

@@ -7,6 +7,11 @@
 --   * pins lie within about 15 km of the 31-001 centroid and go through the profile trigger,
 --     so they are coarsened like real ones;
 --   * each resident has 1–4 distinct skills, with a level only where the skill has one;
+--   * about 85% declare availability (common weekly patterns plus some random grids), so the
+--     ranked list shows every badge state;
+--   * about 70% have a phone. Every number is `+48000` plus 6 digits: Polish numbering never
+--     assigns the `0` prefix, so a seed number can never reach a real person, and
+--     `save_my_profile` and S-07 verification both reject it;
 --   * no coordinator is created: grant the role to your own local account (see README).
 
 select setseed(0.42);
@@ -68,3 +73,35 @@ cross join lateral (
   limit s.skill_count
 ) as k
 on conflict (user_id, skill_slug) do nothing;
+
+-- Availability and phone presence come from per-resident hashes, not random(), so they are
+-- deterministic without shifting the random() sequence behind the pins and skills above.
+-- Masks (see the S-06 migration): weekday evenings 559240, weekends all day 267386880,
+-- weekday rano+popołudnie 419430, always 268435455.
+create temp table seed_extras on commit drop as
+select
+  s.user_id,
+  s.i,
+  ('x' || substr(md5('skillnet-seed-availability-' || s.i), 1, 7))::bit(28)::integer % 100 as pattern,
+  ('x' || substr(md5('skillnet-seed-grid-' || s.i), 1, 7))::bit(28)::integer as grid,
+  ('x' || substr(md5('skillnet-seed-phone-' || s.i), 1, 7))::bit(28)::integer % 10 as phone_bucket
+from seed_residents s;
+
+update public.profiles p
+set availability_slots = case
+  when e.pattern < 15 then null
+  when e.pattern < 40 then 559240
+  when e.pattern < 55 then 559240 | 267386880
+  when e.pattern < 65 then 267386880
+  when e.pattern < 75 then 268435455
+  when e.pattern < 85 then 419430
+  else e.grid % 268435455 + 1
+end
+from seed_extras e
+where p.user_id = e.user_id;
+
+insert into public.profile_contacts (user_id, phone)
+select user_id, '+48000' || lpad(i::text, 6, '0')
+from seed_extras
+where phone_bucket < 7
+on conflict (user_id) do nothing;
