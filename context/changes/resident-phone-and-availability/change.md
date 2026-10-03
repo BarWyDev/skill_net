@@ -1,7 +1,7 @@
 ---
 change_id: resident-phone-and-availability
 title: Resident phone and availability
-status: implementing
+status: implemented
 created: 2026-10-03
 updated: 2026-10-03
 archived_at: null
