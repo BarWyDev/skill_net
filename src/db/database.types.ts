@@ -231,6 +231,35 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_contacts: {
+        Row: {
+          phone: string
+          phone_verified_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          phone: string
+          phone_verified_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          phone?: string
+          phone_verified_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profile_skills: {
         Row: {
           level: number | null
@@ -266,6 +295,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          availability_slots: number | null
           created_at: string
           location: unknown
           location_source: string | null
@@ -274,6 +304,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          availability_slots?: number | null
           created_at?: string
           location?: unknown
           location_source?: string | null
@@ -282,6 +313,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          availability_slots?: number | null
           created_at?: string
           location?: unknown
           location_source?: string | null
@@ -378,12 +410,19 @@ export type Database = {
         }
         Returns: string
       }
+      availability_covers: {
+        Args: { p_at: string; p_slots: number }
+        Returns: boolean
+      }
       coarsen_point: { Args: { p: unknown }; Returns: unknown }
       end_crisis: { Args: { p_crisis_id: string }; Returns: boolean }
       get_crisis_matches: {
         Args: { p_crisis_id: string; p_limit?: number }
         Returns: {
+          availability_slots: number
+          available_now: boolean
           distance_km_rounded: number
+          has_phone: boolean
           matched_skills: Json
           position: number
           rank: number
@@ -413,9 +452,11 @@ export type Database = {
       }
       save_my_profile: {
         Args: {
+          p_availability_slots: number
           p_lat: number
           p_lng: number
           p_location_source: string
+          p_phone: string
           p_postcode: string
           p_skills: Json
         }
