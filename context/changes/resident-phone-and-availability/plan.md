@@ -324,31 +324,31 @@ The changes are additive for existing data: existing profiles get `availability_
 
 #### Automated
 
-- [x] 2.1 Type check passes: `npx astro check`
-- [x] 2.2 Lint passes: `npm run lint`
-- [x] 2.3 Build passes: `npm run build`
-- [x] 2.4 Smoke passes against the local dev server: `npm run smoke`
+- [x] 2.1 Type check passes: `npx astro check` — c0f1c4d
+- [x] 2.2 Lint passes: `npm run lint` — c0f1c4d
+- [x] 2.3 Build passes: `npm run build` — c0f1c4d
+- [x] 2.4 Smoke passes against the local dev server: `npm run smoke` — c0f1c4d
 
 #### Manual
 
-- [x] 2.5 Saving `600-123-456` shows `+48600123456` after reload; clearing removes it and shows the no-phone note
-- [x] 2.6 An invalid number shows the Polish error; URL and page don't contain the typed value
-- [x] 2.7 "Zawsze" ticks all 28 slots, "Wyczyść" unticks them, grid survives save and reload
-- [x] 2.8 At 375 px width, phone and grid sections are usable with no horizontal page scroll
+- [x] 2.5 Saving `600-123-456` shows `+48600123456` after reload; clearing removes it and shows the no-phone note — c0f1c4d
+- [x] 2.6 An invalid number shows the Polish error; URL and page don't contain the typed value — c0f1c4d
+- [x] 2.7 "Zawsze" ticks all 28 slots, "Wyczyść" unticks them, grid survives save and reload — c0f1c4d
+- [x] 2.8 At 375 px width, phone and grid sections are usable with no horizontal page scroll — c0f1c4d
 
 ### Phase 3: Coordinator Ranked List
 
 #### Automated
 
-- [ ] 3.1 Type check passes: `npx astro check`
-- [ ] 3.2 Lint passes: `npm run lint`
-- [ ] 3.3 Build passes: `npm run build`
-- [ ] 3.4 DB tests still pass: `npm run test:db`
-- [ ] 3.5 Smoke passes: `npm run smoke`
+- [x] 3.1 Type check passes: `npx astro check`
+- [x] 3.2 Lint passes: `npm run lint`
+- [x] 3.3 Build passes: `npm run build`
+- [x] 3.4 DB tests still pass: `npm run test:db`
+- [x] 3.5 Smoke passes: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.6 Seed crisis at 31-001, 5 km shows all three badge states and some "bez telefonu" rows
-- [ ] 3.7 Changing own availability updates that row's badge on reload; ranking order unchanged
-- [ ] 3.8 The crisis page source contains no `+48` string
-- [ ] 3.9 At 375 px width, rows with badges and the marker wrap cleanly
+- [x] 3.6 Seed crisis at 31-001, 5 km shows all three badge states and some "bez telefonu" rows
+- [x] 3.7 Changing own availability updates that row's badge on reload; ranking order unchanged
+- [x] 3.8 The crisis page source contains no `+48` string
+- [x] 3.9 At 375 px width, rows with badges and the marker wrap cleanly
