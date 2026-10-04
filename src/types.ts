@@ -98,3 +98,13 @@ export interface CrisisMatchDTO {
   /** The declaration checked against the Warsaw clock when the page is viewed; null = not declared. */
   availableNow: boolean | null;
 }
+
+/**
+ * One row of a break-glass reveal. It exists only in the response to a reveal that wrote an audit
+ * row; it is never stored, cached or put in a URL.
+ */
+export interface CrisisContactDTO extends Omit<CrisisMatchDTO, "hasPhone"> {
+  /** The resident's current number, normalised `+48XXXXXXXXX`. */
+  phone: string;
+  phoneVerified: boolean;
+}
