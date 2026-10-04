@@ -432,17 +432,17 @@ The changes are additive: new tables, seed data and one function, with no change
 
 #### Automated
 
-- [x] 3.1 Lint passes: `npm run lint`
-- [x] 3.2 Type check passes: `npx astro check`
-- [x] 3.3 Build succeeds: `npm run build`
-- [x] 3.4 Unit and DB tests still pass: `npm run test:unit && npm run test:db`
-- [x] 3.5 Smoke passes against the local preview: `npm run smoke`
+- [x] 3.1 Lint passes: `npm run lint` — 2bd2439
+- [x] 3.2 Type check passes: `npx astro check` — 2bd2439
+- [x] 3.3 Build succeeds: `npm run build` — 2bd2439
+- [x] 3.4 Unit and DB tests still pass: `npm run test:unit && npm run test:db` — 2bd2439
+- [x] 3.5 Smoke passes against the local preview: `npm run smoke` — 2bd2439
 
 #### Manual
 
-- [x] 3.6 Flood crisis: 3 evacuation teams give complete teams first, at most one partial team, no duplicate `Osoba #N`
-- [x] 3.7 Medical point × 1 shows two different medics
-- [x] 3.8 Role skills come from the current profile; removing a skill drops the member from that role
-- [x] 3.9 Invalid `liczba`/`szablon` keeps the form with a Polish message
-- [x] 3.10 An ended crisis shows the ended state on `/zespoly`
-- [x] 3.11 The page is usable at phone width
+- [x] 3.6 Flood crisis: 3 evacuation teams give complete teams first, at most one partial team, no duplicate `Osoba #N` — 2bd2439
+- [x] 3.7 Medical point × 1 shows two different medics — 2bd2439
+- [x] 3.8 Role skills come from the current profile; removing a skill drops the member from that role — 2bd2439
+- [x] 3.9 Invalid `liczba`/`szablon` keeps the form with a Polish message — 2bd2439
+- [x] 3.10 An ended crisis shows the ended state on `/zespoly` — 2bd2439
+- [x] 3.11 The page is usable at phone width — 2bd2439
