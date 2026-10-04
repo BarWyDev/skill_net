@@ -1,8 +1,19 @@
 ---
 import Welcome from "@/components/Welcome.astro";
 import Layout from "@/layouts/Layout.astro";
+
+const accountDeleted = Astro.url.searchParams.has("konto-usuniete");
 ---
 
 <Layout>
-  <Welcome />
+  <Welcome>
+    {accountDeleted && (
+      <p
+        role="status"
+        class="mx-auto mt-4 max-w-2xl rounded-lg border border-green-400/50 bg-green-500/15 p-3 text-sm text-green-100"
+      >
+        Twoje konto i dane zostały usunięte.
+      </p>
+    )}
+  </Welcome>
 </Layout>

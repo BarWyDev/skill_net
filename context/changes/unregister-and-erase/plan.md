@@ -222,29 +222,29 @@ Additive only (a new function and column comments). Rollback of the Worker does 
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db reset`
-- [x] 1.2 pgTAP suites pass, including the new one: `npm run test:db`
-- [x] 1.3 Type checking passes: `npx astro check`
-- [x] 1.4 Linting passes: `npm run lint`
+- [x] 1.1 Migration applies cleanly: `npx supabase db reset` — 211d4a5
+- [x] 1.2 pgTAP suites pass, including the new one: `npm run test:db` — 211d4a5
+- [x] 1.3 Type checking passes: `npx astro check` — 211d4a5
+- [x] 1.4 Linting passes: `npm run lint` — 211d4a5
 
 #### Manual
 
-- [x] 1.5 In Studio, `unregister_me` is owned by `postgres`, is `security definer`, and `anon` has no execute grant
+- [x] 1.5 In Studio, `unregister_me` is owned by `postgres`, is `security definer`, and `anon` has no execute grant — 211d4a5
 
 ### Phase 2: Endpoint, UI and smoke coverage
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npx astro check`
-- [ ] 2.2 Linting passes: `npm run lint`
-- [ ] 2.3 Build succeeds: `npm run build`
-- [ ] 2.4 Unit tests still pass: `npm run test:unit`
-- [ ] 2.5 Smoke passes against the local dev server: `npm run smoke`
+- [x] 2.1 Type checking passes: `npx astro check`
+- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.3 Build succeeds: `npm run build`
+- [x] 2.4 Unit tests still pass: `npm run test:unit`
+- [x] 2.5 Smoke passes against the local dev server: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.6 On `/profil`, the "Usuń konto" section is clearly separated from the profile form and readable on a phone-width screen
-- [ ] 2.7 Wrong password shows the error at the top of `/profil` and the profile is intact
-- [ ] 2.8 Correct password lands on the home page with the notice, and `/profil` then redirects to sign-in
-- [ ] 2.9 A coordinator matched in an active crisis: after a resident in that crisis unregisters, the crisis view no longer shows them and loads without error
-- [ ] 2.10 The same email can sign up again and gets an empty profile
+- [x] 2.6 On `/profil`, the "Usuń konto" section is clearly separated from the profile form and readable on a phone-width screen
+- [x] 2.7 Wrong password shows the error at the top of `/profil` and the profile is intact
+- [x] 2.8 Correct password lands on the home page with the notice, and `/profil` then redirects to sign-in
+- [x] 2.9 A coordinator matched in an active crisis: after a resident in that crisis unregisters, the crisis view no longer shows them and loads without error
+- [x] 2.10 The same email can sign up again and gets an empty profile
