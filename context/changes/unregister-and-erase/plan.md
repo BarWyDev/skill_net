@@ -235,16 +235,16 @@ Additive only (a new function and column comments). Rollback of the Worker does 
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npx astro check`
-- [x] 2.2 Linting passes: `npm run lint`
-- [x] 2.3 Build succeeds: `npm run build`
-- [x] 2.4 Unit tests still pass: `npm run test:unit`
-- [x] 2.5 Smoke passes against the local dev server: `npm run smoke`
+- [x] 2.1 Type checking passes: `npx astro check` — 38bbb68
+- [x] 2.2 Linting passes: `npm run lint` — 38bbb68
+- [x] 2.3 Build succeeds: `npm run build` — 38bbb68
+- [x] 2.4 Unit tests still pass: `npm run test:unit` — 38bbb68
+- [x] 2.5 Smoke passes against the local dev server: `npm run smoke` — 38bbb68
 
 #### Manual
 
-- [x] 2.6 On `/profil`, the "Usuń konto" section is clearly separated from the profile form and readable on a phone-width screen
-- [x] 2.7 Wrong password shows the error at the top of `/profil` and the profile is intact
-- [x] 2.8 Correct password lands on the home page with the notice, and `/profil` then redirects to sign-in
-- [x] 2.9 A coordinator matched in an active crisis: after a resident in that crisis unregisters, the crisis view no longer shows them and loads without error
-- [x] 2.10 The same email can sign up again and gets an empty profile
+- [x] 2.6 On `/profil`, the "Usuń konto" section is clearly separated from the profile form and readable on a phone-width screen — 38bbb68
+- [x] 2.7 Wrong password shows the error at the top of `/profil` and the profile is intact — 38bbb68
+- [x] 2.8 Correct password lands on the home page with the notice, and `/profil` then redirects to sign-in — 38bbb68
+- [x] 2.9 A coordinator matched in an active crisis: after a resident in that crisis unregisters, the crisis view no longer shows them and loads without error — 38bbb68
+- [x] 2.10 The same email can sign up again and gets an empty profile — 38bbb68
