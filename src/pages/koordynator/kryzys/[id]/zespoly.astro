@@ -1,0 +1,292 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
+import { formatAvailabilitySummary } from "@/lib/availability";
+import { availabilityBadge, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
+import { createClient } from "@/lib/supabase";
+import { assembleCrisisTeams, getCrisis, getTeamTemplates } from "@/lib/services/crisis";
+import { parseTeamRequest, TEAM_COUNT_MAX, TEAM_COUNT_MIN } from "@/lib/validation/crisis";
+import { cn } from "@/lib/utils";
+import type { CrisisDTO, CrisisTeamDTO, TeamTemplateDTO } from "@/types";
+
+// Crisis team templates (S-10, FR-014). A GET form: the template and the team count live in the
+// query string, so a reload gives the same teams (the solver is deterministic). Teams are computed
+// per request from the crisis's snapshot and the residents' current skills, and never stored.
+// Declared availability is shown but never changes who is chosen. The middleware gates this route
+// (coordinators only) and sends Cache-Control: private, no-store. No identity reaches this page.
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const id = Astro.params.id ?? "";
+const params = Astro.url.searchParams;
+const submitted = params.has("szablon") || params.has("liczba");
+
+let crisis: CrisisDTO | null = null;
+let templates: TeamTemplateDTO[] = [];
+let template: TeamTemplateDTO | null = null;
+let requested = 0;
+let teams: CrisisTeamDTO[] | null = null;
+let completeCount = 0;
+let loadError: string | null = null;
+let formError: string | null = null;
+let ended = false;
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (!supabase) {
+  loadError = "Supabase nie jest skonfigurowany.";
+} else if (UUID_RE.test(id)) {
+  try {
+    crisis = await getCrisis(supabase, id);
+    if (crisis?.status === "active") templates = await getTeamTemplates(supabase);
+  } catch {
+    loadError = "Nie udało się wczytać kryzysu. Odśwież stronę.";
+  }
+}
+
+if (!crisis && !loadError) Astro.response.status = 404;
+if (crisis?.status === "ended") ended = true;
+
+if (supabase && crisis?.status === "active" && !loadError && submitted) {
+  const parsed = parseTeamRequest(params);
+  template = parsed.success ? (templates.find((t) => t.slug === parsed.data.template) ?? null) : null;
+
+  if (!parsed.success) {
+    formError = parsed.message;
+    Astro.response.status = 422;
+  } else if (!template) {
+    formError = "Wybierz szablon zespołu z listy.";
+    Astro.response.status = 422;
+  } else {
+    requested = parsed.data.count;
+    try {
+      const result = await assembleCrisisTeams(supabase, crisis.id, template, requested);
+      if (result.ok) {
+        teams = result.teams;
+        completeCount = result.completeCount;
+      } else if (result.ended) {
+        ended = true;
+      } else {
+        formError = result.message;
+        Astro.response.status = result.status;
+      }
+    } catch {
+      formError = "Nie udało się złożyć zespołów. Spróbuj ponownie.";
+      Astro.response.status = 500;
+    }
+  }
+}
+
+const selectedSlug = template?.slug ?? params.get("szablon") ?? templates.at(0)?.slug ?? "";
+// Echo what was typed, so an invalid count stays visible next to its message.
+const selectedCount = params.get("liczba") ?? "1";
+const formatRoles = (t: TeamTemplateDTO) =>
+  t.roles.map((r) => (r.slots > 1 ? `${r.slots} × ${r.name}` : r.name)).join(" + ");
+const missingRoles = (team: CrisisTeamDTO) => [
+  ...new Set(team.slots.filter((slot) => !slot.member).map((slot) => slot.roleName)),
+];
+---
+
+<Layout title={crisis ? `Zespoły: ${crisis.typeName}` : "Nie znaleziono kryzysu"}>
+  <div class="bg-cosmic min-h-screen w-full">
+    <div class="mx-auto max-w-2xl p-4 sm:p-8">
+      <Topbar />
+
+      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+        <a
+          href={crisis ? `/koordynator/kryzys/${crisis.id}` : "/koordynator"}
+          class="mb-4 inline-block text-sm text-purple-300 hover:text-purple-100 hover:underline"
+        >
+          {crisis ? "← Lista dopasowanych" : "← Panel koordynatora"}
+        </a>
+
+        {loadError && (
+          <p role="alert" class="text-red-200">
+            {loadError}
+          </p>
+        )}
+
+        {!crisis && !loadError && (
+          <>
+            <h1 class="mb-2 text-2xl font-bold">Nie znaleziono kryzysu</h1>
+            <p class="text-blue-100/80">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
+          </>
+        )}
+
+        {crisis && ended && (
+          <>
+            <h1 class="mb-2 text-2xl font-bold">{crisis.typeName}</h1>
+            <p role="alert" class="rounded-lg border border-white/15 bg-white/5 p-3 text-sm text-blue-100">
+              Ten kryzys został zakończony — lista osób została usunięta, więc nie można złożyć zespołów.
+            </p>
+          </>
+        )}
+
+        {crisis && !ended && !loadError && (
+          <>
+            <h1 class="mb-1 text-2xl font-bold">Złóż zespoły</h1>
+            <p class="mb-4 text-sm text-blue-100/80">
+              {crisis.typeName} · promień {crisis.radiusKm} km ·{" "}
+              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> dopasowanych
+            </p>
+
+            <form method="get" class="mb-6 space-y-4 rounded-lg border border-white/15 bg-white/5 p-3">
+              <fieldset>
+                <legend class="mb-2 text-sm font-medium">Szablon zespołu</legend>
+                <div class="space-y-2">
+                  {templates.map((t) => (
+                    <label
+                      for={`szablon-${t.slug}`}
+                      aria-label={`${t.name}: ${formatRoles(t)}`}
+                      class="flex cursor-pointer gap-3 rounded-lg border border-white/10 p-2 hover:bg-white/5 has-[:checked]:border-purple-300/60 has-[:checked]:bg-purple-600/20"
+                    >
+                      <input
+                        id={`szablon-${t.slug}`}
+                        type="radio"
+                        name="szablon"
+                        value={t.slug}
+                        checked={t.slug === selectedSlug}
+                        required
+                        class="mt-1 accent-purple-400"
+                      />
+                      <span>
+                        <span class="block text-sm font-medium">{t.name}</span>
+                        <span class="block text-xs text-blue-100/70">{formatRoles(t)}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <div class="flex flex-wrap items-end justify-between gap-3">
+                <label class="text-sm font-medium">
+                  Liczba zespołów
+                  <input
+                    type="number"
+                    name="liczba"
+                    min={TEAM_COUNT_MIN}
+                    max={TEAM_COUNT_MAX}
+                    step="1"
+                    value={selectedCount}
+                    required
+                    aria-invalid={formError ? "true" : undefined}
+                    aria-describedby={formError ? "teams-error" : undefined}
+                    class="mt-1 block w-24 rounded-lg border border-white/20 bg-slate-900/60 p-2 text-white focus:border-purple-300 focus:outline-none"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500"
+                >
+                  Złóż zespoły
+                </button>
+              </div>
+              {formError && (
+                <p id="teams-error" role="alert" class="text-sm text-red-200">
+                  {formError}
+                </p>
+              )}
+            </form>
+
+            {teams && template && (
+              <section aria-labelledby="teams-heading">
+                <h2 id="teams-heading" class="text-xl font-bold">
+                  {template.name}
+                </h2>
+                <p class="mb-3 text-sm text-blue-100">
+                  Pełne zespoły: <strong class="text-white">{completeCount}</strong> z {requested}
+                </p>
+                <p class="mb-4 rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm text-blue-100">
+                  Zespoły składamy z listy dopasowanych do tego kryzysu, według aktualnych umiejętności mieszkańców:
+                  najpierw jak najwięcej pełnych zespołów, potem osoby wyżej na liście. Deklarowana dostępność nie
+                  wpływa na wybór.
+                </p>
+
+                {teams.length === 0 ? (
+                  <p class="text-blue-100/80">Nikt z listy dopasowanych nie pasuje do tego szablonu.</p>
+                ) : (
+                  <ol class="space-y-4">
+                    {teams.map((team) => (
+                      <li
+                        class:list={cn(
+                          "rounded-xl border p-3",
+                          team.complete ? "border-white/10 bg-white/5" : "border-amber-300/40 bg-amber-500/10",
+                        )}
+                      >
+                        <div class="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <h3 class="font-semibold">Zespół {team.number}</h3>
+                          {!team.complete && (
+                            <span class="rounded-full border border-amber-300/50 bg-amber-500/15 px-2.5 py-0.5 text-xs text-amber-100">
+                              niepełny
+                            </span>
+                          )}
+                        </div>
+                        {!team.complete && (
+                          <p class="mb-2 text-sm text-amber-100">Brakuje: {missingRoles(team).join(", ")}</p>
+                        )}
+                        <ul class="space-y-2">
+                          {team.slots.map((slot) => (
+                            <li class="rounded-lg border border-white/10 bg-slate-900/30 p-2">
+                              <div class="text-xs tracking-wide text-purple-200 uppercase">{slot.roleName}</div>
+                              {slot.member ? (
+                                <>
+                                  <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+                                    <span class="font-medium">
+                                      Osoba #{slot.member.position}
+                                      <span class="text-sm font-normal text-blue-100/70">
+                                        {" "}
+                                        · miejsce {slot.member.rank}.
+                                      </span>
+                                    </span>
+                                    <span class="text-sm text-blue-100/80">
+                                      {formatDistanceKm(slot.member.distanceKm)}
+                                    </span>
+                                  </div>
+                                  <ul class="mt-1.5 flex flex-wrap gap-1.5">
+                                    {slot.member.skills.map((s) => (
+                                      <li class="rounded-full border border-white/20 bg-white/5 px-2.5 py-0.5 text-xs text-blue-100">
+                                        {s.name}
+                                        {s.level !== null && (
+                                          <span class="text-white/70"> · {LEVEL_LABELS[s.level]}</span>
+                                        )}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                                    <span
+                                      class:list={cn(
+                                        "rounded-full border px-2.5 py-0.5",
+                                        availabilityBadge(slot.member.availableNow).className,
+                                      )}
+                                    >
+                                      {availabilityBadge(slot.member.availableNow).label}
+                                    </span>
+                                    {slot.member.availabilitySlots !== null && (
+                                      <span class="text-blue-100/80">
+                                        <span class="sr-only">Deklarowana dostępność: </span>
+                                        {formatAvailabilitySummary(slot.member.availabilitySlots)}
+                                      </span>
+                                    )}
+                                    {!slot.member.hasPhone && (
+                                      <span class="rounded-full border border-amber-300/50 bg-amber-500/15 px-2.5 py-0.5 text-amber-100">
+                                        bez telefonu
+                                      </span>
+                                    )}
+                                  </div>
+                                </>
+                              ) : (
+                                <span class="text-sm text-amber-200">brak</span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </section>
+            )}
+          </>
+        )}
+      </main>
+    </div>
+  </div>
+</Layout>

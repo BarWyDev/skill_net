@@ -112,6 +112,18 @@ const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - mat
               „bez telefonu” oznacza, że ta osoba nie otrzyma alertu.
             </p>
 
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-purple-300/40 bg-purple-600/15 p-3">
+              <p class="text-sm text-blue-100">
+                Potrzebujesz gotowych składów? Złóż zespoły z szablonu (np. ewakuacyjny) z osób z tej listy.
+              </p>
+              <a
+                href={`/koordynator/kryzys/${crisis.id}/zespoly`}
+                class="shrink-0 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-500"
+              >
+                Złóż zespoły
+              </a>
+            </div>
+
             <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-400/40 bg-red-500/10 p-3">
               <p class="text-sm text-red-100">
                 Nikt nie potwierdza? Możesz ujawnić numery wszystkich dopasowanych osób. Każde ujawnienie jest

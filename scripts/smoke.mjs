@@ -17,6 +17,7 @@ const CRISIS_END_PATH = "/api/koordynator/kryzysy/00000000-0000-0000-0000-000000
 // The break-glass page: the gates must refuse both the reason form (GET) and the reveal (POST).
 const REVEAL_PATH = "/koordynator/kryzys/00000000-0000-0000-0000-000000000000/kontakty";
 const REVEAL_FORM = { reason: "Smoke test: brak potwierdzeń" };
+const TEAMS_PATH = "/koordynator/kryzys/00000000-0000-0000-0000-000000000000/zespoly";
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -91,6 +92,7 @@ const readonlySteps = [
     () => request(REVEAL_PATH, { method: "POST", form: REVEAL_FORM }),
     { status: 302, location: "/auth/signin" },
   ],
+  ["teams page redirects anonymous user", () => request(TEAMS_PATH), { status: 302, location: "/auth/signin" }],
   // The lookup takes the postcode in a POST body, so it never appears in a request URL.
   [
     "postcode lookup finds known code",
@@ -155,6 +157,11 @@ const writeSteps = [
   [
     "reveal denies resident",
     () => request(REVEAL_PATH, { method: "POST", form: REVEAL_FORM }),
+    { status: 403, bodyIncludes: "Brak dostępu", cacheControlIncludes: "no-store" },
+  ],
+  [
+    "teams page denies resident",
+    () => request(`${TEAMS_PATH}?szablon=ewakuacyjny&liczba=3`),
     { status: 403, bodyIncludes: "Brak dostępu", cacheControlIncludes: "no-store" },
   ],
   [
