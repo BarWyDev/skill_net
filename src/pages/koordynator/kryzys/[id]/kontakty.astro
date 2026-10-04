@@ -1,0 +1,271 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
+import { formatAvailabilitySummary } from "@/lib/availability";
+import { availabilityBadge, formatActivatedAt, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
+import { formatPhone } from "@/lib/phone";
+import { createClient } from "@/lib/supabase";
+import { getCrisis, revealCrisisContacts } from "@/lib/services/crisis";
+import { parseRevealReason, REASON_MAX, REASON_MIN } from "@/lib/validation/crisis";
+import { cn } from "@/lib/utils";
+import type { CrisisContactDTO, CrisisDTO } from "@/types";
+
+// Break-glass (S-09, FR-012). GET shows the warning and the reason form, never a number. POST calls
+// reveal_crisis_contacts, which logs the reveal, and renders the numbers in this response only:
+// no redirect, nothing in a URL, cookie or client storage. A reload or a resubmitted form is a new,
+// separately logged reveal. The middleware gates this route (coordinators only) and sends
+// Cache-Control: private, no-store; do not override it. Never log the reason or a number.
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const id = Astro.params.id ?? "";
+
+let crisis: CrisisDTO | null = null;
+let contacts: CrisisContactDTO[] | null = null;
+let revealedAt: string | null = null;
+let loadError: string | null = null;
+let formError: string | null = null;
+let endedMessage: string | null = null;
+let reason = "";
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (!supabase) {
+  loadError = "Supabase nie jest skonfigurowany.";
+} else if (UUID_RE.test(id)) {
+  try {
+    crisis = await getCrisis(supabase, id);
+  } catch {
+    loadError = "Nie udało się wczytać kryzysu. Odśwież stronę.";
+  }
+}
+
+if (!crisis && !loadError) Astro.response.status = 404;
+
+if (supabase && crisis?.status === "active" && Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const raw = form.get("reason");
+  reason = typeof raw === "string" ? raw : "";
+  const parsed = parseRevealReason(form);
+
+  if (!parsed.success) {
+    formError = parsed.message;
+    Astro.response.status = 422;
+  } else {
+    try {
+      const result = await revealCrisisContacts(supabase, crisis.id, parsed.data);
+      if (result.ok) {
+        contacts = result.contacts;
+        revealedAt = new Date().toISOString();
+      } else if (result.ended) {
+        endedMessage = result.message;
+      } else {
+        formError = result.message;
+        if (result.field) Astro.response.status = 422;
+      }
+    } catch {
+      formError = "Nie udało się ujawnić kontaktów. Spróbuj ponownie.";
+    }
+  }
+}
+
+if (crisis?.status === "ended") {
+  endedMessage = "Ten kryzys został zakończony — kontaktów nie można ujawnić.";
+}
+
+const withoutPhone = crisis && contacts ? Math.max(0, crisis.matchCount - contacts.length) : 0;
+const anyUnverified = contacts?.some((c) => !c.phoneVerified) ?? false;
+---
+
+<Layout title={crisis ? `Kontakty: ${crisis.typeName}` : "Nie znaleziono kryzysu"}>
+  <div class="bg-cosmic min-h-screen w-full">
+    <div class="mx-auto max-w-2xl p-4 sm:p-8">
+      <Topbar />
+
+      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+        <a
+          href={crisis ? `/koordynator/kryzys/${crisis.id}` : "/koordynator"}
+          class="mb-4 inline-block text-sm text-purple-300 hover:text-purple-100 hover:underline"
+        >
+          {crisis ? "← Lista dopasowanych" : "← Panel koordynatora"}
+        </a>
+
+        {loadError && (
+          <p role="alert" class="text-red-200">
+            {loadError}
+          </p>
+        )}
+
+        {!crisis && !loadError && (
+          <>
+            <h1 class="mb-2 text-2xl font-bold">Nie znaleziono kryzysu</h1>
+            <p class="text-blue-100/80">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
+          </>
+        )}
+
+        {crisis && endedMessage && (
+          <>
+            <h1 class="mb-2 text-2xl font-bold">{crisis.typeName}</h1>
+            <p role="alert" class="rounded-lg border border-white/15 bg-white/5 p-3 text-sm text-blue-100">
+              {endedMessage}
+            </p>
+          </>
+        )}
+
+        {crisis && !endedMessage && !contacts && (
+          <>
+            <h1 class="mb-1 text-2xl font-bold">Ujawnij kontakty (break-glass)</h1>
+            <p class="mb-4 text-sm text-blue-100/80">
+              {crisis.typeName} · promień {crisis.radiusKm} km ·{" "}
+              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> dopasowanych
+            </p>
+
+            <div class="mb-5 space-y-2 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
+              <p>
+                Zobaczysz numery telefonów <strong>wszystkich</strong> dopasowanych osób, które podały numer. Używaj
+                tego tylko wtedy, gdy nie da się ich zawiadomić inaczej.
+              </p>
+              <p>
+                Ujawnienie zostanie trwale zapisane: Twoje konto, czas, powód i lista osób, których numery zobaczysz.
+              </p>
+              <p>
+                Numery znikną po opuszczeniu strony. Każde ponowne wyświetlenie to nowe, osobno zapisane ujawnienie.
+              </p>
+            </div>
+
+            <form method="post" class="space-y-3">
+              <label for="reason" class="block text-sm font-medium">
+                Powód ujawnienia
+              </label>
+              <textarea
+                id="reason"
+                name="reason"
+                required
+                minlength={REASON_MIN}
+                maxlength={REASON_MAX}
+                rows="3"
+                autocomplete="off"
+                aria-invalid={formError ? "true" : undefined}
+                aria-describedby={formError ? "reason-error" : "reason-hint"}
+                class="w-full rounded-lg border border-white/20 bg-slate-900/60 p-3 text-sm text-white placeholder:text-blue-100/40 focus:border-red-300 focus:outline-none"
+                placeholder="np. brak potwierdzeń od 30 minut, awaria sieci komórkowej"
+              >{reason}</textarea>
+              {formError ? (
+                <p id="reason-error" role="alert" class="text-sm text-red-200">
+                  {formError}
+                </p>
+              ) : (
+                <p id="reason-hint" class="text-xs text-blue-100/60">
+                  Od {REASON_MIN} do {REASON_MAX} znaków.
+                </p>
+              )}
+              <div class="flex flex-wrap justify-end gap-2">
+                <a
+                  href={`/koordynator/kryzys/${crisis.id}`}
+                  class="rounded-lg border border-white/20 px-4 py-2 text-sm text-blue-100 hover:bg-white/10"
+                >
+                  Anuluj
+                </a>
+                <button
+                  type="submit"
+                  class="rounded-lg border border-red-400/60 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
+                >
+                  Ujawnij kontakty
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+
+        {crisis && contacts && revealedAt && (
+          <>
+            <div class="mb-4 rounded-lg border border-red-400/60 bg-red-600/30 p-3">
+              <h1 class="text-xl font-bold">Break-glass: kontakty ujawnione</h1>
+              <p class="text-sm text-red-100">
+                {crisis.typeName} · promień {crisis.radiusKm} km · ujawniono {formatActivatedAt(revealedAt)} · zapisano
+                w dzienniku
+              </p>
+            </div>
+
+            {anyUnverified && (
+              <p class="mb-4 rounded-lg border border-amber-300/50 bg-amber-500/15 p-3 text-sm text-amber-100">
+                Numery nie są zweryfikowane — mogą być błędne.
+              </p>
+            )}
+
+            {contacts.length === 0 ? (
+              <p class="text-blue-100/80">Żadna z dopasowanych osób nie podała numeru telefonu.</p>
+            ) : (
+              <ol class="space-y-2">
+                {contacts.map((c) => (
+                  <li class="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                    <span
+                      class="w-8 shrink-0 text-right text-lg font-bold text-purple-200"
+                      aria-label={`Miejsce ${c.rank}`}
+                    >
+                      {c.rank}.
+                    </span>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+                        <span class="font-medium">Osoba #{c.position}</span>
+                        <span class="text-sm text-blue-100/80">{formatDistanceKm(c.distanceKm)}</span>
+                      </div>
+                      <a
+                        href={`tel:${c.phone}`}
+                        class="mt-2 inline-flex min-h-11 items-center rounded-lg border border-emerald-300/50 bg-emerald-500/20 px-4 py-2 text-lg font-semibold tracking-wide text-white hover:bg-emerald-500/35"
+                      >
+                        <span class="sr-only">Zadzwoń: </span>
+                        {formatPhone(c.phone)}
+                      </a>
+                      {anyUnverified && c.phoneVerified && (
+                        <span class="ml-2 text-xs text-emerald-200">zweryfikowany</span>
+                      )}
+                      <ul class="mt-2 flex flex-wrap gap-1.5">
+                        {c.skills.map((s) => (
+                          <li
+                            class:list={cn(
+                              "rounded-full border px-2.5 py-0.5 text-xs",
+                              s.tier === "priority"
+                                ? "border-purple-300/60 bg-purple-600/40 text-white"
+                                : "border-white/20 bg-white/5 text-blue-100",
+                            )}
+                          >
+                            {s.tier === "priority" ? "★ " : ""}
+                            {s.name}
+                            {s.level !== null && <span class="text-white/70"> · {LEVEL_LABELS[s.level]}</span>}
+                            <span class="sr-only">
+                              {s.tier === "priority" ? " (umiejętność priorytetowa)" : " (umiejętność wspierająca)"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                        <span
+                          class:list={cn(
+                            "rounded-full border px-2.5 py-0.5",
+                            availabilityBadge(c.availableNow).className,
+                          )}
+                        >
+                          {availabilityBadge(c.availableNow).label}
+                        </span>
+                        {c.availabilitySlots !== null && (
+                          <span class="text-blue-100/80">
+                            <span class="sr-only">Deklarowana dostępność: </span>
+                            {formatAvailabilitySummary(c.availabilitySlots)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+
+            <p class="mt-4 text-sm text-blue-100/70">
+              Bez numeru telefonu: {formatPeople(withoutPhone)}. Numery znikną po opuszczeniu tej strony.
+            </p>
+          </>
+        )}
+      </main>
+    </div>
+  </div>
+</Layout>

@@ -288,33 +288,33 @@ The migration is purely additive: two new tables and one new function, with no c
 
 #### Automated
 
-- [x] 1.1 Migration and seed apply cleanly: `npx supabase db reset`
-- [x] 1.2 DB tests pass, new suite and existing suites: `npm run test:db`
-- [x] 1.3 Types regenerated with no manual edits: `npm run db:types`
-- [x] 1.4 Type check passes: `npx astro check`
-- [x] 1.5 Lint passes: `npm run lint`
+- [x] 1.1 Migration and seed apply cleanly: `npx supabase db reset` — 38b9f80
+- [x] 1.2 DB tests pass, new suite and existing suites: `npm run test:db` — 38b9f80
+- [x] 1.3 Types regenerated with no manual edits: `npm run db:types` — 38b9f80
+- [x] 1.4 Type check passes: `npx astro check` — 38b9f80
+- [x] 1.5 Lint passes: `npm run lint` — 38b9f80
 
 #### Manual
 
-- [x] 1.6 Coordinator reveal in Studio returns numbers and writes the expected audit rows
-- [x] 1.7 Migration pushed to production before the Phase 2 PR merges
+- [x] 1.6 Coordinator reveal in Studio returns numbers and writes the expected audit rows — 38b9f80
+- [x] 1.7 Migration pushed to production before the Phase 2 PR merges — 38b9f80
 
 ### Phase 2: App — reveal page and entry point
 
 #### Automated
 
-- [ ] 2.1 Type check passes: `npx astro check`
-- [ ] 2.2 Lint passes: `npm run lint`
-- [ ] 2.3 Build passes: `npm run build`
-- [ ] 2.4 DB tests still pass: `npm run test:db`
-- [ ] 2.5 Smoke passes against the local dev server, including the four new gate steps: `npm run smoke`
+- [x] 2.1 Type check passes: `npx astro check`
+- [x] 2.2 Lint passes: `npm run lint`
+- [x] 2.3 Build passes: `npm run build`
+- [x] 2.4 DB tests still pass: `npm run test:db`
+- [x] 2.5 Smoke passes against the local dev server, including the four new gate steps: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.6 Crisis page shows the break-glass link; GET page shows warning and form with no numbers
-- [ ] 2.7 Short reason shows the inline error and writes no audit row
-- [ ] 2.8 Valid reason shows all matched residents with phones, tel: links, unverified banner and no-phone count; audit rows match
-- [ ] 2.9 Reload, the crisis page, and a second coordinator show no numbers
-- [ ] 2.10 After ending the crisis, the reveal is refused and the audit rows remain
-- [ ] 2.11 POST response carries `Cache-Control: private, no-store`
-- [ ] 2.12 Layout works at phone width (375 px)
+- [x] 2.6 Crisis page shows the break-glass link; GET page shows warning and form with no numbers
+- [x] 2.7 Short reason shows the inline error and writes no audit row
+- [x] 2.8 Valid reason shows all matched residents with phones, tel: links, unverified banner and no-phone count; audit rows match
+- [x] 2.9 Reload, the crisis page, and a second coordinator show no numbers
+- [x] 2.10 After ending the crisis, the reveal is refused and the audit rows remain
+- [x] 2.11 POST response carries `Cache-Control: private, no-store`
+- [x] 2.12 Layout works at phone width (375 px)

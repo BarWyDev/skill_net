@@ -11,3 +11,9 @@ export function normalisePhone(raw: string): string | null {
   const match = PHONE_RE.exec(raw.replace(/[\s-]/g, ""));
   return match ? `+48${match[1]}` : null;
 }
+
+/** Displays a normalised `+48XXXXXXXXX` as `+48 600 123 456`; anything else is returned as is. */
+export function formatPhone(phone: string): string {
+  const match = /^\+48(\d{3})(\d{3})(\d{3})$/.exec(phone);
+  return match ? `+48 ${match[1]} ${match[2]} ${match[3]}` : phone;
+}
