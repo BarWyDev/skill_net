@@ -108,3 +108,34 @@ export interface CrisisContactDTO extends Omit<CrisisMatchDTO, "hasPhone"> {
   phone: string;
   phoneVerified: boolean;
 }
+
+/** A predefined crisis team template (S-10). Templates change only by migration. */
+export interface TeamTemplateDTO {
+  slug: string;
+  name: string;
+  /** In template order; `slots` is how many people the role needs per team. */
+  roles: { slug: string; name: string; slots: number }[];
+}
+
+/** One team member. No identity, like CrisisMatchDTO; `skills` are the ones that qualify them for the role. */
+export interface TeamMemberDTO {
+  rank: number;
+  /** The stable per-crisis order behind the "Osoba #N" pseudonym. */
+  position: number;
+  /** Rounded to 0.5 km in the database. */
+  distanceKm: number;
+  /** The member's current skills that qualify them for their role, best level first. */
+  skills: { slug: string; name: string; level: SkillLevel | null }[];
+  hasPhone: boolean;
+  availabilitySlots: number | null;
+  availableNow: boolean | null;
+}
+
+/** An assembled team. It is computed per request and never stored. */
+export interface CrisisTeamDTO {
+  /** 1-based, in output order: complete teams first, then the partial one. */
+  number: number;
+  complete: boolean;
+  /** One entry per slot, in template role order; `member` is null for an unfilled slot. */
+  slots: { roleSlug: string; roleName: string; member: TeamMemberDTO | null }[];
+}
