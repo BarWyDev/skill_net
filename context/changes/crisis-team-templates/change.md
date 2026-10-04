@@ -1,7 +1,7 @@
 ---
 change_id: crisis-team-templates
 title: Crisis team templates
-status: implementing
+status: implemented
 created: 2026-10-04
 updated: 2026-10-04
 ---
