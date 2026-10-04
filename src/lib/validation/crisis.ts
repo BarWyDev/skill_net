@@ -70,6 +70,33 @@ export function parseRevealReason(
     : { success: false, message: result.error.issues[0]?.message ?? "Podaj powód." };
 }
 
+export const TEAM_COUNT_MIN = 1;
+export const TEAM_COUNT_MAX = 10;
+
+// The same bounds as get_team_candidates, which checks them again; whether the template exists is
+// checked against the seeded templates.
+export const teamRequestSchema = z.object({
+  szablon: z.string().regex(/^[a-z-]{1,40}$/, "Wybierz szablon zespołu z listy."),
+  liczba: z.coerce
+    .number({ error: `Podaj liczbę zespołów od ${TEAM_COUNT_MIN} do ${TEAM_COUNT_MAX}.` })
+    .int(`Podaj liczbę zespołów od ${TEAM_COUNT_MIN} do ${TEAM_COUNT_MAX}.`)
+    .min(TEAM_COUNT_MIN, `Podaj liczbę zespołów od ${TEAM_COUNT_MIN} do ${TEAM_COUNT_MAX}.`)
+    .max(TEAM_COUNT_MAX, `Podaj liczbę zespołów od ${TEAM_COUNT_MIN} do ${TEAM_COUNT_MAX}.`),
+});
+
+/** Parses the team page's query string. Messages are Polish and safe to show. */
+export function parseTeamRequest(
+  params: URLSearchParams,
+): { success: true; data: { template: string; count: number } } | { success: false; message: string } {
+  const result = teamRequestSchema.safeParse({
+    szablon: params.get("szablon") ?? "",
+    liczba: (params.get("liczba") ?? "").trim() || undefined,
+  });
+  return result.success
+    ? { success: true, data: { template: result.data.szablon, count: result.data.liczba } }
+    : { success: false, message: result.error.issues[0]?.message ?? "Nieprawidłowe zapytanie." };
+}
+
 export type CrisisParseResult = { success: true; data: ActivateCrisisInput } | { success: false; message: string };
 
 /** Parses the crisis activation form POST into the RPC input. Messages are Polish and safe to show. */

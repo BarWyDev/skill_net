@@ -1,7 +1,17 @@
 import { z } from "zod";
 import type { Database } from "@/db/database.types";
 import type { SupabaseClient } from "@/lib/supabase";
-import type { ActivateCrisisInput, CrisisContactDTO, CrisisDTO, CrisisMatchDTO, CrisisTypeDTO } from "@/types";
+import { assembleTeams } from "@/lib/team-assembly";
+import type {
+  ActivateCrisisInput,
+  CrisisContactDTO,
+  CrisisDTO,
+  CrisisMatchDTO,
+  CrisisTeamDTO,
+  CrisisTypeDTO,
+  TeamMemberDTO,
+  TeamTemplateDTO,
+} from "@/types";
 
 // Never log input values here: the epicentre can reveal an address in context, and a break-glass
 // reason or a revealed number is personal data.
@@ -227,4 +237,111 @@ export async function revealCrisisContacts(
       };
     }),
   };
+}
+
+/** Every team template with its roles, both in their seeded order. */
+export async function getTeamTemplates(supabase: SupabaseClient): Promise<TeamTemplateDTO[]> {
+  const { data, error } = await supabase
+    .from("team_templates")
+    .select("slug, name_pl, team_template_roles(role_slug, name_pl, slots, sort)")
+    .order("sort");
+  if (error) throw new Error(`getTeamTemplates: ${error.code}`);
+  return data.map((t) => ({
+    slug: t.slug,
+    name: t.name_pl,
+    roles: [...t.team_template_roles]
+      .sort((a, b) => a.sort - b.sort)
+      .map((r) => ({ slug: r.role_slug, name: r.name_pl, slots: r.slots })),
+  }));
+}
+
+const roleSkillsSchema = z.record(
+  z.string(),
+  z.array(
+    z.object({
+      slug: z.string(),
+      level: z.union([z.literal(1), z.literal(2), z.literal(3)]).nullable(),
+    }),
+  ),
+);
+
+const GENERIC_TEAMS_ERROR = "Nie udało się złożyć zespołów. Spróbuj ponownie.";
+
+// Messages raised by get_team_candidates in the crisis team templates migration.
+const TEAMS_DB_ERRORS: Partial<Record<string, { message: string; status: number; ended?: true }>> = {
+  not_coordinator: { message: "Tylko koordynator może składać zespoły.", status: 403 },
+  unknown_crisis: { message: "Nie znaleziono kryzysu.", status: 404 },
+  crisis_not_active: {
+    message: "Ten kryzys został zakończony — lista osób została usunięta.",
+    status: 200,
+    ended: true,
+  },
+  unknown_template: { message: "Wybierz szablon zespołu z listy.", status: 422 },
+  invalid_team_count: { message: "Podaj liczbę zespołów od 1 do 10.", status: 422 },
+};
+
+export type AssembleTeamsResult =
+  | { ok: true; teams: CrisisTeamDTO[]; completeCount: number }
+  | { ok: false; message: string; status: number; ended?: true };
+
+/**
+ * Assembles up to `count` teams of `template` from the crisis's ranked list: as many complete
+ * teams as possible, then the best-ranked people, then at most one partial team. Computed per
+ * request from the snapshot and the residents' current skills; nothing is stored.
+ */
+export async function assembleCrisisTeams(
+  supabase: SupabaseClient,
+  crisisId: string,
+  template: TeamTemplateDTO,
+  count: number,
+): Promise<AssembleTeamsResult> {
+  const [candidates, names] = await Promise.all([
+    supabase.rpc("get_team_candidates", { p_crisis_id: crisisId, p_template: template.slug, p_teams: count }),
+    getSkillNames(supabase),
+  ]);
+  if (candidates.error) {
+    return {
+      ok: false,
+      ...(TEAMS_DB_ERRORS[candidates.error.message] ?? { message: GENERIC_TEAMS_ERROR, status: 500 }),
+    };
+  }
+
+  const pool = candidates.data.map((row) => {
+    const roleSkills = roleSkillsSchema.parse(row.role_skills);
+    const base = {
+      rank: row.rank,
+      position: row.position,
+      distanceKm: row.distance_km_rounded,
+      hasPhone: row.has_phone,
+      availabilitySlots: availabilitySlotsSchema.parse(row.availability_slots),
+      availableNow: availableNowSchema.parse(row.available_now),
+    };
+    return { position: row.position, roles: Object.keys(roleSkills), roleSkills, base };
+  });
+
+  const { teams, completeCount } = assembleTeams(template.roles, pool, count);
+  const roleNames = new Map(template.roles.map((r) => [r.slug, r.name]));
+
+  return {
+    ok: true,
+    completeCount,
+    teams: teams.map((team, i) => ({
+      number: i + 1,
+      complete: team.complete,
+      slots: team.slots.map((slot) => ({
+        roleSlug: slot.role,
+        roleName: roleNames.get(slot.role) ?? slot.role,
+        member: slot.candidate && toTeamMember(slot.candidate, slot.role, names),
+      })),
+    })),
+  };
+}
+
+function toTeamMember(
+  candidate: { roleSkills: z.infer<typeof roleSkillsSchema>; base: Omit<TeamMemberDTO, "skills"> },
+  role: string,
+  names: Map<string, string>,
+): TeamMemberDTO {
+  const skills = (candidate.roleSkills[role] ?? []).map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug }));
+  return { ...candidate.base, skills };
 }

@@ -420,29 +420,29 @@ The changes are additive: new tables, seed data and one function, with no change
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm run test:unit`
-- [x] 2.2 Lint passes: `npm run lint`
-- [x] 2.3 Type check passes: `npx astro check`
+- [x] 2.1 Unit tests pass: `npm run test:unit` — cd8a8b0
+- [x] 2.2 Lint passes: `npm run lint` — cd8a8b0
+- [x] 2.3 Type check passes: `npx astro check` — cd8a8b0
 
 #### Manual
 
-- [x] 2.4 The test names read as the planning decisions; the cases are not tautological, because each was seen to fail when the rule was broken
+- [x] 2.4 The test names read as the planning decisions; the cases are not tautological, because each was seen to fail when the rule was broken — cd8a8b0
 
 ### Phase 3: App
 
 #### Automated
 
-- [ ] 3.1 Lint passes: `npm run lint`
-- [ ] 3.2 Type check passes: `npx astro check`
-- [ ] 3.3 Build succeeds: `npm run build`
-- [ ] 3.4 Unit and DB tests still pass: `npm run test:unit && npm run test:db`
-- [ ] 3.5 Smoke passes against the local preview: `npm run smoke`
+- [x] 3.1 Lint passes: `npm run lint`
+- [x] 3.2 Type check passes: `npx astro check`
+- [x] 3.3 Build succeeds: `npm run build`
+- [x] 3.4 Unit and DB tests still pass: `npm run test:unit && npm run test:db`
+- [x] 3.5 Smoke passes against the local preview: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.6 Flood crisis: 3 evacuation teams give complete teams first, at most one partial team, no duplicate `Osoba #N`
-- [ ] 3.7 Medical point × 1 shows two different medics
-- [ ] 3.8 Role skills come from the current profile; removing a skill drops the member from that role
-- [ ] 3.9 Invalid `liczba`/`szablon` keeps the form with a Polish message
-- [ ] 3.10 An ended crisis shows the ended state on `/zespoly`
-- [ ] 3.11 The page is usable at phone width
+- [x] 3.6 Flood crisis: 3 evacuation teams give complete teams first, at most one partial team, no duplicate `Osoba #N`
+- [x] 3.7 Medical point × 1 shows two different medics
+- [x] 3.8 Role skills come from the current profile; removing a skill drops the member from that role
+- [x] 3.9 Invalid `liczba`/`szablon` keeps the form with a Polish message
+- [x] 3.10 An ended crisis shows the ended state on `/zespoly`
+- [x] 3.11 The page is usable at phone width
