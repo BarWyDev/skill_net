@@ -49,7 +49,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | done     |
 | S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | blocked  |
 | S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | proposed |
-| S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | in-progress |
+| S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | done |
 | S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | ready    |
 | S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | ready    |
 | S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked  |
@@ -208,7 +208,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This is the fallback when SMS fails, so it deliberately does not depend on S-07. The audit trail must outlive the platform's 7-day log retention.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-10: Coordinator gets teams assembled from templates
 
@@ -341,3 +341,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-03: a coordinator can activate crisis mode by choosing the incident type, location and radius, and within 3 seconds sees residents matched to that crisis type, ranked by the weighted score (distance, skill match, skill level, availability confirmation), even when optional external services are down.** — Archived 2026-10-02 → `context/archive/2026-10-01-crisis-activation-ranked-list/`. Lesson: —.
 - **S-04: a coordinator can deactivate crisis mode, and the app returns to everyday mode.** — Archived 2026-10-02 → `context/archive/2026-10-02-crisis-deactivation/`. Lesson: —.
 - **S-06: a resident can add an optional phone number (hidden by default) and declare availability days and hours, shown to the coordinator as information only. A resident without a phone appears on the aggregated map but gets no alerts and no operational-list presence.** — Archived 2026-10-03 → `context/archive/2026-10-03-resident-phone-and-availability/`. Lesson: —.
+- **S-09: a coordinator can deliberately reveal the contact details of everyone matched (break-glass: an emergency override of the default privacy rule, used when nobody has confirmed, for example because the mobile network is down). The reveal is recorded in an append-only audit trail.** — Archived 2026-10-04 → `context/archive/2026-10-04-break-glass-contact-reveal/`. Lesson: —.
