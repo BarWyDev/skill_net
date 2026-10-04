@@ -408,25 +408,25 @@ The changes are additive: new tables, seed data and one function, with no change
 
 #### Automated
 
-- [x] 1.1 Migrations apply cleanly: `npx supabase db reset`
-- [x] 1.2 The pgTAP suites pass, the new one and all existing ones: `npm run test:db`
-- [x] 1.3 Types regenerated and type check passes: `npm run db:types && npx astro check`
+- [x] 1.1 Migrations apply cleanly: `npx supabase db reset` — 16be0ce
+- [x] 1.2 The pgTAP suites pass, the new one and all existing ones: `npm run test:db` — 16be0ce
+- [x] 1.3 Types regenerated and type check passes: `npm run db:types && npx astro check` — 16be0ce
 
 #### Manual
 
-- [x] 1.4 In Studio, the 4 templates and their role skills match `docs/shape_not.md:103-112` and the mapping above
+- [x] 1.4 In Studio, the 4 templates and their role skills match `docs/shape_not.md:103-112` and the mapping above — 16be0ce
 
 ### Phase 2: Solver
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm run test:unit`
-- [ ] 2.2 Lint passes: `npm run lint`
-- [ ] 2.3 Type check passes: `npx astro check`
+- [x] 2.1 Unit tests pass: `npm run test:unit`
+- [x] 2.2 Lint passes: `npm run lint`
+- [x] 2.3 Type check passes: `npx astro check`
 
 #### Manual
 
-- [ ] 2.4 The test names read as the planning decisions; the cases are not tautological, because each was seen to fail when the rule was broken
+- [x] 2.4 The test names read as the planning decisions; the cases are not tautological, because each was seen to fail when the rule was broken
 
 ### Phase 3: App
 
