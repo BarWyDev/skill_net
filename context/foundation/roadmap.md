@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-10-03
+updated: 2026-10-04
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -49,12 +49,12 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | done     |
 | S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | blocked  |
 | S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | proposed |
-| S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | proposed |
-| S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | proposed |
-| S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | proposed |
+| S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | ready    |
+| S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | ready    |
+| S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | ready    |
 | S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked  |
-| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | proposed |
-| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | proposed |
+| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | ready    |
+| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | ready    |
 | S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
 
 ## Streams
@@ -208,7 +208,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This is the fallback when SMS fails, so it deliberately does not depend on S-07. The audit trail must outlive the platform's 7-day log retention.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-10: Coordinator gets teams assembled from templates
 
@@ -221,7 +221,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - How does assembly behave when a small pilot can't fill a template (partial team vs. no team)? — Owner: user. Block: no.
 - **Risk:** Builds purely on the ranking. Parallel-friendly and low risk; the templates are already written down in the seed spec.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-11: Anyone sees the aggregated skills map of their area
 
@@ -234,7 +234,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - What minimum aggregation keeps a sparse area from revealing an individual's location, and is a public "gap map" acceptable? — Owner: user. Block: no.
 - **Risk:** This is the everyday reason to open the app, which keeps the directory fresh. At low density it can leak individual locations, so aggregation is the whole slice.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-12: Resident controls data visibility per mode
 
@@ -260,7 +260,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - Does a pause remove the person from the ranking or only from alerts, does it expire, and what happens when someone pauses after a YES during an active crisis? — Owner: user. Block: no.
 - **Risk:** Low. It keeps the directory full, the alternative the PRD accepted to deletion.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-14: Resident unregisters and their data is erased
 
@@ -273,7 +273,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - How does erasure reconcile with audit records (consent, break-glass) that reference the person? — Owner: user. Block: no.
 - **Risk:** A hard guardrail for any pilot with real people. It needs deferred deletion, the first scheduled background task in the product.
-- **Status:** proposed
+- **Status:** ready
 
 ### S-15: Resident's stored location never identifies a building
 
@@ -289,23 +289,23 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 
 ## Backlog Handoff
 
-| Roadmap ID | Issue | Change ID                       | Suggested issue title                                           | Ready for `/10x-plan` | Notes                                               |
-| ---------- | ----- | ------------------------------- | --------------------------------------------------------------- | --------------------- | --------------------------------------------------- |
-| S-01       | #2    | resident-skills-profile         | Resident profile: skills (level 1–3) and approximate location   | yes                   | Run `/10x-plan resident-skills-profile`             |
-| S-02       | #3    | coordinator-role-grant          | Operator grants coordinator role; coordinator-only area         | yes                   | Run `/10x-plan coordinator-role-grant`              |
-| S-03       | #4    | crisis-activation-ranked-list   | Activate crisis mode and show ranked matched residents          | no                    | North star; waits on S-01, S-02, S-15               |
-| S-04       | #5    | crisis-deactivation             | Deactivate crisis mode                                          | no                    | Waits on S-03                                       |
-| S-05       | #6    | verified-sign-up-with-consent   | Sign-up with verified email and data-processing consent         | yes                   | Needs own domain + email provider before real users |
-| S-06       | #7    | resident-phone-and-availability | Optional hidden phone number and availability                   | no                    | Waits on S-01                                       |
-| S-07       | #8    | crisis-sms-alert-confirmation   | Crisis SMS alert with YES/NO confirmation                       | no                    | Blocked: SMS provider choice; needs Workers Paid    |
-| S-08       | #9    | live-operational-list           | Live operational list of confirmed volunteers                   | no                    | Waits on S-07                                       |
-| S-09       | #10   | break-glass-contact-reveal      | Break-glass reveal of matched contacts, audited                 | no                    | Waits on S-03, S-06                                 |
-| S-10       | #11   | crisis-team-templates           | Assemble teams from predefined templates                        | no                    | Waits on S-03                                       |
-| S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | no                    | Waits on S-01                                       |
-| S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                    | no                    | Blocked: visibility matrix undefined                |
-| S-13       | #14   | pause-availability              | Pause and resume availability                                   | no                    | Waits on S-01                                       |
-| S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | no                    | Waits on S-01                                       |
-| S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | yes                   | From S-01 impl-review F1; issue not created yet     |
+| Roadmap ID | Issue | Change ID                       | Suggested issue title                                           | Ready for `/10x-plan` | Notes                                                        |
+| ---------- | ----- | ------------------------------- | --------------------------------------------------------------- | --------------------- | ------------------------------------------------------------ |
+| S-01       | #2    | resident-skills-profile         | Resident profile: skills (level 1–3) and approximate location   | done                  | Archived 2026-09-27                                          |
+| S-02       | #3    | coordinator-role-grant          | Operator grants coordinator role; coordinator-only area         | done                  | Archived 2026-09-28                                          |
+| S-03       | #4    | crisis-activation-ranked-list   | Activate crisis mode and show ranked matched residents          | done                  | Archived 2026-10-02 (north star)                             |
+| S-04       | #5    | crisis-deactivation             | Deactivate crisis mode                                          | done                  | Archived 2026-10-02                                          |
+| S-05       | #6    | verified-sign-up-with-consent   | Sign-up with verified email and data-processing consent         | yes                   | Needs own domain + email provider before real users          |
+| S-06       | #7    | resident-phone-and-availability | Optional hidden phone number and availability                   | done                  | Archived 2026-10-03                                          |
+| S-07       | #8    | crisis-sms-alert-confirmation   | Crisis SMS alert with YES/NO confirmation                       | no                    | Blocked: SMS provider choice; needs Workers Paid             |
+| S-08       | #9    | live-operational-list           | Live operational list of confirmed volunteers                   | no                    | Waits on S-07                                                |
+| S-09       | #10   | break-glass-contact-reveal      | Break-glass reveal of matched contacts, audited                 | yes                   | Recommended next; run `/10x-plan break-glass-contact-reveal` |
+| S-10       | #11   | crisis-team-templates           | Assemble teams from predefined templates                        | yes                   | Run `/10x-plan crisis-team-templates`                        |
+| S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | yes                   | Run `/10x-plan public-skills-density-map`                    |
+| S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                    | no                    | Blocked: visibility matrix undefined                         |
+| S-13       | #14   | pause-availability              | Pause and resume availability                                   | yes                   | Run `/10x-plan pause-availability`                           |
+| S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | yes                   | Run `/10x-plan unregister-and-erase`                         |
+| S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | done                  | Archived 2026-09-27; no issue was created                    |
 
 ## Open Roadmap Questions
 
