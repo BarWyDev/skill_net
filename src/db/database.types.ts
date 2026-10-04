@@ -628,6 +628,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      unregister_me: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

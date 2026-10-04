@@ -17,6 +17,9 @@ import Topbar from "@/components/Topbar.astro";
   <div class="relative z-10 p-4 sm:p-8">
     <Topbar />
 
+    <!-- Page notices, e.g. the account-erasure confirmation -->
+    <slot />
+
     <!-- Hero section -->
     <div class="mx-auto flex max-w-4xl flex-col items-center justify-center px-4 py-24 text-center sm:py-32 lg:py-40">
       <h1 class="mb-6 bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 bg-clip-text text-5xl leading-tight font-bold text-transparent sm:text-6xl lg:text-7xl">

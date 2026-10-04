@@ -54,7 +54,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | ready    |
 | S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked  |
 | S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | ready    |
-| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | ready    |
+| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | in-progress |
 | S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
 
 ## Streams
@@ -273,7 +273,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - How does erasure reconcile with audit records (consent, break-glass) that reference the person? — Owner: user. Block: no.
 - **Risk:** A hard guardrail for any pilot with real people. It needs deferred deletion, the first scheduled background task in the product.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-15: Resident's stored location never identifies a building
 
