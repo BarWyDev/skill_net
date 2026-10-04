@@ -14,6 +14,9 @@ const jar = new Map();
 const CRISIS_FORM = { crisis_type: "awaria-pradu", location_source: "postcode", postcode: "31-001", radius_km: "5" };
 // An unknown crisis: the gates must refuse the end request before it reaches the RPC.
 const CRISIS_END_PATH = "/api/koordynator/kryzysy/00000000-0000-0000-0000-000000000000/zakoncz";
+// The break-glass page: the gates must refuse both the reason form (GET) and the reveal (POST).
+const REVEAL_PATH = "/koordynator/kryzys/00000000-0000-0000-0000-000000000000/kontakty";
+const REVEAL_FORM = { reason: "Smoke test: brak potwierdzeń" };
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -82,6 +85,12 @@ const readonlySteps = [
     () => request(CRISIS_END_PATH, { method: "POST" }),
     { status: 302, location: "/auth/signin" },
   ],
+  ["reveal form redirects anonymous user", () => request(REVEAL_PATH), { status: 302, location: "/auth/signin" }],
+  [
+    "reveal redirects anonymous user",
+    () => request(REVEAL_PATH, { method: "POST", form: REVEAL_FORM }),
+    { status: 302, location: "/auth/signin" },
+  ],
   // The lookup takes the postcode in a POST body, so it never appears in a request URL.
   [
     "postcode lookup finds known code",
@@ -136,6 +145,16 @@ const writeSteps = [
   [
     "crisis page denies resident",
     () => request("/koordynator/kryzys/00000000-0000-0000-0000-000000000000"),
+    { status: 403, bodyIncludes: "Brak dostępu", cacheControlIncludes: "no-store" },
+  ],
+  [
+    "reveal form denies resident",
+    () => request(REVEAL_PATH),
+    { status: 403, bodyIncludes: "Brak dostępu", cacheControlIncludes: "no-store" },
+  ],
+  [
+    "reveal denies resident",
+    () => request(REVEAL_PATH, { method: "POST", form: REVEAL_FORM }),
     { status: 403, bodyIncludes: "Brak dostępu", cacheControlIncludes: "no-store" },
   ],
   [

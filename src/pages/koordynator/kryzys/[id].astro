@@ -6,14 +6,21 @@ import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
 import { formatAvailabilitySummary } from "@/lib/availability";
 import { createClient } from "@/lib/supabase";
 import { getCrisis, getCrisisMatches, MATCHES_PAGE_SIZE } from "@/lib/services/crisis";
-import { formatActivatedAt, formatActiveFor, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
+import {
+  availabilityBadge,
+  formatActivatedAt,
+  formatActiveFor,
+  formatDistanceKm,
+  formatPeople,
+} from "@/lib/crisis-format";
 import { cn } from "@/lib/utils";
 import type { CrisisDTO, CrisisMatchDTO } from "@/types";
 
 // The middleware gates this route (coordinators only) and sends Cache-Control: private, no-store.
 // The list is a snapshot from activation: no identity, coordinates or score reach this page.
 // Availability and phone presence are read live and are display-only: they never change the order.
-// No phone number reaches this page, only whether one exists.
+// No phone number reaches this page, only whether one exists. Numbers are shown only on the
+// break-glass page (kontakty), in the response to a logged reveal.
 // Ending a crisis deletes the snapshot, so an ended crisis shows only its summary.
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -38,19 +45,6 @@ if (!supabase) {
 
 if (!crisis && !loadError) Astro.response.status = 404;
 const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - matches.length) : 0;
-
-function availabilityBadge(availableNow: boolean | null): { label: string; className: string } {
-  if (availableNow === true) {
-    return {
-      label: "Deklaruje dostępność teraz",
-      className: "border-emerald-300/60 bg-emerald-500/25 text-emerald-50",
-    };
-  }
-  if (availableNow === false) {
-    return { label: "Teraz poza deklarowaną dostępnością", className: "border-white/25 bg-white/10 text-blue-100" };
-  }
-  return { label: "Nie podano", className: "border-white/10 bg-transparent text-blue-100/60" };
-}
 ---
 
 <Layout title={crisis ? `Kryzys: ${crisis.typeName}` : "Nie znaleziono kryzysu"}>
@@ -114,9 +108,22 @@ function availabilityBadge(availableNow: boolean | null): { label: string; class
 
             <p class="mb-6 rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm text-blue-100">
               Kolejność i umiejętności to stan z chwili aktywacji. Dostępność to aktualna deklaracja mieszkańca,
-              sprawdzana względem bieżącej godziny, i nie wpływa na kolejność. Numery telefonów nie są pokazywane; „bez
-              telefonu” oznacza, że ta osoba nie otrzyma alertu.
+              sprawdzana względem bieżącej godziny, i nie wpływa na kolejność. Numery telefonów są domyślnie ukryte;
+              „bez telefonu” oznacza, że ta osoba nie otrzyma alertu.
             </p>
+
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-400/40 bg-red-500/10 p-3">
+              <p class="text-sm text-red-100">
+                Nikt nie potwierdza? Możesz ujawnić numery wszystkich dopasowanych osób. Każde ujawnienie jest
+                zapisywane razem z Twoim kontem i powodem.
+              </p>
+              <a
+                href={`/koordynator/kryzys/${crisis.id}/kontakty`}
+                class="shrink-0 rounded-lg border border-red-400/60 px-4 py-2 text-sm font-medium text-red-100 transition-colors hover:bg-red-600/30"
+              >
+                Ujawnij kontakty (break-glass)
+              </a>
+            </div>
 
             {matches.length === 0 ? (
               <p class="text-blue-100/80">W tym promieniu nie ma dopasowanych mieszkańców.</p>
@@ -124,10 +131,8 @@ function availabilityBadge(availableNow: boolean | null): { label: string; class
               <ol class="space-y-2">
                 {matches.map((m) => (
                   <li class="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                    <span
-                      class="w-8 shrink-0 text-right text-lg font-bold text-purple-200"
-                      aria-label={`Miejsce ${m.rank}`}
-                    >
+                    <span class="w-8 shrink-0 text-right text-lg font-bold text-purple-200">
+                      <span class="sr-only">Miejsce </span>
                       {m.rank}.
                     </span>
                     <div class="min-w-0 flex-1">

@@ -40,6 +40,20 @@ export function formatActiveFor(activatedAtIso: string, now: Date = new Date()):
   return `aktywny od ${days} ${days === 1 ? "dnia" : "dni"}`;
 }
 
+/** The badge for a resident's declared availability at the time of viewing. */
+export function availabilityBadge(availableNow: boolean | null): { label: string; className: string } {
+  if (availableNow === true) {
+    return {
+      label: "Deklaruje dostępność teraz",
+      className: "border-emerald-300/60 bg-emerald-500/25 text-emerald-50",
+    };
+  }
+  if (availableNow === false) {
+    return { label: "Teraz poza deklarowaną dostępnością", className: "border-white/25 bg-white/10 text-blue-100" };
+  }
+  return { label: "Nie podano", className: "border-white/10 bg-transparent text-blue-100/60" };
+}
+
 /** True once a crisis has been active for more than 24 hours: it may have been forgotten. */
 export function isStale(activatedAtIso: string, now: Date = new Date()): boolean {
   return now.getTime() - new Date(activatedAtIso).getTime() > DAY_MS;

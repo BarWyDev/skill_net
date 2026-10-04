@@ -1,9 +1,10 @@
 import { z } from "zod";
 import type { Database } from "@/db/database.types";
 import type { SupabaseClient } from "@/lib/supabase";
-import type { ActivateCrisisInput, CrisisDTO, CrisisMatchDTO, CrisisTypeDTO } from "@/types";
+import type { ActivateCrisisInput, CrisisContactDTO, CrisisDTO, CrisisMatchDTO, CrisisTypeDTO } from "@/types";
 
-// Never log input values here: the epicentre can reveal an address in context.
+// Never log input values here: the epicentre can reveal an address in context, and a break-glass
+// reason or a revealed number is personal data.
 
 type ActivateCrisisArgs = Database["public"]["Functions"]["activate_crisis"]["Args"];
 
@@ -139,23 +140,91 @@ const matchedSkillsSchema = z.array(
 const availabilitySlotsSchema = z.number().int().nullable();
 const availableNowSchema = z.boolean().nullable();
 
+type MatchedSkills = CrisisMatchDTO["skills"];
+
+async function getSkillNames(supabase: SupabaseClient): Promise<Map<string, string>> {
+  const { data, error } = await supabase.from("skills").select("slug, name_pl");
+  if (error) throw new Error(`getSkillNames: ${error.code}`);
+  return new Map(data.map((s) => [s.slug, s.name_pl]));
+}
+
+function toSkills(raw: unknown, names: Map<string, string>): MatchedSkills {
+  return matchedSkillsSchema.parse(raw).map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug }));
+}
+
 /** The first page of the ranked list, in position order, with skill names for display. */
 export async function getCrisisMatches(supabase: SupabaseClient, id: string): Promise<CrisisMatchDTO[]> {
-  const [matches, skills] = await Promise.all([
+  const [matches, names] = await Promise.all([
     supabase.rpc("get_crisis_matches", { p_crisis_id: id, p_limit: MATCHES_PAGE_SIZE }),
-    supabase.from("skills").select("slug, name_pl"),
+    getSkillNames(supabase),
   ]);
   if (matches.error) throw new Error(`getCrisisMatches: ${matches.error.code}`);
-  if (skills.error) throw new Error(`getCrisisMatches: ${skills.error.code}`);
 
-  const names = new Map(skills.data.map((s) => [s.slug, s.name_pl]));
   return matches.data.map((row) => ({
     rank: row.rank,
     position: row.position,
     distanceKm: row.distance_km_rounded,
-    skills: matchedSkillsSchema.parse(row.matched_skills).map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug })),
+    skills: toSkills(row.matched_skills, names),
     hasPhone: row.has_phone,
     availabilitySlots: availabilitySlotsSchema.parse(row.availability_slots),
     availableNow: availableNowSchema.parse(row.available_now),
   }));
+}
+
+const GENERIC_REVEAL_ERROR = "Nie udało się ujawnić kontaktów. Spróbuj ponownie.";
+
+// Messages raised by reveal_crisis_contacts in the break-glass migration. `field` marks the ones
+// the coordinator fixes in the reason box; `status` is the page's HTTP status, so failed reveals
+// show up in Workers error logs without logging anything personal.
+const REVEAL_DB_ERRORS: Partial<Record<string, { message: string; status: number; field?: "reason"; ended?: true }>> = {
+  not_coordinator: { message: "Tylko koordynator może ujawnić kontakty.", status: 403 },
+  unknown_crisis: { message: "Nie znaleziono kryzysu.", status: 404 },
+  crisis_not_active: {
+    message: "Ten kryzys został już zakończony — kontaktów nie można ujawnić.",
+    status: 200,
+    ended: true,
+  },
+  reason_required: { message: "Podaj powód (co najmniej 10 znaków).", status: 422, field: "reason" },
+  reason_too_long: { message: "Powód może mieć najwyżej 500 znaków.", status: 422, field: "reason" },
+};
+
+export type RevealResult =
+  | { ok: true; contacts: CrisisContactDTO[] }
+  | { ok: false; message: string; status: number; field?: "reason"; ended?: true };
+
+/**
+ * Break-glass: logs the reveal and returns the current number of every matched resident who has
+ * one, in position order. The numbers exist only in this result: never store or log them.
+ */
+export async function revealCrisisContacts(
+  supabase: SupabaseClient,
+  id: string,
+  reason: string,
+): Promise<RevealResult> {
+  const { data, error } = await supabase.rpc("reveal_crisis_contacts", { p_crisis_id: id, p_reason: reason });
+  if (error) {
+    return { ok: false, ...(REVEAL_DB_ERRORS[error.message] ?? { message: GENERIC_REVEAL_ERROR, status: 500 }) };
+  }
+
+  // The reveal is already logged, so nothing after this point may hide the numbers: a failed
+  // name lookup or an unexpected column shape falls back instead of throwing.
+  const names = await getSkillNames(supabase).catch(() => new Map<string, string>());
+  return {
+    ok: true,
+    contacts: data.map((row) => {
+      const skills = matchedSkillsSchema.safeParse(row.matched_skills);
+      const slots = availabilitySlotsSchema.safeParse(row.availability_slots);
+      const now = availableNowSchema.safeParse(row.available_now);
+      return {
+        rank: row.rank,
+        position: row.position,
+        distanceKm: row.distance_km_rounded,
+        skills: skills.success ? skills.data.map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug })) : [],
+        phone: row.phone,
+        phoneVerified: row.phone_verified,
+        availabilitySlots: slots.success ? slots.data : null,
+        availableNow: now.success ? now.data : null,
+      };
+    }),
+  };
 }
