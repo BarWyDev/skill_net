@@ -60,10 +60,11 @@ if (supabase && crisis?.status === "active" && Astro.request.method === "POST") 
         endedMessage = result.message;
       } else {
         formError = result.message;
-        if (result.field) Astro.response.status = 422;
+        Astro.response.status = result.status;
       }
     } catch {
       formError = "Nie udało się ujawnić kontaktów. Spróbuj ponownie.";
+      Astro.response.status = 500;
     }
   }
 }
@@ -198,10 +199,8 @@ const anyUnverified = contacts?.some((c) => !c.phoneVerified) ?? false;
               <ol class="space-y-2">
                 {contacts.map((c) => (
                   <li class="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                    <span
-                      class="w-8 shrink-0 text-right text-lg font-bold text-purple-200"
-                      aria-label={`Miejsce ${c.rank}`}
-                    >
+                    <span class="w-8 shrink-0 text-right text-lg font-bold text-purple-200">
+                      <span class="sr-only">Miejsce </span>
                       {c.rank}.
                     </span>
                     <div class="min-w-0 flex-1">

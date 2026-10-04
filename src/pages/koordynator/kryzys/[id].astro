@@ -131,10 +131,8 @@ const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - mat
               <ol class="space-y-2">
                 {matches.map((m) => (
                   <li class="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                    <span
-                      class="w-8 shrink-0 text-right text-lg font-bold text-purple-200"
-                      aria-label={`Miejsce ${m.rank}`}
-                    >
+                    <span class="w-8 shrink-0 text-right text-lg font-bold text-purple-200">
+                      <span class="sr-only">Miejsce </span>
                       {m.rank}.
                     </span>
                     <div class="min-w-0 flex-1">

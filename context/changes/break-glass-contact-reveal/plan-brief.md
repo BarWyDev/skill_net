@@ -16,17 +16,17 @@ On an active crisis, a coordinator opens "Ujawnij kontakty (break-glass)", reads
 
 ## Key Decisions Made
 
-| Decision          | Choice                                                         | Why (1 sentence)                                                                                     |
-| ----------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Persistence       | Per-view: numbers only in the POST response; re-reveal each time | Every on-screen exposure has its own audit row, and nothing lingers for the next person on the device. |
-| Scope             | Everyone in the snapshot with a phone, no 200 cap              | FR-012 says "all matched", and a blackout is exactly when the coordinator needs every number.          |
-| Audit contents    | Event (crisis, coordinator, time, count, reason) + exposed user_ids, kept after crisis end | Answers "who saw my number, when, why"; a documented exception to S-04's no-link rule.    |
-| Reason            | Required free text, 10–500 characters after trimming           | It makes the act deliberate and gives a reviewer context.                                            |
-| Reveal view       | Dedicated `/koordynator/kryzys/<id>/kontakty` page, GET form + POST list | The default list stays number-free; one tap to call on a phone; works without JS.          |
-| Unverified phones | Show all, with an unverified banner                            | No number is verified before S-07; filtering would make the slice return nothing.                    |
-| Export            | None, screen only                                              | The numbers never leave the audited channel.                                                         |
-| Resident notice   | Not in this slice                                              | The subject rows make it answerable on request; a `/profil` view is parked.                          |
-| Where rules live  | One security-definer RPC that checks, logs and returns in a single transaction | No path returns numbers without a log row, so the app layer cannot weaken it.          |
+| Decision          | Choice                                                                                     | Why (1 sentence)                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Persistence       | Per-view: numbers only in the POST response; re-reveal each time                           | Every on-screen exposure has its own audit row, and nothing lingers for the next person on the device. |
+| Scope             | Everyone in the snapshot with a phone, no 200 cap                                          | FR-012 says "all matched", and a blackout is exactly when the coordinator needs every number.          |
+| Audit contents    | Event (crisis, coordinator, time, count, reason) + exposed user_ids, kept after crisis end | Answers "who saw my number, when, why"; a documented exception to S-04's no-link rule.                 |
+| Reason            | Required free text, 10–500 characters after trimming                                       | It makes the act deliberate and gives a reviewer context.                                              |
+| Reveal view       | Dedicated `/koordynator/kryzys/<id>/kontakty` page, GET form + POST list                   | The default list stays number-free; one tap to call on a phone; works without JS.                      |
+| Unverified phones | Show all, with an unverified banner                                                        | No number is verified before S-07; filtering would make the slice return nothing.                      |
+| Export            | None, screen only                                                                          | The numbers never leave the audited channel.                                                           |
+| Resident notice   | Not in this slice                                                                          | The subject rows make it answerable on request; a `/profil` view is parked.                            |
+| Where rules live  | One security-definer RPC that checks, logs and returns in a single transaction             | No path returns numbers without a log row, so the app layer cannot weaken it.                          |
 
 ## Scope
 
@@ -40,10 +40,10 @@ The request flows from the GET `kontakty` page (warning + reason form), through 
 
 ## Phases at a Glance
 
-| Phase                      | What it delivers                                                | Key risk                                                                                       |
-| -------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| 1. Database                | Audit tables, the reveal RPC, the pgTAP suite, regenerated types | A grant or revoke slip exposes the log or the RPC to clients (the suite covers it).            |
-| 2. App                     | `kontakty` page, service, entry link, smoke checks              | Numbers leaking outside the POST response (redirect, URL, storage); POST resubmit semantics.   |
+| Phase       | What it delivers                                                 | Key risk                                                                                     |
+| ----------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 1. Database | Audit tables, the reveal RPC, the pgTAP suite, regenerated types | A grant or revoke slip exposes the log or the RPC to clients (the suite covers it).          |
+| 2. App      | `kontakty` page, service, entry link, smoke checks               | Numbers leaking outside the POST response (redirect, URL, storage); POST resubmit semantics. |
 
 **Prerequisites:** S-03, S-04, S-06 merged (done); local Supabase via Docker; the Phase 1 migration pushed to production before the Phase 2 PR merges.
 **Estimated effort:** ~2 sessions across 2 phases.
@@ -54,6 +54,7 @@ The request flows from the GET `kontakty` page (warning + reason form), through 
 - Unverified numbers may be wrong. The coordinator is warned, but may still call a stranger.
 - A browser "resend form" counts as a new reveal and writes a new audit row. That is intended, but it may inflate the log.
 - A very large match (thousands) renders a long page. That is acceptable for the pilot, but untested at scale.
+- On the Workers Free plan (10 ms CPU), a reveal of 1000+ numbers could fail during render after it has been logged. The Paid upgrade, already required before crisis mode, removes this (review finding F4).
 
 ## Success Criteria (Summary)
 

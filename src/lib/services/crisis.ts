@@ -174,17 +174,23 @@ export async function getCrisisMatches(supabase: SupabaseClient, id: string): Pr
 const GENERIC_REVEAL_ERROR = "Nie udało się ujawnić kontaktów. Spróbuj ponownie.";
 
 // Messages raised by reveal_crisis_contacts in the break-glass migration. `field` marks the ones
-// the coordinator fixes in the reason box.
-const REVEAL_DB_ERRORS: Partial<Record<string, { message: string; field?: "reason"; ended?: true }>> = {
-  not_coordinator: { message: "Tylko koordynator może ujawnić kontakty." },
-  unknown_crisis: { message: "Nie znaleziono kryzysu." },
-  crisis_not_active: { message: "Ten kryzys został już zakończony — kontaktów nie można ujawnić.", ended: true },
-  reason_required: { message: "Podaj powód (co najmniej 10 znaków).", field: "reason" },
-  reason_too_long: { message: "Powód może mieć najwyżej 500 znaków.", field: "reason" },
+// the coordinator fixes in the reason box; `status` is the page's HTTP status, so failed reveals
+// show up in Workers error logs without logging anything personal.
+const REVEAL_DB_ERRORS: Partial<Record<string, { message: string; status: number; field?: "reason"; ended?: true }>> = {
+  not_coordinator: { message: "Tylko koordynator może ujawnić kontakty.", status: 403 },
+  unknown_crisis: { message: "Nie znaleziono kryzysu.", status: 404 },
+  crisis_not_active: {
+    message: "Ten kryzys został już zakończony — kontaktów nie można ujawnić.",
+    status: 200,
+    ended: true,
+  },
+  reason_required: { message: "Podaj powód (co najmniej 10 znaków).", status: 422, field: "reason" },
+  reason_too_long: { message: "Powód może mieć najwyżej 500 znaków.", status: 422, field: "reason" },
 };
 
 export type RevealResult =
-  { ok: true; contacts: CrisisContactDTO[] } | { ok: false; message: string; field?: "reason"; ended?: true };
+  | { ok: true; contacts: CrisisContactDTO[] }
+  | { ok: false; message: string; status: number; field?: "reason"; ended?: true };
 
 /**
  * Break-glass: logs the reveal and returns the current number of every matched resident who has
@@ -197,22 +203,28 @@ export async function revealCrisisContacts(
 ): Promise<RevealResult> {
   const { data, error } = await supabase.rpc("reveal_crisis_contacts", { p_crisis_id: id, p_reason: reason });
   if (error) {
-    return { ok: false, ...(REVEAL_DB_ERRORS[error.message] ?? { message: GENERIC_REVEAL_ERROR }) };
+    return { ok: false, ...(REVEAL_DB_ERRORS[error.message] ?? { message: GENERIC_REVEAL_ERROR, status: 500 }) };
   }
 
-  // The reveal is already logged; a failed name lookup must not hide the numbers.
+  // The reveal is already logged, so nothing after this point may hide the numbers: a failed
+  // name lookup or an unexpected column shape falls back instead of throwing.
   const names = await getSkillNames(supabase).catch(() => new Map<string, string>());
   return {
     ok: true,
-    contacts: data.map((row) => ({
-      rank: row.rank,
-      position: row.position,
-      distanceKm: row.distance_km_rounded,
-      skills: toSkills(row.matched_skills, names),
-      phone: row.phone,
-      phoneVerified: row.phone_verified,
-      availabilitySlots: availabilitySlotsSchema.parse(row.availability_slots),
-      availableNow: availableNowSchema.parse(row.available_now),
-    })),
+    contacts: data.map((row) => {
+      const skills = matchedSkillsSchema.safeParse(row.matched_skills);
+      const slots = availabilitySlotsSchema.safeParse(row.availability_slots);
+      const now = availableNowSchema.safeParse(row.available_now);
+      return {
+        rank: row.rank,
+        position: row.position,
+        distanceKm: row.distance_km_rounded,
+        skills: skills.success ? skills.data.map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug })) : [],
+        phone: row.phone,
+        phoneVerified: row.phone_verified,
+        availabilitySlots: slots.success ? slots.data : null,
+        availableNow: now.success ? now.data : null,
+      };
+    }),
   };
 }
