@@ -1,7 +1,8 @@
 ---
 change_id: break-glass-contact-reveal
 title: Break-glass contact reveal
-status: impl_reviewed
+status: archived
+archived_at: 2026-10-04T14:56:14Z
 created: 2026-10-04
 updated: 2026-10-04
 ---
