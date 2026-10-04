@@ -7,14 +7,17 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(34);
+select plan(37);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as postgres: bypasses RLS, triggers still apply)
 -- ---------------------------------------------------------------------------
 
--- Isolate the fixtures from the local demo seed (supabase/seed.sql).
+-- Isolate the fixtures from the local demo seed (supabase/seed.sql) and from audit rows left by
+-- manual reveals: the assertions below count audit rows globally.
 delete from public.profiles;
+delete from public.contact_reveal_subjects;
+delete from public.contact_reveal_events;
 
 -- K1, K2: coordinators. R: a resident. Residents 1–205 have phones and 206–208 do not, all in
 -- Kraków. Residents 301–302 are in Warsaw, without phones.
@@ -305,6 +308,25 @@ select throws_ok(
   '42501',
   null::text,
   'log_private: a coordinator cannot delete subjects'
+);
+select throws_ok(
+  $$ delete from public.contact_reveal_events $$,
+  '42501',
+  null::text,
+  'log_private: a coordinator cannot delete events'
+);
+select throws_ok(
+  $$ insert into public.contact_reveal_subjects (event_id, user_id)
+     values (1, 'cccccccc-0000-0000-0000-000000000001') $$,
+  '42501',
+  null::text,
+  'log_private: a coordinator cannot insert subjects'
+);
+select throws_ok(
+  $$ update public.contact_reveal_subjects set user_id = 'cccccccc-0000-0000-0000-000000000001' $$,
+  '42501',
+  null::text,
+  'log_private: a coordinator cannot update subjects'
 );
 
 -- ---------------------------------------------------------------------------

@@ -52,7 +52,7 @@ The privacy guarantees live in the database, as in S-03, S-04 and S-06. A single
 
 ## Critical Implementation Details
 
-- **State sequencing**: inside `reveal_crisis_contacts`, take `FOR SHARE` on the crisis row and check `status = 'active'` *before* reading `crisis_matches`. Write the event row and the subject rows from the same set of rows the function returns, so the log never disagrees with what was shown. A reveal that finds zero numbers is still logged, with `revealed_count = 0`.
+- **State sequencing**: inside `reveal_crisis_contacts`, take `FOR SHARE` on the crisis row and check `status = 'active'` _before_ reading `crisis_matches`. Write the event row and the subject rows from the same set of rows the function returns, so the log never disagrees with what was shown. A reveal that finds zero numbers is still logged, with `revealed_count = 0`.
 - **User experience spec**: the POST response is the only place numbers ever appear. Do not redirect after the POST (the numbers would be lost), and do not store them in a cookie, a query string or session storage. A browser "resend form" is a new reveal with a new audit row; that is the intended per-view semantics. Never `console.*` the reason or any phone number.
 
 ## Phase 1: Database — audit trail and reveal RPC
@@ -102,7 +102,7 @@ Add the two audit tables and `reveal_crisis_contacts`, cover them with a pgTAP s
 - An unknown crisis gets `unknown_crisis`. An ended crisis gets `crisis_not_active`, and no event row is written.
 - The reasons `null`, `'   '` and `'krótko'` each get `reason_required`, and no event row is written. A reason of 501 characters gets `reason_too_long`.
 - **Scope beyond the page cap**: a crisis with more than 200 matched residents who have phones returns all of them, in `position` order. The fixture can generate about 205 residents with `generate_series`.
-- Matched residents without a phone are absent from the result. A resident who changed their number after activation is returned with the *current* number.
+- Matched residents without a phone are absent from the result. A resident who changed their number after activation is returned with the _current_ number.
 - One call writes one event row (`revealed_by` = caller, trimmed reason, `revealed_count` = rows returned) and exactly one subject row per returned resident. Two calls write two events.
 - A crisis whose matched residents have no phones still writes an event with `revealed_count = 0`.
 - After `end_crisis`, the event and subject rows still exist. Deleting a revealed resident's auth user succeeds, and their subject row remains.
@@ -265,6 +265,8 @@ The anonymous steps go in `readonlySteps`, next to the existing crisis gate step
 ## Performance Considerations
 
 The reveal returns every matched row with a phone. At pilot scale (hundreds) this is one round trip, well under the 3-second budget. The insert of subject rows scales with the same row count. At thousands of rows, the rendered page grows, but it does not need pagination for the pilot. Revisit if a 20 km radius in a dense city exceeds a few thousand matches.
+
+Added by review finding F4: production runs on the Workers Free plan, whose 10 ms CPU limit applies to rendering the contact list. A reveal that returns 1000+ numbers could exceed the limit _after_ the audit row is written, so the reveal would be logged but never seen, and a retry would log a second one. This is not measured. Moving to the Paid plan, already a prerequisite before crisis mode ships (CLAUDE.md, roadmap Q10), removes the limit. Until then, treat large-radius reveals in dense areas as untested.
 
 ## Migration Notes
 
