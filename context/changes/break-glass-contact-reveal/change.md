@@ -1,7 +1,7 @@
 ---
 change_id: break-glass-contact-reveal
 title: Break-glass contact reveal
-status: implementing
+status: implemented
 created: 2026-10-04
 updated: 2026-10-04
 ---
