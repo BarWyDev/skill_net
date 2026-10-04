@@ -304,7 +304,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | yes                   | Run `/10x-plan public-skills-density-map`                    |
 | S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                    | no                    | Blocked: visibility matrix undefined                         |
 | S-13       | #14   | pause-availability              | Pause and resume availability                                   | yes                   | Run `/10x-plan pause-availability`                           |
-| S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | yes                   | Run `/10x-plan unregister-and-erase`                         |
+| S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | done                  | Archived 2026-10-04                                          |
 | S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | done                  | Archived 2026-09-27; no issue was created                    |
 
 ## Open Roadmap Questions
