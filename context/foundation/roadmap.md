@@ -54,7 +54,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | ready    |
 | S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked  |
 | S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | ready    |
-| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | in-progress |
+| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done |
 | S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
 
 ## Streams
@@ -273,7 +273,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - How does erasure reconcile with audit records (consent, break-glass) that reference the person? — Owner: user. Block: no.
 - **Risk:** A hard guardrail for any pilot with real people. It needs deferred deletion, the first scheduled background task in the product.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-15: Resident's stored location never identifies a building
 
@@ -304,7 +304,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | yes                   | Run `/10x-plan public-skills-density-map`                    |
 | S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                    | no                    | Blocked: visibility matrix undefined                         |
 | S-13       | #14   | pause-availability              | Pause and resume availability                                   | yes                   | Run `/10x-plan pause-availability`                           |
-| S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | yes                   | Run `/10x-plan unregister-and-erase`                         |
+| S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | done                  | Archived 2026-10-04                                          |
 | S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | done                  | Archived 2026-09-27; no issue was created                    |
 
 ## Open Roadmap Questions
@@ -343,3 +343,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-06: a resident can add an optional phone number (hidden by default) and declare availability days and hours, shown to the coordinator as information only. A resident without a phone appears on the aggregated map but gets no alerts and no operational-list presence.** — Archived 2026-10-03 → `context/archive/2026-10-03-resident-phone-and-availability/`. Lesson: —.
 - **S-09: a coordinator can deliberately reveal the contact details of everyone matched (break-glass: an emergency override of the default privacy rule, used when nobody has confirmed, for example because the mobile network is down). The reveal is recorded in an append-only audit trail.** — Archived 2026-10-04 → `context/archive/2026-10-04-break-glass-contact-reveal/`. Lesson: —.
 - **S-10: a coordinator can ask for teams assembled from predefined templates (for example, an evacuation team is a medic, a physically strong person and a driver with a vehicle), built on the current ranking.** — Archived 2026-10-04 → `context/archive/2026-10-04-crisis-team-templates/`. Lesson: —.
+- **S-14: a resident can unregister at any time. They disappear from searches, the map and alerts immediately, and their personal data is fully removed within 30 days.** — Archived 2026-10-04 → `context/archive/2026-10-04-unregister-and-erase/`. Lesson: —.
