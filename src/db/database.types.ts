@@ -431,6 +431,89 @@ export type Database = {
           },
         ]
       }
+      team_role_skills: {
+        Row: {
+          role_slug: string
+          skill_slug: string
+          template_slug: string
+        }
+        Insert: {
+          role_slug: string
+          skill_slug: string
+          template_slug: string
+        }
+        Update: {
+          role_slug?: string
+          skill_slug?: string
+          template_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_role_skills_skill_slug_fkey"
+            columns: ["skill_slug"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "team_role_skills_template_slug_role_slug_fkey"
+            columns: ["template_slug", "role_slug"]
+            isOneToOne: false
+            referencedRelation: "team_template_roles"
+            referencedColumns: ["template_slug", "role_slug"]
+          },
+        ]
+      }
+      team_template_roles: {
+        Row: {
+          name_pl: string
+          role_slug: string
+          slots: number
+          sort: number
+          template_slug: string
+        }
+        Insert: {
+          name_pl: string
+          role_slug: string
+          slots: number
+          sort: number
+          template_slug: string
+        }
+        Update: {
+          name_pl?: string
+          role_slug?: string
+          slots?: number
+          sort?: number
+          template_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_template_roles_template_slug_fkey"
+            columns: ["template_slug"]
+            isOneToOne: false
+            referencedRelation: "team_templates"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      team_templates: {
+        Row: {
+          name_pl: string
+          slug: string
+          sort: number
+        }
+        Insert: {
+          name_pl: string
+          slug: string
+          sort: number
+        }
+        Update: {
+          name_pl?: string
+          slug?: string
+          sort?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           granted_at: string
@@ -487,6 +570,18 @@ export type Database = {
         }[]
       }
       get_my_profile: { Args: never; Returns: Json }
+      get_team_candidates: {
+        Args: { p_crisis_id: string; p_teams: number; p_template: string }
+        Returns: {
+          availability_slots: number
+          available_now: boolean
+          distance_km_rounded: number
+          has_phone: boolean
+          position: number
+          rank: number
+          role_skills: Json
+        }[]
+      }
       grant_coordinator: {
         Args: { p_email: string; p_note: string }
         Returns: undefined

@@ -70,6 +70,12 @@ const astroConfig = defineConfig({
   },
 });
 
+// node:test's `test()` returns a promise the runner tracks itself; awaiting it is not required.
+const testsConfig = defineConfig({
+  files: ["**/*.test.ts"],
+  rules: { "@typescript-eslint/no-floating-promises": "off" },
+});
+
 const scriptsConfig = defineConfig({
   files: ["scripts/**/*.mjs"],
   extends: [tseslint.configs.disableTypeChecked],
@@ -86,6 +92,7 @@ export default defineConfig(
   eslintPluginAstro.configs["flat/recommended"],
   eslintPluginAstro.configs["flat/jsx-a11y-recommended"],
   astroConfig,
+  testsConfig,
   scriptsConfig,
   eslintPluginPrettier,
 );
