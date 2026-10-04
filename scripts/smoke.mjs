@@ -284,6 +284,28 @@ const writeSteps = [
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  // Unregistering last also removes the account this run created.
+  [
+    "signin before unregister",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
+    { status: 302, location: "/", exact: true },
+  ],
+  [
+    "unregister rejects wrong password",
+    () => request("/api/auth/unregister", { method: "POST", form: { password: "wrong" } }),
+    { status: 302, location: "/profil?error=" },
+  ],
+  [
+    "unregister erases account",
+    () => request("/api/auth/unregister", { method: "POST", form: { password } }),
+    { status: 302, location: "/?konto-usuniete=1", exact: true },
+  ],
+  ["profil redirects after unregister", () => request("/profil"), { status: 302, location: "/auth/signin" }],
+  [
+    "signin rejects erased account",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
+    { status: 302, location: "/auth/signin?error=" },
+  ],
 ];
 
 const steps = READONLY ? readonlySteps : [...readonlySteps, ...writeSteps];
