@@ -50,7 +50,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | blocked  |
 | S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | proposed |
 | S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | done |
-| S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | ready    |
+| S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | done |
 | S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | ready    |
 | S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked  |
 | S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | ready    |
@@ -221,7 +221,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - How does assembly behave when a small pilot can't fill a template (partial team vs. no team)? — Owner: user. Block: no.
 - **Risk:** Builds purely on the ranking. Parallel-friendly and low risk; the templates are already written down in the seed spec.
-- **Status:** ready
+- **Status:** done
 
 ### S-11: Anyone sees the aggregated skills map of their area
 
@@ -299,8 +299,8 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-06       | #7    | resident-phone-and-availability | Optional hidden phone number and availability                   | done                  | Archived 2026-10-03                                          |
 | S-07       | #8    | crisis-sms-alert-confirmation   | Crisis SMS alert with YES/NO confirmation                       | no                    | Blocked: SMS provider choice; needs Workers Paid             |
 | S-08       | #9    | live-operational-list           | Live operational list of confirmed volunteers                   | no                    | Waits on S-07                                                |
-| S-09       | #10   | break-glass-contact-reveal      | Break-glass reveal of matched contacts, audited                 | yes                   | Recommended next; run `/10x-plan break-glass-contact-reveal` |
-| S-10       | #11   | crisis-team-templates           | Assemble teams from predefined templates                        | yes                   | Run `/10x-plan crisis-team-templates`                        |
+| S-09       | #10   | break-glass-contact-reveal      | Break-glass reveal of matched contacts, audited                 | done                  | Archived 2026-10-04                                          |
+| S-10       | #11   | crisis-team-templates           | Assemble teams from predefined templates                        | done                  | Archived 2026-10-04                                          |
 | S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | yes                   | Run `/10x-plan public-skills-density-map`                    |
 | S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                    | no                    | Blocked: visibility matrix undefined                         |
 | S-13       | #14   | pause-availability              | Pause and resume availability                                   | yes                   | Run `/10x-plan pause-availability`                           |
@@ -342,3 +342,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-04: a coordinator can deactivate crisis mode, and the app returns to everyday mode.** — Archived 2026-10-02 → `context/archive/2026-10-02-crisis-deactivation/`. Lesson: —.
 - **S-06: a resident can add an optional phone number (hidden by default) and declare availability days and hours, shown to the coordinator as information only. A resident without a phone appears on the aggregated map but gets no alerts and no operational-list presence.** — Archived 2026-10-03 → `context/archive/2026-10-03-resident-phone-and-availability/`. Lesson: —.
 - **S-09: a coordinator can deliberately reveal the contact details of everyone matched (break-glass: an emergency override of the default privacy rule, used when nobody has confirmed, for example because the mobile network is down). The reveal is recorded in an append-only audit trail.** — Archived 2026-10-04 → `context/archive/2026-10-04-break-glass-contact-reveal/`. Lesson: —.
+- **S-10: a coordinator can ask for teams assembled from predefined templates (for example, an evacuation team is a medic, a physically strong person and a driver with a vehicle), built on the current ranking.** — Archived 2026-10-04 → `context/archive/2026-10-04-crisis-team-templates/`. Lesson: —.

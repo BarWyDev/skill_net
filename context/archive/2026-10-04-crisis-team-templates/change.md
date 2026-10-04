@@ -1,9 +1,10 @@
 ---
 change_id: crisis-team-templates
 title: Crisis team templates
-status: impl_reviewed
+status: archived
 created: 2026-10-04
 updated: 2026-10-04
+archived_at: 2026-10-04T15:50:13Z
 ---
 
 ## Notes
