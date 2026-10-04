@@ -34,6 +34,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      contact_reveal_events: {
+        Row: {
+          crisis_id: string
+          id: number
+          occurred_at: string
+          reason: string
+          revealed_by: string
+          revealed_count: number
+        }
+        Insert: {
+          crisis_id: string
+          id?: never
+          occurred_at?: string
+          reason: string
+          revealed_by: string
+          revealed_count?: number
+        }
+        Update: {
+          crisis_id?: string
+          id?: never
+          occurred_at?: string
+          reason?: string
+          revealed_by?: string
+          revealed_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_reveal_events_crisis_id_fkey"
+            columns: ["crisis_id"]
+            isOneToOne: false
+            referencedRelation: "crises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_reveal_subjects: {
+        Row: {
+          event_id: number
+          user_id: string
+        }
+        Insert: {
+          event_id: number
+          user_id: string
+        }
+        Update: {
+          event_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_reveal_subjects_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "contact_reveal_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coordinator_role_events: {
         Row: {
           action: string
@@ -442,6 +500,19 @@ export type Database = {
         }[]
       }
       profile_is_matchable: { Args: { p_user_id: string }; Returns: boolean }
+      reveal_crisis_contacts: {
+        Args: { p_crisis_id: string; p_reason: string }
+        Returns: {
+          availability_slots: number
+          available_now: boolean
+          distance_km_rounded: number
+          matched_skills: Json
+          phone: string
+          phone_verified: boolean
+          position: number
+          rank: number
+        }[]
+      }
       revoke_coordinator: {
         Args: { p_email: string; p_note: string }
         Returns: undefined
