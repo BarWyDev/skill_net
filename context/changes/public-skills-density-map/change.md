@@ -1,7 +1,7 @@
 ---
 change_id: public-skills-density-map
 title: Public skills-density map
-status: implementing
+status: implemented
 created: 2026-10-05
 updated: 2026-10-05
 ---
