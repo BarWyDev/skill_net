@@ -277,25 +277,25 @@ The change is additive: one new function, no table changes and no backfill. Roll
 
 #### Automated
 
-- [x] 1.1 The migration applies cleanly: `npx supabase db reset`
-- [x] 1.2 The pgTAP suites pass, including the new one: `npm run test:db`
-- [x] 1.3 The types are regenerated and the type check passes: `npm run db:types && npx astro check`
+- [x] 1.1 The migration applies cleanly: `npx supabase db reset` — 3f2e7fd
+- [x] 1.2 The pgTAP suites pass, including the new one: `npm run test:db` — 3f2e7fd
+- [x] 1.3 The types are regenerated and the type check passes: `npm run db:types && npx astro check` — 3f2e7fd
 
 #### Manual
 
-- [x] 1.4 As `anon`, `get_skills_density()` returns only seed cells with bands 1–3 and no other columns
+- [x] 1.4 As `anon`, `get_skills_density()` returns only seed cells with bands 1–3 and no other columns — 3f2e7fd
 
 ### Phase 2: Service and Public API
 
 #### Automated
 
-- [ ] 2.1 Lint passes: `npm run lint`
-- [ ] 2.2 The type check passes: `npx astro check`
-- [ ] 2.3 Smoke passes against the local dev server: `npm run smoke`
+- [x] 2.1 Lint passes: `npm run lint`
+- [x] 2.2 The type check passes: `npx astro check`
+- [x] 2.3 Smoke passes against the local dev server: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.4 `/api/mapa?kategoria=medyczne` returns `{cell, band}` rows with `Cache-Control: private, max-age=300`
+- [x] 2.4 `/api/mapa?kategoria=medyczne` returns `{cell, band}` rows with `Cache-Control: private, max-age=300`
 
 ### Phase 3: Map Page and Landing
 
