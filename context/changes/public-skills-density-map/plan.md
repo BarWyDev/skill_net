@@ -289,28 +289,28 @@ The change is additive: one new function, no table changes and no backfill. Roll
 
 #### Automated
 
-- [x] 2.1 Lint passes: `npm run lint`
-- [x] 2.2 The type check passes: `npx astro check`
-- [x] 2.3 Smoke passes against the local dev server: `npm run smoke`
+- [x] 2.1 Lint passes: `npm run lint` — 3f88bd3
+- [x] 2.2 The type check passes: `npx astro check` — 3f88bd3
+- [x] 2.3 Smoke passes against the local dev server: `npm run smoke` — 3f88bd3
 
 #### Manual
 
-- [x] 2.4 `/api/mapa?kategoria=medyczne` returns `{cell, band}` rows with `Cache-Control: private, max-age=300`
+- [x] 2.4 `/api/mapa?kategoria=medyczne` returns `{cell, band}` rows with `Cache-Control: private, max-age=300` — 3f88bd3
 
 ### Phase 3: Map Page and Landing
 
 #### Automated
 
-- [ ] 3.1 Lint passes: `npm run lint`
-- [ ] 3.2 The type check passes: `npx astro check`
-- [ ] 3.3 The build passes: `npm run build`
-- [ ] 3.4 Smoke passes against the local dev server: `npm run smoke`
+- [x] 3.1 Lint passes: `npm run lint`
+- [x] 3.2 The type check passes: `npx astro check`
+- [x] 3.3 The build passes: `npm run build`
+- [x] 3.4 Smoke passes against the local dev server: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.5 Signed out, `/mapa` opens on Poland and `31-001` recentres on the seed cells in three shades
-- [ ] 3.6 Category switching redraws cells, and a sparse category shows fewer cells or the empty status
-- [ ] 3.7 A signed-in resident with a location gets a map centred on their area
-- [ ] 3.8 The landing pitch, the Topbar "Mapa" link and the account-erased notice all work
-- [ ] 3.9 Network requests carry only `kategoria`, and the postcode stays in a POST body
-- [ ] 3.10 The page is usable at 375 px width
+- [x] 3.5 Signed out, `/mapa` opens on Poland and `31-001` recentres on the seed cells in three shades
+- [x] 3.6 Category switching redraws cells, and a sparse category shows fewer cells or the empty status
+- [x] 3.7 A signed-in resident with a location gets a map centred on their area
+- [x] 3.8 The landing pitch, the Topbar "Mapa" link and the account-erased notice all work
+- [x] 3.9 Network requests carry only `kategoria`, and the postcode stays in a POST body
+- [x] 3.10 The page is usable at 375 px width
