@@ -1,0 +1,68 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+import { DensityMap } from "@/components/map/DensityMap";
+import { createClient } from "@/lib/supabase";
+import { getMyProfile, getTaxonomy } from "@/lib/services/profile";
+import type { SkillCategoryDTO } from "@/types";
+
+// Public page. It renders per user (Topbar, start point), so it is never cached as `public`.
+Astro.response.headers.set("Cache-Control", "private");
+
+let categories: SkillCategoryDTO[] | null = null;
+let start: { lat: number; lng: number } | null = null;
+let loadError: string | null = null;
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (!supabase) {
+  loadError = "Mapa jest niedostępna, bo Supabase nie jest skonfigurowany.";
+} else {
+  try {
+    categories = (await getTaxonomy(supabase)).categories;
+  } catch {
+    loadError = "Nie udało się wczytać mapy. Odśwież stronę.";
+  }
+  if (Astro.locals.user) {
+    try {
+      const profile = await getMyProfile(supabase);
+      if (profile.lat !== null && profile.lng !== null) start = { lat: profile.lat, lng: profile.lng };
+    } catch {
+      // Without the resident's own point the map simply opens on Poland.
+    }
+  }
+}
+---
+
+<Layout title="Mapa umiejętności — SkillNet">
+  <div class="bg-cosmic min-h-screen w-full">
+    <div class="mx-auto max-w-4xl p-4 sm:p-8">
+      <Topbar />
+
+      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+        <h1 class="mb-2 text-2xl font-bold">Mapa umiejętności</h1>
+        <p class="mb-2 text-blue-100/80">
+          Zobacz, gdzie w okolicy mieszkają osoby gotowe pomóc swoimi umiejętnościami. Każdy kwadrat to obszar 2 × 2 km,
+          a kolor mówi, ile osób w nim jest.
+        </p>
+        <p class="mb-6 text-sm text-blue-100/60">
+          Mapa nigdy nie pokazuje osób, adresów ani dokładnych liczb — tylko przedziały dla kwadratów z co najmniej 5
+          osobami.
+        </p>
+
+        {loadError && (
+          <p role="alert" class="text-red-200">
+            {loadError}
+          </p>
+        )}
+
+        {categories && (
+          <DensityMap client:only="react" categories={categories} start={start}>
+            <p slot="fallback" class="text-blue-100/70">
+              Ładowanie mapy…
+            </p>
+          </DensityMap>
+        )}
+      </main>
+    </div>
+  </div>
+</Layout>

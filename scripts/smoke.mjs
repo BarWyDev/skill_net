@@ -110,6 +110,7 @@ const readonlySteps = [
     { status: 400 },
   ],
   // The density map is public: banded cells only, never a count or an id, and never cached as `public`.
+  ["density map page renders", () => request("/mapa"), { status: 200, cacheControlIncludes: "private" }],
   [
     "density map serves banded cells",
     () => request("/api/mapa"),

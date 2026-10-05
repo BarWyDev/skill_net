@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { OSM_ATTRIBUTION, OSM_TILE_URL, POLAND_VIEW, type ViewTarget } from "@/components/map/map-view";
 import { cn } from "@/lib/utils";
 import type { LocationSource } from "@/types";
 
@@ -12,13 +13,6 @@ export interface LocationValue {
   lng: number | null;
 }
 
-interface ViewTarget {
-  lat: number;
-  lng: number;
-  zoom: number;
-}
-
-const POLAND_VIEW: ViewTarget = { lat: 52.07, lng: 19.48, zoom: 6 };
 const POINT_ZOOM = 14;
 const POSTCODE_RE = /^(\d{2})-?(\d{3})$/;
 
@@ -171,10 +165,7 @@ export function LocationPicker({ value, initial, onChange }: Props) {
           className="h-72 w-full rounded-xl"
           scrollWheelZoom={false}
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
           <Recenter target={viewTarget} />
           <ClickToPin onPin={handlePin} />
           {hasPoint && (
