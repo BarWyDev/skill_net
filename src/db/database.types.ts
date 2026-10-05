@@ -570,6 +570,13 @@ export type Database = {
         }[]
       }
       get_my_profile: { Args: never; Returns: Json }
+      get_skills_density: {
+        Args: { p_category?: string }
+        Returns: {
+          band: number
+          cell: Json
+        }[]
+      }
       get_team_candidates: {
         Args: { p_crisis_id: string; p_teams: number; p_template: string }
         Returns: {
