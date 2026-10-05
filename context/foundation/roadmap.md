@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-10-04
+updated: 2026-10-05
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -51,7 +51,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | proposed |
 | S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | done |
 | S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | done |
-| S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | ready    |
+| S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | in-progress |
 | S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked  |
 | S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | ready    |
 | S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done |
@@ -234,7 +234,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - What minimum aggregation keeps a sparse area from revealing an individual's location, and is a public "gap map" acceptable? — Owner: user. Block: no.
 - **Risk:** This is the everyday reason to open the app, which keeps the directory fresh. At low density it can leak individual locations, so aggregation is the whole slice.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-12: Resident controls data visibility per mode
 
