@@ -109,6 +109,16 @@ const readonlySteps = [
     () => request("/api/kody-pocztowe", { method: "POST", rawBody: '{"postcode":', contentType: "application/json" }),
     { status: 400 },
   ],
+  // The density map is public: banded cells only, never a count or an id, and never cached as `public`.
+  ["density map page renders", () => request("/mapa"), { status: 200, cacheControlIncludes: "private" }],
+  [
+    "density map serves banded cells",
+    () => request("/api/mapa"),
+    { status: 200, bodyExcludes: "user_id", cacheControlIncludes: "private" },
+  ],
+  ["density map hides counts", () => request("/api/mapa"), { status: 200, bodyExcludes: '"count"' }],
+  ["density map filters by category", () => request("/api/mapa?kategoria=medyczne"), { status: 200 }],
+  ["density map rejects unknown category", () => request("/api/mapa?kategoria=nie-ma"), { status: 400 }],
 ];
 
 const writeSteps = [
