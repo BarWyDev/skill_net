@@ -5,7 +5,8 @@
 -- residents, so the demo and the performance check are reproducible.
 --   * accounts use `@seed.skillnet.test` emails and have no password, so nobody can sign in;
 --   * pins lie within about 15 km of the 31-001 centroid and go through the profile trigger,
---     so they are coarsened like real ones;
+--     so they are coarsened like real ones. The radius is uniform (not area-uniform), so the
+--     centre is denser and the S-11 density map shows all three bands;
 --   * each resident has 1–4 distinct skills, with a level only where the skill has one;
 --   * about 85% declare availability (common weekly patterns plus some random grids), so the
 --     ranked list shows every badge state;
@@ -20,7 +21,7 @@ create temp table seed_residents on commit drop as
 select
   i,
   md5('skillnet-seed-' || i)::uuid as user_id,
-  15000 * sqrt(random()) as r,
+  15000 * random() as r,
   2 * pi() * random() as theta,
   1 + floor(random() * 4)::integer as skill_count
 from generate_series(1, 500) as i;
