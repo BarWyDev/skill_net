@@ -301,7 +301,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-08       | #9    | live-operational-list           | Live operational list of confirmed volunteers                   | no                    | Waits on S-07                                                |
 | S-09       | #10   | break-glass-contact-reveal      | Break-glass reveal of matched contacts, audited                 | done                  | Archived 2026-10-04                                          |
 | S-10       | #11   | crisis-team-templates           | Assemble teams from predefined templates                        | done                  | Archived 2026-10-04                                          |
-| S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | yes                   | Run `/10x-plan public-skills-density-map`                    |
+| S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | done                  | Archived 2026-10-05                                          |
 | S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                    | no                    | Blocked: visibility matrix undefined                         |
 | S-13       | #14   | pause-availability              | Pause and resume availability                                   | yes                   | Run `/10x-plan pause-availability`                           |
 | S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | done                  | Archived 2026-10-04                                          |
