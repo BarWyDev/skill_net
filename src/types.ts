@@ -1,5 +1,7 @@
 // Shared entity and DTO types for the page, the API and the React islands.
 
+import type { Polygon } from "geojson";
+
 export type SkillLevel = 1 | 2 | 3;
 export type LocationSource = "postcode" | "pin";
 
@@ -138,4 +140,13 @@ export interface CrisisTeamDTO {
   complete: boolean;
   /** One entry per slot, in template role order; `member` is null for an unfilled slot. */
   slots: { roleSlug: string; roleName: string; member: TeamMemberDTO | null }[];
+}
+
+/** 1: 5–9, 2: 10–24, 3: 25 or more distinct residents. Cells with fewer than 5 are never returned. */
+export type DensityBand = 1 | 2 | 3;
+
+/** One public 2 km cell of the skills-density map (S-11). No count, no id, no sub-cell coordinate. */
+export interface DensityCellDTO {
+  cell: Polygon;
+  band: DensityBand;
 }
