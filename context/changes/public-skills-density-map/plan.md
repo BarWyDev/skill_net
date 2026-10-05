@@ -301,16 +301,16 @@ The change is additive: one new function, no table changes and no backfill. Roll
 
 #### Automated
 
-- [x] 3.1 Lint passes: `npm run lint`
-- [x] 3.2 The type check passes: `npx astro check`
-- [x] 3.3 The build passes: `npm run build`
-- [x] 3.4 Smoke passes against the local dev server: `npm run smoke`
+- [x] 3.1 Lint passes: `npm run lint` — 00600b7
+- [x] 3.2 The type check passes: `npx astro check` — 00600b7
+- [x] 3.3 The build passes: `npm run build` — 00600b7
+- [x] 3.4 Smoke passes against the local dev server: `npm run smoke` — 00600b7
 
 #### Manual
 
-- [x] 3.5 Signed out, `/mapa` opens on Poland and `31-001` recentres on the seed cells in three shades
-- [x] 3.6 Category switching redraws cells, and a sparse category shows fewer cells or the empty status
-- [x] 3.7 A signed-in resident with a location gets a map centred on their area
-- [x] 3.8 The landing pitch, the Topbar "Mapa" link and the account-erased notice all work
-- [x] 3.9 Network requests carry only `kategoria`, and the postcode stays in a POST body
-- [x] 3.10 The page is usable at 375 px width
+- [x] 3.5 Signed out, `/mapa` opens on Poland and `31-001` recentres on the seed cells in three shades — 00600b7
+- [x] 3.6 Category switching redraws cells, and a sparse category shows fewer cells or the empty status — 00600b7
+- [x] 3.7 A signed-in resident with a location gets a map centred on their area — 00600b7
+- [x] 3.8 The landing pitch, the Topbar "Mapa" link and the account-erased notice all work — 00600b7
+- [x] 3.9 Network requests carry only `kategoria`, and the postcode stays in a POST body — 00600b7
+- [x] 3.10 The page is usable at 375 px width — 00600b7
