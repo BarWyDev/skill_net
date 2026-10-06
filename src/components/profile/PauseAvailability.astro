@@ -1,0 +1,58 @@
+---
+// "Wstrzymaj dostępność": a plain form POST, so it works without JS. The date bounds come from the
+// server (Warsaw calendar), never from the browser clock. Errors come back through the `?error=`
+// alert at the top of /profil.
+import { pauseDateBounds } from "@/lib/pause";
+
+interface Props {
+  paused: boolean;
+}
+
+const { paused } = Astro.props;
+const { min, max } = pauseDateBounds(new Date());
+---
+
+<section
+  aria-labelledby="pause-availability-title"
+  class="mt-10 rounded-2xl border border-white/15 bg-white/5 p-4 text-white sm:p-6"
+>
+  <h2 id="pause-availability-title" class="mb-3 text-lg font-semibold">
+    {paused ? "Zmień wstrzymanie dostępności" : "Wstrzymaj dostępność"}
+  </h2>
+  <p class="mb-4 text-sm text-blue-100/80">
+    Na czas wstrzymania nie pojawisz się w nowych kryzysach ani na mapie, a w trwających kryzysach koordynator Cię nie
+    widzi. Twój profil i konto zostają bez zmian.
+  </p>
+  <form method="post" action="/api/profile/pause" class="space-y-4">
+    <fieldset class="space-y-3">
+      <legend class="sr-only">Jak długo</legend>
+      <div class="space-y-2">
+        <label class="flex min-h-12 items-center gap-3 text-sm">
+          <input type="radio" name="mode" value="date" checked class="size-5 accent-blue-400" />
+          Do dnia (włącznie)
+        </label>
+        <label for="pause-until" class="sr-only">
+          Ostatni dzień wstrzymania
+        </label>
+        <input
+          id="pause-until"
+          name="until"
+          type="date"
+          min={min}
+          max={max}
+          class="h-12 w-full rounded-lg border border-white/20 bg-slate-900/60 px-3 text-sm text-white scheme-dark focus:border-blue-300 focus:outline-none sm:max-w-xs"
+        />
+      </div>
+      <label class="flex min-h-12 items-center gap-3 text-sm">
+        <input type="radio" name="mode" value="indefinite" class="size-5 accent-blue-400" />
+        Bezterminowo, do wznowienia
+      </label>
+    </fieldset>
+    <button
+      type="submit"
+      class="h-12 w-full rounded-lg border border-white/30 bg-white/10 px-6 text-sm font-medium text-white transition-colors hover:bg-white/20 sm:w-auto"
+    >
+      {paused ? "Zmień wstrzymanie" : "Wstrzymaj dostępność"}
+    </button>
+  </form>
+</section>
