@@ -260,7 +260,7 @@ When needed: the zone on Cloudflare DNS → Worker → Domains & Routes → **Cu
 
 **Carried over from planning:**
 
-- Custom SMTP provider for Supabase auth emails (needed before real users). Confirmed on 2026-09-25: the built-in limit blocked sign-up after a handful of attempts. Sending to arbitrary addresses needs a verified own domain, which `workers.dev` can't provide, so this is tied to Phase 8.
+- Custom SMTP provider for Supabase auth emails (needed before real users). Tracked in `context/changes/email-delivery/` since 2026-10-06. Confirmed on 2026-09-25: the built-in limit blocked sign-up after a handful of attempts. Sending to arbitrary addresses needs a verified own domain, which `workers.dev` can't provide, so this is tied to Phase 8.
 - Supabase Pro upgrade before the pilot (removes pausing and adds backups).
 - A staging Supabase project, if previews ever need writable test data.
 - Upgrade to wrangler ≥ 4.135 and Worker Previews once #15682 is resolved.
