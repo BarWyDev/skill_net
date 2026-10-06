@@ -430,12 +430,12 @@ Expand-only migration: new tables, a new trigger, new functions, and one `create
 
 #### Automated
 
-- [ ] 5.1 Migration applied remotely
-- [ ] 5.2 Production read-only smoke passes
+- [x] 5.1 Migration applied remotely
+- [x] 5.2 Production read-only smoke passes
 - [ ] 5.3 No errors in wrangler tail during the manual test
 
 #### Manual
 
 - [ ] 5.4 Non-team address receives the Polish email from the own domain; link works end to end
 - [ ] 5.5 New account has a signup consent row; existing accounts are gated and can accept
-- [ ] 5.6 Roadmap S-05 marked done via /10x-archive
+- [x] 5.6 Roadmap S-05 marked done via /10x-archive
