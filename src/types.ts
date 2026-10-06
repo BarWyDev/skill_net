@@ -28,7 +28,14 @@ export interface MyProfileDTO {
   lat: number | null;
   lng: number | null;
   skills: ProfileSkillDTO[];
+  /** Complete and not paused: the resident can appear in a crisis ranking. */
   matchable: boolean;
+  /** A location and at least one skill, whether paused or not. */
+  complete: boolean;
+  /** A pause is in effect now. */
+  paused: boolean;
+  /** Last paused day (`YYYY-MM-DD`, inclusive, Warsaw calendar); null when indefinite or not paused. */
+  pausedUntil: string | null;
   /** Normalised `+48XXXXXXXXX`. Only ever returned to its owner. */
   phone: string | null;
   phoneVerified: boolean;
@@ -79,6 +86,10 @@ export interface CrisisDTO {
   radiusKm: number;
   activatedAt: string;
   endedAt: string | null;
+  /**
+   * For an active crisis, the residents the coordinator can currently see in its list (paused and
+   * erased residents excluded). For an ended crisis, the frozen count from activation.
+   */
   matchCount: number;
   status: "active" | "ended";
 }

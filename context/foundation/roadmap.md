@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-10-05
+updated: 2026-10-06
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -53,7 +53,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | done |
 | S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | done |
 | S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked  |
-| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | ready    |
+| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | in-progress |
 | S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done |
 | S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
 
@@ -260,7 +260,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - Does a pause remove the person from the ranking or only from alerts, does it expire, and what happens when someone pauses after a YES during an active crisis? — Owner: user. Block: no.
 - **Risk:** Low. It keeps the directory full, the alternative the PRD accepted to deletion.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-14: Resident unregisters and their data is erased
 

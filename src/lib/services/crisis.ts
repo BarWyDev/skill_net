@@ -84,14 +84,17 @@ export async function endCrisis(
   return error ? { ok: false, message: endErrorMessage(error) } : { ok: true, ended: data };
 }
 
-const CRISIS_COLUMNS = "id, radius_m, activated_at, ended_at, match_count, status, crisis_types(name_pl)";
+// `visible_match_count` is a PostgREST computed column (a SQL function over the crises row type).
+// The generated types only recognise computed columns whose parameter is unnamed, so the queries
+// below override the row type.
+const CRISIS_COLUMNS = "id, radius_m, activated_at, ended_at, visible_match_count, status, crisis_types(name_pl)";
 
 interface CrisisRow {
   id: string;
   radius_m: number;
   activated_at: string;
   ended_at: string | null;
-  match_count: number;
+  visible_match_count: number;
   status: string;
   crisis_types: { name_pl: string } | null;
 }
@@ -103,7 +106,7 @@ function toCrisisDTO(row: CrisisRow): CrisisDTO {
     radiusKm: row.radius_m / 1000,
     activatedAt: row.activated_at,
     endedAt: row.ended_at,
-    matchCount: row.match_count,
+    matchCount: row.visible_match_count,
     status: row.status === "ended" ? "ended" : "active",
   };
 }
@@ -114,7 +117,8 @@ export async function listActiveCrises(supabase: SupabaseClient): Promise<Crisis
     .from("crises")
     .select(CRISIS_COLUMNS)
     .eq("status", "active")
-    .order("activated_at", { ascending: false });
+    .order("activated_at", { ascending: false })
+    .overrideTypes<CrisisRow[], { merge: false }>();
   if (error) throw new Error(`listActiveCrises: ${error.code}`);
   return data.map(toCrisisDTO);
 }
@@ -126,14 +130,20 @@ export async function listRecentEndedCrises(supabase: SupabaseClient, limit = 10
     .select(CRISIS_COLUMNS)
     .eq("status", "ended")
     .order("ended_at", { ascending: false })
-    .limit(limit);
+    .limit(limit)
+    .overrideTypes<CrisisRow[], { merge: false }>();
   if (error) throw new Error(`listRecentEndedCrises: ${error.code}`);
   return data.map(toCrisisDTO);
 }
 
 /** One crisis, or null when it does not exist or is not visible to the caller. */
 export async function getCrisis(supabase: SupabaseClient, id: string): Promise<CrisisDTO | null> {
-  const { data, error } = await supabase.from("crises").select(CRISIS_COLUMNS).eq("id", id).maybeSingle();
+  const { data, error } = await supabase
+    .from("crises")
+    .select(CRISIS_COLUMNS)
+    .eq("id", id)
+    .maybeSingle()
+    .overrideTypes<CrisisRow | null, { merge: false }>();
   if (error) throw new Error(`getCrisis: ${error.code}`);
   return data ? toCrisisDTO(data) : null;
 }
