@@ -51,7 +51,7 @@ Verify with: `npm run test:db`, `npm run test:unit`, `npm run smoke` locally, `S
 
 ## Implementation Approach
 
-Database first, so the invariants live where the app can't weaken them: an append-only `consent_events` table, a whitelist of published versions in `consent_versions`, and an `after insert` trigger on `auth.users` that reads `consent_version` from the sign-up metadata. Email sign-ups without a valid version are rejected; direct inserts (fixtures, admin) are exempt. The app then sends the version from one constant, gates older accounts in middleware, and handles the confirmation link with `verifyOtp`. Production configuration (template, SMTP, domain) is a human phase at the end because it has DNS lead time and touches dashboards the agent can't change.
+Database first, so the invariants live where the app can't weaken them: an append-only `consent_events` table, a whitelist of published versions in `consent_versions`, and an `after insert` trigger on `auth.users` that reads `consent_version` from the sign-up metadata. Email-provider accounts without a valid version are rejected, including those created by admin (Studio "Add user", `auth.admin.createUser`), which must pass `consent_version` in user metadata; only rows inserted straight into `auth.users` without app metadata (test fixtures) are exempt. The app then sends the version from one constant, gates older accounts in middleware, and handles the confirmation link with `verifyOtp`. Production configuration (template, SMTP, domain) is a human phase at the end because it has DNS lead time and touches dashboards the agent can't change.
 
 ## Critical Implementation Details
 
@@ -305,11 +305,11 @@ Push the migration, configure the confirmation template and custom SMTP on an ow
 
 #### 1. Database
 
-**Intent**: Right after the PR merges: `npx supabase migration list --linked`, then `npx supabase db push`. Verify production sign-up and the gate.
+**Intent**: Right after the PR merges: `npx supabase migration list --linked`, then `npx supabase db push`. Verify production sign-up and the gate. Push only when no crisis is active: from the push until each resident accepts on `/zgoda`, existing residents have no consent row and are absent from new activations and the density map. Count matchable residents (`select count(*) from public.profiles p where public.profile_is_matchable(p.user_id)` in the SQL editor) before and after the push, and note the drop in the deployment log.
 
 #### 2. Supabase dashboard (human)
 
-**Intent**: Auth → Email Templates → "Confirm signup": paste the Polish subject and body from `supabase/templates/confirmation.html`. Confirm Site URL is `https://skillnet.barwy.workers.dev` and the redirect allowlist includes it.
+**Intent**: Auth → Email Templates → "Confirm signup": paste the Polish subject and body from `supabase/templates/confirmation.html`. Confirm Site URL is `https://skillnet.barwy.workers.dev` and the redirect allowlist includes it. After the push, creating a user in Studio or through the admin API fails with `consent_required` unless the user metadata carries `{"consent_version": "<current version>"}`.
 
 #### 3. Domain and SMTP (human)
 
@@ -416,15 +416,15 @@ Expand-only migration: new tables, a new trigger, new functions, and one `create
 
 #### Automated
 
-- [x] 4.1 Lint, type check, build
-- [x] 4.2 Unit tests pass
-- [x] 4.3 Smoke passes locally
+- [x] 4.1 Lint, type check, build — 2eae82a
+- [x] 4.2 Unit tests pass — 2eae82a
+- [x] 4.3 Smoke passes locally — 2eae82a
 
 #### Manual
 
-- [x] 4.4 Account without consent is gated; accepting writes a reaccept row
-- [x] 4.5 Unregister from /zgoda shows errors there and erases on success
-- [x] 4.6 Signed-out visitors are never gated
+- [x] 4.4 Account without consent is gated; accepting writes a reaccept row — 2eae82a
+- [x] 4.5 Unregister from /zgoda shows errors there and erases on success — 2eae82a
+- [x] 4.6 Signed-out visitors are never gated — 2eae82a
 
 ### Phase 5: Production rollout (human)
 

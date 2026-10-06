@@ -8,7 +8,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(36);
+select plan(39);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as postgres: bypasses RLS, triggers still apply)
@@ -328,6 +328,31 @@ select ok(
   (select prosecdef from pg_proc where oid = 'public.record_signup_consent()'::regprocedure)
     and (select prosecdef from pg_proc where oid = 'public.record_my_consent(text)'::regprocedure),
   'definer_owner: the trigger function and record_my_consent are security definer'
+);
+
+-- GoTrue inserts as supabase_auth_admin, which the test runner cannot become (membership is reserved
+-- for superusers). These pin the properties that insert relies on instead; the smoke sign-up step
+-- covers the real path through GoTrue.
+select ok(
+  exists (
+    select 1 from pg_trigger t
+    where t.tgrelid = 'auth.users'::regclass
+      and t.tgfoid = 'public.record_signup_consent()'::regprocedure
+      and t.tgenabled = 'O'
+      and (t.tgtype & 1) = 1      -- for each row
+      and (t.tgtype & 2) = 0      -- after
+      and (t.tgtype & 4) = 4      -- insert
+  ),
+  'trigger_wiring: record_signup_consent fires after insert on auth.users, for each row, enabled'
+);
+select ok(
+  (select proconfig from pg_proc where oid = 'public.record_signup_consent()'::regprocedure)
+    = array['search_path=""']::text[],
+  'trigger_search_path: record_signup_consent pins an empty search_path'
+);
+select ok(
+  has_table_privilege('postgres', 'public.consent_events', 'insert'),
+  'definer_can_write: the definer (postgres) can insert into consent_events'
 );
 
 select * from finish();

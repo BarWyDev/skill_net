@@ -65,6 +65,7 @@ Production is https://skillnet.barwy.workers.dev on the Workers **Free** plan. U
 - **Live errors**: `npx wrangler tail skillnet --format json --status error`
 - **State**: `npx wrangler deployments status` and `npx wrangler versions list --json`
 - **Rollback**: `npx wrangler rollback <version-id> --message "<reason>"`. It takes seconds, but it doesn't undo migrations, KV data or secrets. The next push to `master` redeploys over a rollback, so revert the bad commit too.
+- **Admin-created accounts**: a database trigger refuses every email account without a published consent version. Creating a user in Studio or with `auth.admin.createUser` fails with `consent_required` unless the user metadata carries `{"consent_version": "<CURRENT_CONSENT_VERSION from src/lib/consent.ts>"}`.
 - **Human-only**: deleting the Worker, KV namespaces or named previews, rotating Supabase keys, changing the Workers plan, and granting or revoking the coordinator role on production. Once crisis mode exists, don't merge to `master` while a crisis is active.
 
 <!-- BEGIN @przeprogramowani/10x-cli -->
