@@ -53,7 +53,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | done |
 | S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | done |
 | S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked  |
-| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | in-progress |
+| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | done |
 | S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done |
 | S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
 
@@ -260,7 +260,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - Does a pause remove the person from the ranking or only from alerts, does it expire, and what happens when someone pauses after a YES during an active crisis? — Owner: user. Block: no.
 - **Risk:** Low. It keeps the directory full, the alternative the PRD accepted to deletion.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-14: Resident unregisters and their data is erased
 
@@ -303,7 +303,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-10       | #11   | crisis-team-templates           | Assemble teams from predefined templates                        | done                  | Archived 2026-10-04                                          |
 | S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | done                  | Archived 2026-10-05                                          |
 | S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                    | no                    | Blocked: visibility matrix undefined                         |
-| S-13       | #14   | pause-availability              | Pause and resume availability                                   | yes                   | Run `/10x-plan pause-availability`                           |
+| S-13       | #14   | pause-availability              | Pause and resume availability                                   | done                  | Archived 2026-10-06                                          |
 | S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | done                  | Archived 2026-10-04                                          |
 | S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | done                  | Archived 2026-09-27; no issue was created                    |
 
@@ -345,3 +345,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-10: a coordinator can ask for teams assembled from predefined templates (for example, an evacuation team is a medic, a physically strong person and a driver with a vehicle), built on the current ranking.** — Archived 2026-10-04 → `context/archive/2026-10-04-crisis-team-templates/`. Lesson: —.
 - **S-14: a resident can unregister at any time. They disappear from searches, the map and alerts immediately, and their personal data is fully removed within 30 days.** — Archived 2026-10-04 → `context/archive/2026-10-04-unregister-and-erase/`. Lesson: —.
 - **S-11: an anonymous visitor or a resident can see the density of skills in their area on a map, with no personal data.** — Archived 2026-10-05 → `context/archive/2026-10-05-public-skills-density-map/`. Lesson: —.
+- **S-13: a resident can pause their availability without deleting the account, and resume it later.** — Archived 2026-10-06 → `context/archive/2026-10-06-pause-availability/`. Lesson: —.
