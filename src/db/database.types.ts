@@ -34,6 +34,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      consent_events: {
+        Row: {
+          id: number
+          occurred_at: string
+          source: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          id?: never
+          occurred_at?: string
+          source: string
+          user_id: string
+          version: string
+        }
+        Update: {
+          id?: never
+          occurred_at?: string
+          source?: string
+          user_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_events_version_fkey"
+            columns: ["version"]
+            isOneToOne: false
+            referencedRelation: "consent_versions"
+            referencedColumns: ["version"]
+          },
+        ]
+      }
+      consent_versions: {
+        Row: {
+          published_at: string
+          version: string
+        }
+        Insert: {
+          published_at?: string
+          version: string
+        }
+        Update: {
+          published_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       contact_reveal_events: {
         Row: {
           crisis_id: string
@@ -608,6 +655,7 @@ export type Database = {
           lng: number
         }[]
       }
+      my_latest_consent_version: { Args: never; Returns: string }
       pause_active: {
         Args: { p_at: string; p_paused_at: string; p_paused_until: string }
         Returns: boolean
@@ -615,6 +663,7 @@ export type Database = {
       pause_my_availability: { Args: { p_until: string }; Returns: undefined }
       profile_is_complete: { Args: { p_user_id: string }; Returns: boolean }
       profile_is_matchable: { Args: { p_user_id: string }; Returns: boolean }
+      record_my_consent: { Args: { p_version: string }; Returns: undefined }
       resume_my_availability: { Args: never; Returns: undefined }
       reveal_crisis_contacts: {
         Args: { p_crisis_id: string; p_reason: string }
