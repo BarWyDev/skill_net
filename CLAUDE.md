@@ -26,7 +26,7 @@ A pre-commit hook (husky + lint-staged) runs `eslint --fix` on `*.{ts,tsx,astro}
 
 The app is an Astro 7 SSR app (`output: "server"`) deployed to Cloudflare Workers through `@astrojs/cloudflare`. It uses React 19 islands, Tailwind 4, shadcn/ui ("new-york" style, components in `src/components/ui/`) and Supabase for auth and data.
 
-- **Env**: `SUPABASE_URL` and `SUPABASE_KEY` are declared in the `env.schema` of `astro.config.mjs` as *optional* server secrets. Import them from `astro:env/server`, never from `import.meta.env`. Put them in `.env`, and in `.dev.vars` for the workerd runtime (both are gitignored). In production, set them with `npx wrangler secret put`.
+- **Env**: `SUPABASE_URL` and `SUPABASE_KEY` are declared in the `env.schema` of `astro.config.mjs` as _optional_ server secrets. Import them from `astro:env/server`, never from `import.meta.env`. Put them in `.env`, and in `.dev.vars` for the workerd runtime (both are gitignored). In production, set them with `npx wrangler secret put`.
 - **Supabase client**: `createClient(headers, cookies)` in `src/lib/supabase.ts` builds a per-request SSR client with cookie-based sessions. It **returns `null` when env is missing**, so every caller must handle `null`. See `src/pages/api/auth/signin.ts` for the pattern.
 - **Middleware**: `src/middleware.ts` resolves the user on every request into `Astro.locals.user` (typed in `src/env.d.ts`). It redirects anonymous users to `/auth/signin` for any path starting with an entry in `PROTECTED_ROUTES`. To protect a new route, add it to that list.
 - **Auth**: HTML form POSTs go to `src/pages/api/auth/{signin,signup,signout}.ts`. The endpoints answer with redirects, not JSON, and pass errors back as `?error=` query params, which the React forms in `src/components/auth/` display. The smoke test asserts these exact redirect targets, so update `scripts/smoke.mjs` whenever you change them.
@@ -58,7 +58,8 @@ GitHub Actions never deploys. The repo is https://github.com/BarWyDev/skill_net.
 
 Production is https://skillnet.barwy.workers.dev on the Workers **Free** plan. Upgrade to Paid before crisis mode ships: Free's 10 ms CPU and 50-subrequest limits silently truncate a fan-out. Details and risks are in @context/foundation/infrastructure.md; the run log is in `context/changes/deployment/deployment-plan.md`.
 
-- **Auto-deploy**: Cloudflare Workers Builds deploys every push to `master` (`npm run build`, then `npx wrangler deploy`), **even when CI is red**. So change `master` only through PRs, and merge after `ci` and `smoke` pass.
+- **Auto-deploy**: Cloudflare Workers Builds deploys every push to `master` (`npm run build`, then `npx wrangler deploy`), **even when CI is red**. So change `master` only through PRs. Branch protection on `master` requires `ci` and `smoke` to pass before a PR can merge (admins can still push directly; don't).
+- **Migrations**: the deploy never touches the database. Production gets migrations only from `npx supabase db push` (the project is linked). Write them expand-then-contract so the code on `master` keeps working, and right after merging a change with a migration run `npx supabase migration list --linked`, then `npx supabase db push`. Pushing a migration is a production change.
 - **Previews**: other branches run `npx wrangler preview` and get `https://<branch>-skillnet.barwy.workers.dev` behind Cloudflare Access. Previews inherit no secrets, so auth is off there. They use their own `SESSION` KV, pinned under `previews` in `wrangler.jsonc`. Keep that pin, or preview builds fail with error 10021.
 - **Secrets**: `SUPABASE_URL` and `SUPABASE_KEY` (publishable key only). Set them with `npx wrangler secret put <NAME>` or `npx wrangler secret bulk .dev.vars --name skillnet`. Either one **deploys a new version immediately**, so treat it as a production change. Never pass secret values as command arguments.
 - **Live errors**: `npx wrangler tail skillnet --format json --status error`
@@ -80,12 +81,12 @@ Review AI-generated code before merge with the **implementation review chain**:
 
 ### Task Router - Where to start
 
-| Skill | Use it when |
-| --- | --- |
-| **Code review (lesson focus)** | |
+| Skill                          | Use it when                                                                                                                                                                                                                             |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Code review (lesson focus)** |                                                                                                                                                                                                                                         |
 | `/10x-impl-review <change-id>` | You have implemented code and want a structured review before merge. The skill checks plan adherence, scope discipline, safety and quality, architecture, pattern consistency, and success criteria, then presents findings for triage. |
-| **Recurring lesson outcome** | |
-| `/10x-lesson` | A finding reveals a recurring project rule or agent failure pattern. Record it in `context/foundation/lessons.md` instead of treating it as a one-off note. |
+| **Recurring lesson outcome**   |                                                                                                                                                                                                                                         |
+| `/10x-lesson`                  | A finding reveals a recurring project rule or agent failure pattern. Record it in `context/foundation/lessons.md` instead of treating it as a one-off note.                                                                             |
 
 ### Triage discipline
 
