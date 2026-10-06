@@ -277,29 +277,29 @@ The new columns are nullable with no default, so every existing profile is unpau
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db reset`
-- [x] 1.2 DB suites pass: `npm run test:db`
-- [x] 1.3 Types regenerated, and the type check passes: `npx astro check`
-- [x] 1.4 Lint passes: `npm run lint`
+- [x] 1.1 Migration applies cleanly: `npx supabase db reset` — 8d1c208
+- [x] 1.2 DB suites pass: `npm run test:db` — 8d1c208
+- [x] 1.3 Types regenerated, and the type check passes: `npx astro check` — 8d1c208
+- [x] 1.4 Lint passes: `npm run lint` — 8d1c208
 
 #### Manual
 
-- [x] 1.5 Paused seeded resident disappears from a fresh crisis list and from `/mapa` counts
+- [x] 1.5 Paused seeded resident disappears from a fresh crisis list and from `/mapa` counts — 8d1c208
 
 ### Phase 2: Application
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm run test:unit`
-- [ ] 2.2 Lint passes: `npm run lint`
-- [ ] 2.3 Type check passes: `npx astro check`
-- [ ] 2.4 Build succeeds: `npm run build`
-- [ ] 2.5 DB suites still pass: `npm run test:db`
-- [ ] 2.6 Smoke flow still passes locally: `npm run smoke`
+- [x] 2.1 Unit tests pass: `npm run test:unit`
+- [x] 2.2 Lint passes: `npm run lint`
+- [x] 2.3 Type check passes: `npx astro check`
+- [x] 2.4 Build succeeds: `npm run build`
+- [x] 2.5 DB suites still pass: `npm run test:db`
+- [x] 2.6 Smoke flow still passes locally: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.7 Pause and resume flow on `/profil` at phone width (date, indefinite, banner)
-- [ ] 2.8 Out-of-range date returns the Polish error alert
-- [ ] 2.9 Active crisis: paused resident vanishes from list, reveal and teams; counts stay consistent; resume restores "Osoba #N"
-- [ ] 2.10 `/mapa` band changes for a borderline cell after a pause
+- [x] 2.7 Pause and resume flow on `/profil` at phone width (date, indefinite, banner)
+- [x] 2.8 Out-of-range date returns the Polish error alert
+- [x] 2.9 Active crisis: paused resident vanishes from list, reveal and teams; counts stay consistent; resume restores "Osoba #N"
+- [x] 2.10 `/mapa` band changes for a borderline cell after a pause
