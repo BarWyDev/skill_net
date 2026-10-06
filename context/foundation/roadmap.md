@@ -45,7 +45,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | done     |
 | S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents        | S-01, S-02, S-15              | US-01, FR-009, FR-010 | done     |
 | S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | done     |
-| S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | ready    |
+| S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | in-progress |
 | S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | done     |
 | S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | blocked  |
 | S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | proposed |
@@ -158,7 +158,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - Is email verification enough for v1, or is SMS verification required at sign-up too (FR-001 says "email/SMS")? — Owner: user. Block: no.
 - **Risk:** Not on the north star's path, since development can use today's sign-up, but a pilot with real registrations cannot start without it. The domain and email setup is the lead-time item, so start it early.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-06: Resident adds a phone number and availability
 
