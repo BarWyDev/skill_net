@@ -2,9 +2,16 @@ import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
 import { unregisterMe } from "@/lib/services/account";
 
-const errorRedirect = (message: string) => `/profil?error=${encodeURIComponent(message)}`;
+// Errors go back to the page the form came from, so a resident refusing consent on /zgoda sees them
+// there instead of being bounced through the gate. Only these pages are accepted.
+const RETURN_PAGES = ["/profil", "/zgoda"];
 
 export const POST: APIRoute = async (context) => {
+  const form = await context.request.formData();
+  const returnTo = form.get("return_to");
+  const errorPage = typeof returnTo === "string" && RETURN_PAGES.includes(returnTo) ? returnTo : "/profil";
+  const errorRedirect = (message: string) => `${errorPage}?error=${encodeURIComponent(message)}`;
+
   const user = context.locals.user;
   if (!user) {
     return context.redirect("/auth/signin");
@@ -15,7 +22,7 @@ export const POST: APIRoute = async (context) => {
     return context.redirect(errorRedirect("Supabase nie jest skonfigurowany."));
   }
 
-  const password = (await context.request.formData()).get("password");
+  const password = form.get("password");
   if (typeof password !== "string" || password === "") {
     return context.redirect(errorRedirect("Podaj hasło, aby usunąć konto."));
   }

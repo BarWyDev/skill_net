@@ -17,6 +17,12 @@ insert into auth.users (id, email) values
   ('cccccccc-0000-0000-0000-000000000003', 'c@test.local'),
   ('dddddddd-0000-0000-0000-000000000004', 'd@test.local');
 
+-- Fixture residents consented at sign-up (S-05), so a complete profile stays matchable.
+insert into public.consent_events (user_id, version, source)
+select u.id, '2026-10-06', 'signup'
+from auth.users u
+where not exists (select 1 from public.consent_events c where c.user_id = u.id);
+
 insert into public.postcodes (postcode, centroid, address_count)
 values
   ('00-950', extensions.st_setsrid(extensions.st_makepoint(21.0118, 52.2319), 4326)::extensions.geography, 10),

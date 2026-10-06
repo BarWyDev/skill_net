@@ -4,6 +4,8 @@
 -- never runs seeds, so production never sees it. `setseed` makes every reset produce the same
 -- residents, so the demo and the performance check are reproducible.
 --   * accounts use `@seed.skillnet.test` emails and have no password, so nobody can sign in;
+--   * accounts carry the S-05 `consent_version` like a real sign-up, so the trigger records their
+--     consent and they stay matchable;
 --   * pins lie within about 15 km of the 31-001 centroid and go through the profile trigger,
 --     so they are coarsened like real ones. The radius is uniform (not area-uniform), so the
 --     centre is denser and the S-11 density map shows all three bands;
@@ -39,7 +41,7 @@ select
   'mieszkaniec-' || lpad(i::text, 3, '0') || '@seed.skillnet.test',
   '',
   '{"provider":"email","providers":["email"]}',
-  '{}',
+  '{"consent_version":"2026-10-06"}',
   now(),
   now(),
   '', '', '', ''

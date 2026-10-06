@@ -1,6 +1,11 @@
 ---
 // "Usuń konto": a plain form POST, so it works without JS. Errors come back through the `?error=` alert
-// at the top of /profil.
+// at the top of the page named by `returnTo` (/profil or /zgoda).
+interface Props {
+  returnTo?: "/profil" | "/zgoda";
+}
+
+const { returnTo = "/profil" } = Astro.props;
 ---
 
 <section
@@ -19,6 +24,7 @@
     osobę.
   </p>
   <form method="post" action="/api/auth/unregister" class="space-y-3">
+    <input type="hidden" name="return_to" value={returnTo} />
     <div class="space-y-1">
       <label for="delete-account-password" class="block text-sm font-medium">
         Potwierdź hasłem
