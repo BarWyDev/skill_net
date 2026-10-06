@@ -120,6 +120,28 @@ const readonlySteps = [
   ["density map filters by category", () => request("/api/mapa?kategoria=medyczne"), { status: 200 }],
   ["density map rejects unknown category", () => request("/api/mapa?kategoria=nie-ma"), { status: 400 }],
   ["privacy page renders", () => request("/prywatnosc"), { status: 200, cacheControlIncludes: "private" }],
+  [
+    "confirm without token redirects to link error",
+    () => request("/auth/confirm"),
+    { status: 302, location: "/auth/link-wygasl", cacheControlIncludes: "no-store" },
+  ],
+  [
+    "confirm with bogus token redirects to link error",
+    () => request("/auth/confirm?token_hash=smoke-not-a-token&type=email"),
+    { status: 302, location: "/auth/link-wygasl" },
+  ],
+  ["link error page renders", () => request("/auth/link-wygasl"), { status: 200, cacheControlIncludes: "no-store" }],
+  // An unregistered address gets the same answer as a registered one, and no email is sent.
+  [
+    "resend answers neutrally",
+    () => request("/api/auth/resend", { method: "POST", form: { email: `smoke-nobody-${Date.now()}@example.com` } }),
+    { status: 302, location: "/auth/confirm-email?ponownie=1", exact: true },
+  ],
+  [
+    "resend rejects malformed email",
+    () => request("/api/auth/resend", { method: "POST", form: { email: "not-an-email" } }),
+    { status: 302, location: "/auth/link-wygasl?error=" },
+  ],
 ];
 
 const writeSteps = [
