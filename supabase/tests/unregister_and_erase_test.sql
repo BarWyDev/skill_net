@@ -32,6 +32,12 @@ values ('cccccccc-0000-0000-0000-000000000001', 'coordinator', 'test');
 insert into public.coordinator_role_events (user_id, action, note)
 values ('cccccccc-0000-0000-0000-000000000001', 'grant', 'test');
 
+-- Fixture residents consented at sign-up (S-05), so a complete profile stays matchable.
+insert into public.consent_events (user_id, version, source)
+select u.id, '2026-10-06', 'signup'
+from auth.users u
+where not exists (select 1 from public.consent_events c where c.user_id = u.id);
+
 insert into public.profiles (user_id, location_source, location, availability_slots)
 select u, 'pin', extensions.st_setsrid(extensions.st_makepoint(19.9366, 50.0614), 4326)::extensions.geography, 1
 from unnest(array['eeeeeeee-0000-0000-0000-000000000001', 'eeeeeeee-0000-0000-0000-000000000002']::uuid[]) as u;

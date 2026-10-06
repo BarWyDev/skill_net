@@ -64,6 +64,12 @@ insert into people (sq, located, skills) values (0, false, array['elektryk']);
 insert into auth.users (id, email)
 select user_id, user_id || '@test.local' from people;
 
+-- Fixture residents consented at sign-up (S-05), so a complete profile stays matchable.
+insert into public.consent_events (user_id, version, source)
+select u.id, '2026-10-06', 'signup'
+from auth.users u
+where not exists (select 1 from public.consent_events c where c.user_id = u.id);
+
 insert into public.profiles (user_id, location_source, location)
 select
   p.user_id,
