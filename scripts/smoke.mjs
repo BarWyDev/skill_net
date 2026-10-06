@@ -70,6 +70,12 @@ const readonlySteps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["profil redirects anonymous user", () => request("/profil"), { status: 302, location: "/auth/signin" }],
+  ["zgoda redirects anonymous user", () => request("/zgoda"), { status: 302, location: "/auth/signin" }],
+  [
+    "consent accept redirects anonymous user",
+    () => request("/api/zgoda", { method: "POST", form: { consent: "on" } }),
+    { status: 302, location: "/auth/signin" },
+  ],
   ["koordynator redirects anonymous user", () => request("/koordynator"), { status: 302, location: "/auth/signin" }],
   [
     "koordynator crisis page redirects anonymous user",
@@ -167,6 +173,22 @@ const writeSteps = [
     { status: 302, location: "/profil", exact: true },
   ],
   ["profil renders for signed-in user", () => request("/profil"), { status: 200 }],
+  // The account consented at sign-up, so the gate lets it through and /zgoda has nothing to ask.
+  ["zgoda sends consented user home", () => request("/zgoda"), { status: 302, location: "/", exact: true }],
+  [
+    "unregister error returns to zgoda",
+    () => request("/api/auth/unregister", { method: "POST", form: { password: "wrong", return_to: "/zgoda" } }),
+    { status: 302, location: "/zgoda?error=" },
+  ],
+  [
+    "unregister ignores foreign return path",
+    () =>
+      request("/api/auth/unregister", {
+        method: "POST",
+        form: { password: "wrong", return_to: "https://example.com" },
+      }),
+    { status: 302, location: "/profil?error=" },
+  ],
   // A fresh account is a resident. The positive coordinator path needs a grant, so pgTAP covers it.
   [
     "koordynator denies resident",
