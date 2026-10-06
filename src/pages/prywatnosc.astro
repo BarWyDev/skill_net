@@ -1,0 +1,109 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+import { CURRENT_CONSENT_VERSION } from "@/lib/consent";
+
+// Public page (GDPR Art. 13 information notice). It renders per user (Topbar), so it is never
+// cached as `public`.
+// DRAFT: written by the implementer; the owner reviews the wording, and fills in the controller,
+// before a real pilot. A wording change needs a new consent version (see src/lib/consent.ts).
+Astro.response.headers.set("Cache-Control", "private");
+
+const [year, month, day] = CURRENT_CONSENT_VERSION.split("-");
+---
+
+<Layout title="Prywatność — SkillNet">
+  <div class="bg-cosmic min-h-screen w-full">
+    <div class="mx-auto max-w-3xl p-4 sm:p-8">
+      <Topbar />
+
+      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+        <h1 class="mb-2 text-2xl font-bold">Informacja o przetwarzaniu danych</h1>
+        <p class="mb-6 text-sm text-blue-100/60">
+          Wersja z dnia {day}.{month}.{year}
+        </p>
+
+        <p role="note" class="mb-6 rounded-lg border border-yellow-400/50 bg-yellow-500/15 p-3 text-sm text-yellow-100">
+          Wersja robocza. Treść czeka na przegląd prawny przed uruchomieniem pilotażu.
+        </p>
+
+        <div class="space-y-6 text-blue-100/90 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-white [&_li]:ml-5 [&_li]:list-disc">
+          <section>
+            <h2>Administrator danych</h2>
+            <p>
+              Administratorem Twoich danych jest operator serwisu SkillNet. Pełne dane administratora i adres do
+              kontaktu w sprawie danych osobowych uzupełnimy przed uruchomieniem pilotażu.
+            </p>
+          </section>
+
+          <section>
+            <h2>Jakie dane przetwarzamy</h2>
+            <ul>
+              <li>adres e-mail, którego używasz do logowania;</li>
+              <li>
+                przybliżoną lokalizację: punkt na mapie lub kod pocztowy zamieniamy na środek kwadratu 500 × 500 m i nie
+                zapisujemy ani dokładnego punktu, ani kodu pocztowego;
+              </li>
+              <li>umiejętności, które wskażesz, wraz z ich poziomem;</li>
+              <li>dni i godziny, w których możesz pomóc, oraz ewentualną przerwę w dostępności;</li>
+              <li>numer telefonu, jeśli zdecydujesz się go podać (nie jest wymagany).</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>W jakim celu</h2>
+            <ul>
+              <li>
+                koordynacja pomocy w sytuacjach kryzysowych: koordynator rady może uruchomić kryzys i zobaczyć listę
+                osób z pasującymi umiejętnościami w okolicy;
+              </li>
+              <li>pomoc sąsiedzka na co dzień;</li>
+              <li>
+                publiczna mapa umiejętności, która pokazuje wyłącznie przedziały liczby osób w kwadratach 2 × 2 km,
+                nigdy pojedyncze osoby.
+              </li>
+            </ul>
+            <p class="mt-2">
+              Twój numer telefonu widzisz tylko Ty. Koordynator może go zobaczyć wyłącznie w trakcie aktywnego kryzysu,
+              po podaniu powodu; każde takie odsłonięcie jest zapisywane.
+            </p>
+          </section>
+
+          <section>
+            <h2>Podstawa prawna</h2>
+            <p>
+              Twoja zgoda (art. 6 ust. 1 lit. a RODO), którą wyrażasz przy zakładaniu konta. Bez zgody nie możemy
+              założyć konta, a osoby bez zgody nie są uwzględniane w kryzysach ani na mapie.
+            </p>
+          </section>
+
+          <section>
+            <h2>Jak długo przechowujemy dane</h2>
+            <p>
+              Do czasu usunięcia konta. Konto możesz usunąć w każdej chwili w zakładce „Mój profil”. Usunięcie jest
+              natychmiastowe: kasujemy adres e-mail, lokalizację, umiejętności, dostępność i numer telefonu.
+            </p>
+            <p class="mt-2">
+              Zostają jedynie zapisy kontrolne, które zawierają sam identyfikator konta, bez e-maila i innych danych:
+              kiedy wyrażono zgodę, kto odsłonił czyje numery w trakcie kryzysu i kto prowadził kryzys. Po usunięciu
+              konta ten identyfikator nie wskazuje już nikogo w systemie.
+            </p>
+          </section>
+
+          <section>
+            <h2>Twoje prawa</h2>
+            <ul>
+              <li>dostęp do swoich danych i ich poprawianie — w zakładce „Mój profil”;</li>
+              <li>
+                wycofanie zgody w dowolnym momencie przez usunięcie konta; wycofanie zgody nie wpływa na zgodność z
+                prawem przetwarzania sprzed jej wycofania;
+              </li>
+              <li>usunięcie danych, ograniczenie przetwarzania i przeniesienie danych;</li>
+              <li>skarga do Prezesa Urzędu Ochrony Danych Osobowych (uodo.gov.pl).</li>
+            </ul>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+</Layout>

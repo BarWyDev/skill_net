@@ -375,29 +375,29 @@ Expand-only migration: new tables, a new trigger, new functions, and one `create
 
 #### Automated
 
-- [x] 1.1 Migration applies on a fresh local database
-- [x] 1.2 All pgTAP suites pass, including signup_consent_test.sql
-- [x] 1.3 Types regenerated and type check passes
-- [x] 1.4 Lint passes
+- [x] 1.1 Migration applies on a fresh local database — 2f0bf66
+- [x] 1.2 All pgTAP suites pass, including signup_consent_test.sql — 2f0bf66
+- [x] 1.3 Types regenerated and type check passes — 2f0bf66
+- [x] 1.4 Lint passes — 2f0bf66
 
 #### Manual
 
-- [x] 1.5 Studio shows RLS with only the select policy and the trigger on auth.users
+- [x] 1.5 Studio shows RLS with only the select policy and the trigger on auth.users — 2f0bf66
 
 ### Phase 2: Polish sign-up with consent
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass
-- [ ] 2.2 Lint and type check pass
-- [ ] 2.3 Build passes
-- [ ] 2.4 Smoke passes locally
+- [x] 2.1 Unit tests pass
+- [x] 2.2 Lint and type check pass
+- [x] 2.3 Build passes
+- [x] 2.4 Smoke passes locally
 
 #### Manual
 
-- [ ] 2.5 Sign-up page is Polish; unticked checkbox blocks submit
-- [ ] 2.6 Sign-up writes a signup consent row with the current version
-- [ ] 2.7 Privacy page reviewed by the owner
+- [x] 2.5 Sign-up page is Polish; unticked checkbox blocks submit
+- [x] 2.6 Sign-up writes a signup consent row with the current version
+- [x] 2.7 Privacy page reviewed by the owner
 
 ### Phase 3: Email verification flow
 
