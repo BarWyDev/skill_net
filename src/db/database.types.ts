@@ -357,6 +357,8 @@ export type Database = {
           created_at: string
           location: unknown
           location_source: string | null
+          paused_at: string | null
+          paused_until: string | null
           postcode: string | null
           updated_at: string
           user_id: string
@@ -366,6 +368,8 @@ export type Database = {
           created_at?: string
           location?: unknown
           location_source?: string | null
+          paused_at?: string | null
+          paused_until?: string | null
           postcode?: string | null
           updated_at?: string
           user_id: string
@@ -375,6 +379,8 @@ export type Database = {
           created_at?: string
           location?: unknown
           location_source?: string | null
+          paused_at?: string | null
+          paused_until?: string | null
           postcode?: string | null
           updated_at?: string
           user_id?: string
@@ -601,7 +607,14 @@ export type Database = {
           lng: number
         }[]
       }
+      pause_active: {
+        Args: { p_at: string; p_paused_at: string; p_paused_until: string }
+        Returns: boolean
+      }
+      pause_my_availability: { Args: { p_until: string }; Returns: undefined }
+      profile_is_complete: { Args: { p_user_id: string }; Returns: boolean }
       profile_is_matchable: { Args: { p_user_id: string }; Returns: boolean }
+      resume_my_availability: { Args: never; Returns: undefined }
       reveal_crisis_contacts: {
         Args: { p_crisis_id: string; p_reason: string }
         Returns: {
@@ -636,6 +649,10 @@ export type Database = {
         Returns: undefined
       }
       unregister_me: { Args: never; Returns: undefined }
+      visible_match_count: {
+        Args: { p_crisis: Database["public"]["Tables"]["crises"]["Row"] }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
