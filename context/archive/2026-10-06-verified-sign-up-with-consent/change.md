@@ -1,10 +1,10 @@
 ---
 change_id: verified-sign-up-with-consent
 title: Verified sign up with consent
-status: impl_reviewed
+status: archived
 created: 2026-10-06
 updated: 2026-10-06
-archived_at: null
+archived_at: 2026-10-06T18:17:21Z
 ---
 
 ## Notes
