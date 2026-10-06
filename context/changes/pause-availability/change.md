@@ -1,7 +1,7 @@
 ---
 change_id: pause-availability
 title: Pause and resume availability
-status: implementing
+status: implemented
 created: 2026-10-06
 updated: 2026-10-06
 ---
