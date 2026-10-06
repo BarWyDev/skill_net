@@ -403,28 +403,28 @@ Expand-only migration: new tables, a new trigger, new functions, and one `create
 
 #### Automated
 
-- [x] 3.1 Lint, type check, build
-- [x] 3.2 Smoke passes locally
+- [x] 3.1 Lint, type check, build — 54920fd
+- [x] 3.2 Smoke passes locally — 54920fd
 
 #### Manual
 
-- [x] 3.3 Polish email via Mailpit; link signs in and lands on /profil
-- [x] 3.4 Reused or edited link lands on /auth/link-wygasl; resend works
-- [x] 3.5 Unconfirmed sign-in shows message and working resend
+- [x] 3.3 Polish email via Mailpit; link signs in and lands on /profil — 54920fd
+- [x] 3.4 Reused or edited link lands on /auth/link-wygasl; resend works — 54920fd
+- [x] 3.5 Unconfirmed sign-in shows message and working resend — 54920fd
 
 ### Phase 4: Consent gate for older accounts
 
 #### Automated
 
-- [ ] 4.1 Lint, type check, build
-- [ ] 4.2 Unit tests pass
-- [ ] 4.3 Smoke passes locally
+- [x] 4.1 Lint, type check, build
+- [x] 4.2 Unit tests pass
+- [x] 4.3 Smoke passes locally
 
 #### Manual
 
-- [ ] 4.4 Account without consent is gated; accepting writes a reaccept row
-- [ ] 4.5 Unregister from /zgoda shows errors there and erases on success
-- [ ] 4.6 Signed-out visitors are never gated
+- [x] 4.4 Account without consent is gated; accepting writes a reaccept row
+- [x] 4.5 Unregister from /zgoda shows errors there and erases on success
+- [x] 4.6 Signed-out visitors are never gated
 
 ### Phase 5: Production rollout (human)
 
