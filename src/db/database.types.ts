@@ -128,6 +128,7 @@ export type Database = {
           match_count: number
           radius_m: number
           status: string
+          visible_match_count: number | null
         }
         Insert: {
           activated_at?: string
@@ -650,8 +651,10 @@ export type Database = {
       }
       unregister_me: { Args: never; Returns: undefined }
       visible_match_count: {
-        Args: { p_crisis: Database["public"]["Tables"]["crises"]["Row"] }
-        Returns: number
+        Args: { "": Database["public"]["Tables"]["crises"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.visible_match_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
       }
     }
     Enums: {
