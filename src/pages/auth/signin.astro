@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import SignInForm from "@/components/auth/SignInForm";
 
 const error = Astro.url.searchParams.get("error");
+const unconfirmed = Astro.url.searchParams.has("niepotwierdzony");
 ---
 
 <Layout title="Zaloguj się — SkillNet">
@@ -11,7 +12,7 @@ const error = Astro.url.searchParams.get("error");
       <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
         Zaloguj się
       </h1>
-      <SignInForm serverError={error} client:load />
+      <SignInForm serverError={error} unconfirmed={unconfirmed} client:load />
       <p class="mt-4 text-center text-sm text-blue-100/60">
         Nie masz konta?{" "}
         <a href="/auth/signup" class="text-purple-300 hover:underline">

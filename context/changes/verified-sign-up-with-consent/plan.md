@@ -388,29 +388,29 @@ Expand-only migration: new tables, a new trigger, new functions, and one `create
 
 #### Automated
 
-- [x] 2.1 Unit tests pass
-- [x] 2.2 Lint and type check pass
-- [x] 2.3 Build passes
-- [x] 2.4 Smoke passes locally
+- [x] 2.1 Unit tests pass — 83cf585
+- [x] 2.2 Lint and type check pass — 83cf585
+- [x] 2.3 Build passes — 83cf585
+- [x] 2.4 Smoke passes locally — 83cf585
 
 #### Manual
 
-- [x] 2.5 Sign-up page is Polish; unticked checkbox blocks submit
-- [x] 2.6 Sign-up writes a signup consent row with the current version
-- [x] 2.7 Privacy page reviewed by the owner
+- [x] 2.5 Sign-up page is Polish; unticked checkbox blocks submit — 83cf585
+- [x] 2.6 Sign-up writes a signup consent row with the current version — 83cf585
+- [x] 2.7 Privacy page reviewed by the owner — 83cf585
 
 ### Phase 3: Email verification flow
 
 #### Automated
 
-- [ ] 3.1 Lint, type check, build
-- [ ] 3.2 Smoke passes locally
+- [x] 3.1 Lint, type check, build
+- [x] 3.2 Smoke passes locally
 
 #### Manual
 
-- [ ] 3.3 Polish email via Mailpit; link signs in and lands on /profil
-- [ ] 3.4 Reused or edited link lands on /auth/link-wygasl; resend works
-- [ ] 3.5 Unconfirmed sign-in shows message and working resend
+- [x] 3.3 Polish email via Mailpit; link signs in and lands on /profil
+- [x] 3.4 Reused or edited link lands on /auth/link-wygasl; resend works
+- [x] 3.5 Unconfirmed sign-in shows message and working resend
 
 ### Phase 4: Consent gate for older accounts
 

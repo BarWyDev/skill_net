@@ -2,21 +2,31 @@
 import Layout from "@/layouts/Layout.astro";
 
 const isAutoConfirmed = import.meta.env.DEV;
+// After a resend. The copy is the same for every address, so it never says whether one is registered.
+const isResend = Astro.url.searchParams.has("ponownie");
 
-const content = isAutoConfirmed
+const content = isResend
   ? {
-      emoji: "✅",
-      heading: "Konto założone",
-      description: "Twoje konto jest gotowe. Możesz się teraz zalogować.",
-      linkText: "Przejdź do logowania",
-    }
-  : {
       emoji: "📧",
       heading: "Sprawdź skrzynkę e-mail",
       description:
-        "Wysłaliśmy link potwierdzający na Twój adres e-mail. Kliknij go, aby aktywować konto. Jeśli wiadomość nie dotarła, sprawdź folder ze spamem.",
+        "Jeśli konto z tym adresem czeka na potwierdzenie, wysłaliśmy na nie nowy link. Wiadomość może dotrzeć po kilku minutach — sprawdź też folder ze spamem.",
       linkText: "Wróć do logowania",
-    };
+    }
+  : isAutoConfirmed
+    ? {
+        emoji: "✅",
+        heading: "Konto założone",
+        description: "Twoje konto jest gotowe. Możesz się teraz zalogować.",
+        linkText: "Przejdź do logowania",
+      }
+    : {
+        emoji: "📧",
+        heading: "Sprawdź skrzynkę e-mail",
+        description:
+          "Wysłaliśmy link potwierdzający na Twój adres e-mail. Kliknij go, aby aktywować konto. Jeśli wiadomość nie dotarła, sprawdź folder ze spamem.",
+        linkText: "Wróć do logowania",
+      };
 ---
 
 <Layout title={`${content.heading} — SkillNet`}>

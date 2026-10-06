@@ -15,7 +15,9 @@ export const POST: APIRoute = async (context) => {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return context.redirect(`/auth/signin?error=${encodeURIComponent(authErrorMessage(error.code))}`);
+    // The form shows a resend block for this flag. The address stays in the browser, never in the URL.
+    const unconfirmed = error.code === "email_not_confirmed" ? "&niepotwierdzony=1" : "";
+    return context.redirect(`/auth/signin?error=${encodeURIComponent(authErrorMessage(error.code))}${unconfirmed}`);
   }
 
   // Nudge residents with an incomplete profile to finish it. A failed check (null) must
