@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
 import { isProfileMatchable } from "@/lib/services/profile";
+import { authErrorMessage } from "@/lib/auth-errors";
 
 export const POST: APIRoute = async (context) => {
   const form = await context.request.formData();
@@ -9,12 +10,12 @@ export const POST: APIRoute = async (context) => {
 
   const supabase = createClient(context.request.headers, context.cookies);
   if (!supabase) {
-    return context.redirect(`/auth/signin?error=${encodeURIComponent("Supabase is not configured")}`);
+    return context.redirect(`/auth/signin?error=${encodeURIComponent("Supabase nie jest skonfigurowany.")}`);
   }
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return context.redirect(`/auth/signin?error=${encodeURIComponent(error.message)}`);
+    return context.redirect(`/auth/signin?error=${encodeURIComponent(authErrorMessage(error.code))}`);
   }
 
   // Nudge residents with an incomplete profile to finish it. A failed check (null) must

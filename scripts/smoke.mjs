@@ -119,12 +119,19 @@ const readonlySteps = [
   ["density map hides counts", () => request("/api/mapa"), { status: 200, bodyExcludes: '"count"' }],
   ["density map filters by category", () => request("/api/mapa?kategoria=medyczne"), { status: 200 }],
   ["density map rejects unknown category", () => request("/api/mapa?kategoria=nie-ma"), { status: 400 }],
+  ["privacy page renders", () => request("/prywatnosc"), { status: 200, cacheControlIncludes: "private" }],
 ];
 
 const writeSteps = [
+  // Refused before GoTrue is called, so no account is created.
+  [
+    "signup rejects missing consent",
+    () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
+    { status: 302, location: "/auth/signup?error=" },
+  ],
   [
     "signup creates account",
-    () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
+    () => request("/api/auth/signup", { method: "POST", form: { email, password, consent: "on" } }),
     { status: 302, location: "/auth/confirm-email" },
   ],
   [
