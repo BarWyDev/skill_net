@@ -6,8 +6,8 @@ import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
 
 // Carries the address across the sign-in redirect for the resend block, so it never goes into the
-// URL. Tab-scoped, and removed as soon as the page reads it.
-const EMAIL_STORAGE_KEY = "skillnet:signin-email";
+// URL. Tab-scoped, and removed by the next page load: here, or by Layout.astro on any other page.
+export const EMAIL_STORAGE_KEY = "skillnet:signin-email";
 
 interface Props {
   serverError?: string | null;

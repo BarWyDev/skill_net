@@ -176,6 +176,11 @@ const writeSteps = [
   // The account consented at sign-up, so the gate lets it through and /zgoda has nothing to ask.
   ["zgoda sends consented user home", () => request("/zgoda"), { status: 302, location: "/", exact: true }],
   [
+    "consent accept skips consented user",
+    () => request("/api/zgoda", { method: "POST", form: { consent: "on" } }),
+    { status: 302, location: "/", exact: true },
+  ],
+  [
     "unregister error returns to zgoda",
     () => request("/api/auth/unregister", { method: "POST", form: { password: "wrong", return_to: "/zgoda" } }),
     { status: 302, location: "/zgoda?error=" },

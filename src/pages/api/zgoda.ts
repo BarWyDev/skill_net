@@ -4,9 +4,17 @@ import { recordMyConsent } from "@/lib/services/consent";
 
 const errorRedirect = (message: string) => `/zgoda?error=${encodeURIComponent(message)}`;
 
-// Records consent to the current version from the gate (roadmap S-05). The middleware redirects
-// anonymous callers to sign-in; `record_my_consent` checks the user and the version again.
+// Records consent to the current version from the gate (roadmap S-05). `record_my_consent` checks
+// the user and the version again.
 export const POST: APIRoute = async (context) => {
+  if (!context.locals.user) {
+    return context.redirect("/auth/signin");
+  }
+  // Nothing to accept: no duplicate `reaccept` row.
+  if (!context.locals.needsConsent) {
+    return context.redirect("/");
+  }
+
   const form = await context.request.formData();
   if (form.get("consent") !== "on") {
     return context.redirect(errorRedirect("Zaznacz zgodę na przetwarzanie danych, aby przejść dalej."));

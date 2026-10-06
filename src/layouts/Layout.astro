@@ -2,12 +2,15 @@
 import "../styles/global.css";
 import Banner from "@/components/Banner.astro";
 import { missingConfigs } from "@/lib/config-status";
+import { EMAIL_STORAGE_KEY } from "@/components/auth/SignInForm";
 
 interface Props {
   title?: string;
 }
 
 const { title = "SkillNet" } = Astro.props;
+// The sign-in form reads (and then removes) the address itself; every other page just drops it.
+const clearSigninEmail = Astro.url.pathname !== "/auth/signin";
 ---
 
 <!doctype html>
@@ -17,6 +20,11 @@ const { title = "SkillNet" } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>{title}</title>
+    {clearSigninEmail && <script is:inline define:vars={{ key: EMAIL_STORAGE_KEY }}>
+      try {
+        sessionStorage.removeItem(key);
+      } catch {}
+    </script>}
   </head>
   <body>
     {missingConfigs.map((cfg) => (
