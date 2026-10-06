@@ -290,16 +290,16 @@ The new columns are nullable with no default, so every existing profile is unpau
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm run test:unit`
-- [x] 2.2 Lint passes: `npm run lint`
-- [x] 2.3 Type check passes: `npx astro check`
-- [x] 2.4 Build succeeds: `npm run build`
-- [x] 2.5 DB suites still pass: `npm run test:db`
-- [x] 2.6 Smoke flow still passes locally: `npm run smoke`
+- [x] 2.1 Unit tests pass: `npm run test:unit` — 55f0da0
+- [x] 2.2 Lint passes: `npm run lint` — 55f0da0
+- [x] 2.3 Type check passes: `npx astro check` — 55f0da0
+- [x] 2.4 Build succeeds: `npm run build` — 55f0da0
+- [x] 2.5 DB suites still pass: `npm run test:db` — 55f0da0
+- [x] 2.6 Smoke flow still passes locally: `npm run smoke` — 55f0da0
 
 #### Manual
 
-- [x] 2.7 Pause and resume flow on `/profil` at phone width (date, indefinite, banner)
-- [x] 2.8 Out-of-range date returns the Polish error alert
-- [x] 2.9 Active crisis: paused resident vanishes from list, reveal and teams; counts stay consistent; resume restores "Osoba #N"
-- [x] 2.10 `/mapa` band changes for a borderline cell after a pause
+- [x] 2.7 Pause and resume flow on `/profil` at phone width (date, indefinite, banner) — 55f0da0
+- [x] 2.8 Out-of-range date returns the Polish error alert — 55f0da0
+- [x] 2.9 Active crisis: paused resident vanishes from list, reveal and teams; counts stay consistent; resume restores "Osoba #N" — 55f0da0
+- [x] 2.10 `/mapa` band changes for a borderline cell after a pause — 55f0da0
