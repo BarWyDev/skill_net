@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SkillNet: a local skills directory for crisis coordination. A council coordinator activates a crisis and gets nearby residents ranked by distance, skill match and confirmed availability. The same directory is used day to day for neighbour-to-neighbour help. Product source of truth: @context/foundation/prd.md. Stack rationale: @context/foundation/tech-stack.md.
 
-The code is still the `10x-astro-starter` scaffold (auth only, no domain tables yet). The package and the Worker are named `skillnet`. Production runs at https://skillnet.barwy.workers.dev (see **Deploy** below).
+The app was bootstrapped from the `10x-astro-starter` template and now implements resident profiles, the public skills map and the coordinator's crisis mode on its own Supabase schema. The package and the Worker are named `skillnet`. Production runs at https://skillnet.barwy.workers.dev (see **Deploy** below).
 
 ## Commands
 
@@ -40,9 +40,9 @@ The app is an Astro 7 SSR app (`output: "server"`) deployed to Cloudflare Worker
 - Merge Tailwind classes with `cn()` from `@/lib/utils`. Do not concatenate class strings.
 - Add shadcn components with `npx shadcn@latest add <name>`.
 - API routes export uppercase `GET` / `POST` handlers.
-- Put services in `src/lib/` (or `src/lib/services/`), shared entity and DTO types in `src/types.ts`, and React hooks in `src/components/hooks/`. None of these locations exist yet.
-- Migrations go in `supabase/migrations/YYYYMMDDHHmmss_short_description.sql` (the folder doesn't exist yet). Enable RLS on every new table, with separate policies per operation and per role.
-- zod is only present as a transitive dependency. Add it to `package.json` before using it for input validation.
+- Put services in `src/lib/` (or `src/lib/services/`), shared entity and DTO types in `src/types.ts`, and React hooks in `src/components/hooks/` (that folder doesn't exist yet).
+- Migrations go in `supabase/migrations/YYYYMMDDHHmmss_short_description.sql`. Enable RLS on every new table, with separate policies per operation and per role.
+- zod is a direct dependency. Use it for input validation.
 - Never log personal data (names, emails, phone numbers, locations) with `console.*`. Workers Logs and `wrangler tail` capture it. Audit events go to Supabase tables instead.
 
 ## CI
@@ -67,4 +67,3 @@ Production is https://skillnet.barwy.workers.dev on the Workers **Free** plan. U
 - **Rollback**: `npx wrangler rollback <version-id> --message "<reason>"`. It takes seconds, but it doesn't undo migrations, KV data or secrets. The next push to `master` redeploys over a rollback, so revert the bad commit too.
 - **Admin-created accounts**: a database trigger refuses every email account without a published consent version. Creating a user in Studio or with `auth.admin.createUser` fails with `consent_required` unless the user metadata carries `{"consent_version": "<CURRENT_CONSENT_VERSION from src/lib/consent.ts>"}`.
 - **Human-only**: deleting the Worker, KV namespaces or named previews, rotating Supabase keys, changing the Workers plan, and granting or revoking the coordinator role on production. Once crisis mode exists, don't merge to `master` while a crisis is active.
-
