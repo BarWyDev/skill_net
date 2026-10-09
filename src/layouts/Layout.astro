@@ -7,9 +7,13 @@ import { SIGNUP_EMAIL_STORAGE_KEY } from "@/components/auth/SignUpForm";
 
 interface Props {
   title?: string;
+  description?: string;
 }
 
-const { title = "SkillNet" } = Astro.props;
+const {
+  title = "SkillNet",
+  description = "Lokalny katalog umiejętności na czas kryzysu i na co dzień: sąsiedzi, którzy mogą pomóc w okolicy.",
+} = Astro.props;
 // Each auth form reads (and then removes) its saved address itself; every other page drops it.
 const staleEmailKeys = [
   [EMAIL_STORAGE_KEY, "/auth/signin"],
@@ -27,6 +31,12 @@ const staleEmailKeys = [
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SkillNet" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
     <script is:inline define:vars={{ keys: staleEmailKeys }}>
       try {
         keys.forEach((key) => sessionStorage.removeItem(key));
