@@ -32,3 +32,6 @@ wrangler-output.json
 
 # raw address data for scripts/build-postcode-centroids.mjs (never committed)
 data/
+
+# local QA test-account passwords (skillnet-qa skill)
+docs/qa/.konta.local
