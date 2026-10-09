@@ -3,7 +3,7 @@ import { CircleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const inputBase =
-  "w-full rounded-lg bg-white/10 border px-3 py-2 pl-10 text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-colors";
+  "h-11 w-full rounded-lg bg-white/10 border px-3 pl-10 text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-colors";
 
 interface FormFieldProps {
   id: string;
@@ -13,6 +13,7 @@ interface FormFieldProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  autoComplete?: string;
   error?: string;
   hint?: ReactNode;
   icon: ReactNode;
@@ -27,6 +28,7 @@ export function FormField({
   value,
   onChange,
   placeholder,
+  autoComplete,
   error,
   hint,
   icon,
@@ -48,8 +50,10 @@ export function FormField({
             onChange(e.target.value);
           }}
           placeholder={placeholder}
+          autoComplete={autoComplete}
           className={cn(
             inputBase,
+            endContent && "pr-12",
             error ? "border-red-400/60 focus:ring-red-400" : "border-white/20 focus:ring-purple-400",
           )}
         />

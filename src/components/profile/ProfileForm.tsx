@@ -1,18 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type React from "react";
 import { AvailabilityGrid } from "@/components/profile/AvailabilityGrid";
-import { LocationPicker, type LocationValue } from "@/components/profile/LocationPicker";
+import { LocationPicker, locationProblem, type LocationValue } from "@/components/profile/LocationPicker";
 import { PhoneField } from "@/components/profile/PhoneField";
 import { SkillsPicker, type SelectedSkills } from "@/components/profile/SkillsPicker";
-import { normalisePhone, PHONE_ERROR } from "@/lib/phone";
+import { formatPhone, normalisePhone, PHONE_ERROR } from "@/lib/phone";
+import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
 import type { MyProfileDTO, SkillLevel, TaxonomyDTO } from "@/types";
 
 interface Props {
   taxonomy: TaxonomyDTO;
   profile: MyProfileDTO;
 }
-
-const POSTCODE_RE = /^\d{2}-?\d{3}$/;
 
 export default function ProfileForm({ taxonomy, profile }: Props) {
   const [selected, setSelected] = useState<SelectedSkills>(() =>
@@ -26,13 +25,32 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
     lng: profile.lng,
   }));
   const [location, setLocation] = useState<LocationValue>(initialLocation);
-  const [phone, setPhone] = useState(profile.phone ?? "");
+  // Shown as `+48 600 123 456`; saving normalises the spaces away again (QA-018).
+  const [phone, setPhone] = useState(profile.phone ? formatPhone(profile.phone) : "");
   const [phoneInvalid, setPhoneInvalid] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
   const [showMissingLevels, setShowMissingLevels] = useState(false);
+  const [focusSkill, setFocusSkill] = useState<string | null>(null);
 
-  const levelled = new Set(taxonomy.skills.filter((s) => s.hasLevel).map((s) => s.slug));
-  const missingLevel = Object.entries(selected).some(([slug, level]) => levelled.has(slug) && level === null);
+  // In taxonomy order, so the first one is the topmost on the page.
+  const missingLevels = taxonomy.skills.filter((s) => s.hasLevel && s.slug in selected && selected[s.slug] === null);
+
+  // Once the missing-level group is rendered with its error, bring it into view (QA-020).
+  useEffect(() => {
+    if (!focusSkill) return;
+    const group = document.getElementById(`level-${focusSkill}`);
+    group?.scrollIntoView({ block: "center" });
+    group?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot request, cleared once handled
+    setFocusSkill(null);
+  }, [focusSkill]);
+
+  // The "Zapisano." or `?error=` banner above describes the last save, not the edits since (QA-019).
+  function dismissPageNotices() {
+    document.querySelectorAll("[data-page-notice]").forEach((el) => {
+      el.remove();
+    });
+  }
 
   function handleToggle(slug: string, checked: boolean) {
     setSelected((prev) => {
@@ -47,22 +65,35 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
   }
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    if (missingLevel) {
+    if (missingLevels.length > 0) {
       e.preventDefault();
+      dismissPageNotices();
       setShowMissingLevels(true);
-      setClientError("Wybierz poziom dla każdej zaznaczonej umiejętności.");
+      setClientError(`Wybierz poziom dla: ${missingLevels.map((s) => s.name).join(", ")}.`);
+      setFocusSkill(missingLevels[0].slug);
       return;
     }
     // An empty postcode keeps the stored postcode location.
     const postcode = location.postcode.trim();
-    if (location.source === "postcode" && postcode && !POSTCODE_RE.test(postcode)) {
+    if (location.source === "postcode" && postcode && normalisePostcode(postcode) === null) {
       e.preventDefault();
-      setClientError("Podaj kod pocztowy w formacie 00-000.");
+      dismissPageNotices();
+      setClientError(POSTCODE_ERROR);
+      return;
+    }
+    // An unknown postcode or a pin abroad would be refused by the server, and the reload would
+    // drop every unsaved edit (QA-017).
+    const problem = locationProblem(location);
+    if (problem) {
+      e.preventDefault();
+      dismissPageNotices();
+      setClientError(problem);
       return;
     }
     // An empty phone deletes the stored number.
     if (phone.trim() && normalisePhone(phone) === null) {
       e.preventDefault();
+      dismissPageNotices();
       setPhoneInvalid(true);
       setClientError(PHONE_ERROR);
       return;
@@ -72,7 +103,14 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
   }
 
   return (
-    <form method="POST" action="/api/profile" className="space-y-8" onSubmit={handleSubmit} noValidate>
+    <form
+      method="POST"
+      action="/api/profile"
+      className="space-y-8"
+      onSubmit={handleSubmit}
+      onChange={dismissPageNotices}
+      noValidate
+    >
       <section aria-labelledby="skills-heading" className="space-y-3">
         <h2 id="skills-heading" className="text-lg font-semibold text-white">
           Umiejętności i sprzęt

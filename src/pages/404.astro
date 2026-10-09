@@ -1,0 +1,33 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+
+Astro.response.status = 404;
+---
+
+<Layout title="Nie znaleziono strony — SkillNet">
+  <div class="bg-cosmic min-h-screen w-full">
+    <div class="mx-auto max-w-2xl p-4 sm:p-8">
+      <Topbar />
+
+      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+        <h1 class="mb-4 text-2xl font-bold">Nie znaleziono strony</h1>
+        <p class="mb-4 text-blue-100/80">Pod tym adresem nic nie ma. Link mógł się zmienić albo zawierać literówkę.</p>
+        <div class="flex flex-wrap gap-x-6">
+          <a
+            href="/"
+            class="inline-flex min-h-11 items-center text-purple-300 transition-colors hover:text-purple-100 hover:underline"
+          >
+            Strona główna
+          </a>
+          <a
+            href="/mapa"
+            class="inline-flex min-h-11 items-center text-purple-300 transition-colors hover:text-purple-100 hover:underline"
+          >
+            Mapa umiejętności
+          </a>
+        </div>
+      </main>
+    </div>
+  </div>
+</Layout>

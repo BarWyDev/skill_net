@@ -1,8 +1,10 @@
+import type { APIContext, MiddlewareNext } from "astro";
 import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@/lib/supabase";
 import { isCoordinator } from "@/lib/services/roles";
 import { latestConsentVersion } from "@/lib/services/consent";
 import { CURRENT_CONSENT_VERSION, isConsentGateExempt } from "@/lib/consent";
+import { RETURN_PARAM } from "@/lib/return-path";
 
 const PROTECTED_ROUTES = ["/dashboard", "/profil", "/koordynator", "/api/koordynator", "/zgoda", "/api/zgoda"];
 // Signed-in users without the coordinator role get a 403 here.
@@ -11,7 +13,30 @@ const ACCESS_DENIED_PAGE = "/brak-dostepu";
 // Signed-in users without the current consent are redirected here (see isConsentGateExempt).
 const CONSENT_PAGE = "/zgoda";
 
-export const onRequest = defineMiddleware(async (context, next) => {
+// Sent with every response this Worker renders (QA-028). No full CSP yet: Leaflet loads OSM
+// tiles and the islands use inline styles, so only framing is restricted for now.
+const SECURITY_HEADERS: [name: string, value: string][] = [
+  ["Content-Security-Policy", "frame-ancestors 'none'"],
+  ["X-Frame-Options", "DENY"],
+  ["X-Content-Type-Options", "nosniff"],
+  ["Referrer-Policy", "strict-origin-when-cross-origin"],
+];
+
+function withSecurityHeaders(response: Response): Response {
+  try {
+    for (const [name, value] of SECURITY_HEADERS) response.headers.set(name, value);
+    return response;
+  } catch {
+    // Some responses (e.g. from Response.redirect) have immutable headers: copy them first.
+    const copy = new Response(response.body, response);
+    for (const [name, value] of SECURITY_HEADERS) copy.headers.set(name, value);
+    return copy;
+  }
+}
+
+export const onRequest = defineMiddleware(async (context, next) => withSecurityHeaders(await route(context, next)));
+
+async function route(context: APIContext, next: MiddlewareNext): Promise<Response> {
   const supabase = createClient(context.request.headers, context.cookies);
   context.locals.user = null;
   context.locals.isCoordinator = false;
@@ -41,7 +66,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const path = context.url.pathname;
 
   if (PROTECTED_ROUTES.some((route) => path.startsWith(route)) && !context.locals.user) {
-    return context.redirect("/auth/signin");
+    // A page remembers where the visitor was going; an endpoint cannot be returned to.
+    const back =
+      (context.request.method === "GET" || context.request.method === "HEAD") && !path.startsWith("/api/")
+        ? `?${RETURN_PARAM}=${encodeURIComponent(path)}`
+        : "";
+    return context.redirect(`/auth/signin${back}`);
   }
 
   if (context.locals.needsConsent && !isConsentGateExempt(path)) {
@@ -61,4 +91,4 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const response = context.locals.isCoordinator ? await next() : await next(ACCESS_DENIED_PAGE);
   response.headers.set("Cache-Control", "private, no-store");
   return response;
-});
+}

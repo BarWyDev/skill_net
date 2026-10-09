@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type React from "react";
-import { LocationPicker, type LocationValue } from "@/components/profile/LocationPicker";
+import { LocationPicker, locationProblem, type LocationValue } from "@/components/profile/LocationPicker";
 import { cn } from "@/lib/utils";
 import { DEFAULT_RADIUS, RADIUS_PRESETS } from "@/lib/validation/crisis";
 import type { CrisisTypeDTO, RadiusKm } from "@/types";
@@ -18,7 +18,9 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
   const [submitting, setSubmitting] = useState(false);
 
   // A postcode counts once the lookup found it; the server resolves the raw centroid itself.
-  const locationReady = location.source !== null && location.lat !== null && location.lng !== null;
+  // A pin abroad is refused here too (QA-024), so the form keeps the type and the pin.
+  const locationReady =
+    location.source !== null && location.lat !== null && location.lng !== null && locationProblem(location) === null;
   const ready = crisisType !== "" && locationReady;
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
@@ -60,7 +62,12 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
         <h2 id="epicentre-heading" className="text-sm text-blue-100">
           Epicentrum
         </h2>
-        <LocationPicker value={location} initial={EMPTY_LOCATION} onChange={setLocation} />
+        <LocationPicker
+          value={location}
+          initial={EMPTY_LOCATION}
+          onChange={setLocation}
+          hint="Epicentrum to środek obszaru, w którym szukamy mieszkańców. Zapisujemy je dokładnie, bez zaokrąglania."
+        />
       </section>
 
       <fieldset>
