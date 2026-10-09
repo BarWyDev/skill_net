@@ -12,6 +12,7 @@ import {
   formatActiveFor,
   formatDistanceKm,
   formatPeople,
+  matchedWord,
 } from "@/lib/crisis-format";
 import { cn } from "@/lib/utils";
 import type { CrisisDTO, CrisisMatchDTO } from "@/types";
@@ -53,7 +54,10 @@ const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - mat
       <Topbar />
 
       <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
-        <a href="/koordynator" class="mb-4 inline-block text-sm text-purple-300 hover:text-purple-100 hover:underline">
+        <a
+          href="/koordynator"
+          class="mb-2 inline-flex min-h-11 items-center text-sm text-purple-300 hover:text-purple-100 hover:underline"
+        >
           ← Panel koordynatora
         </a>
 
@@ -79,9 +83,11 @@ const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - mat
               </span>
             </div>
             <p class="mb-4 text-sm text-blue-100/80">
-              Promień {crisis.radiusKm} km · aktywowano {formatActivatedAt(crisis.activatedAt)}
+              Promień {crisis.radiusKm} km
+              {crisis.epicentrePostcode && <> · okolice {crisis.epicentrePostcode}</>} · aktywowano{" "}
+              {formatActivatedAt(crisis.activatedAt)}
               {crisis.endedAt && <> · zakończono {formatActivatedAt(crisis.endedAt)}</>} ·{" "}
-              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> dopasowanych
+              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> {matchedWord(crisis.matchCount)}
             </p>
             <p class="rounded-lg border border-white/15 bg-white/5 p-3 text-sm text-blue-100">
               Lista osób została usunięta po zakończeniu kryzysu.
@@ -101,9 +107,10 @@ const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - mat
               <EndCrisisDialog crisis={crisis} />
             </div>
             <p class="mb-4 text-sm text-blue-100/80">
-              Promień {crisis.radiusKm} km · aktywowano {formatActivatedAt(crisis.activatedAt)} ·{" "}
-              {formatActiveFor(crisis.activatedAt)} ·{" "}
-              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> dopasowanych
+              Promień {crisis.radiusKm} km
+              {crisis.epicentrePostcode && <> · okolice {crisis.epicentrePostcode}</>} · aktywowano{" "}
+              {formatActivatedAt(crisis.activatedAt)} · {formatActiveFor(crisis.activatedAt)} ·{" "}
+              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> {matchedWord(crisis.matchCount)}
             </p>
 
             <p class="mb-6 rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm text-blue-100">
@@ -118,7 +125,7 @@ const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - mat
               </p>
               <a
                 href={`/koordynator/kryzys/${crisis.id}/zespoly`}
-                class="shrink-0 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-500"
+                class="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-500"
               >
                 Złóż zespoły
               </a>
@@ -131,7 +138,7 @@ const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - mat
               </p>
               <a
                 href={`/koordynator/kryzys/${crisis.id}/kontakty`}
-                class="shrink-0 rounded-lg border border-red-400/60 px-4 py-2 text-sm font-medium text-red-100 transition-colors hover:bg-red-600/30"
+                class="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-red-400/60 px-4 py-2 text-sm font-medium text-red-100 transition-colors hover:bg-red-600/30"
               >
                 Ujawnij kontakty (break-glass)
               </a>

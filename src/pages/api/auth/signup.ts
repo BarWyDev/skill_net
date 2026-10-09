@@ -5,8 +5,13 @@ import { CONSENT_REQUIRED_MESSAGE, CURRENT_CONSENT_VERSION } from "@/lib/consent
 
 export const POST: APIRoute = async (context) => {
   const form = await context.request.formData();
-  const email = form.get("email") as string;
-  const password = form.get("password") as string;
+  const email = form.get("email");
+  const password = form.get("password");
+
+  // The browser form checks this first; this covers a POST without it (no JS, a script).
+  if (typeof email !== "string" || !email.trim() || typeof password !== "string" || !password) {
+    return context.redirect(`/auth/signup?error=${encodeURIComponent("Podaj adres e-mail i hasło.")}`);
+  }
 
   // Checked before GoTrue is called. The database refuses an email sign-up without a published
   // consent version anyway (`consent_required`), so this check only gives a clear message.

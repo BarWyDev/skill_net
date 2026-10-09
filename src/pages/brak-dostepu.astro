@@ -4,9 +4,10 @@ import Topbar from "@/components/Topbar.astro";
 
 // Rendered in place by the middleware for signed-in users without the coordinator role.
 Astro.response.status = 403;
+const { user } = Astro.locals;
 ---
 
-<Layout title="Brak dostępu">
+<Layout title="Brak dostępu — SkillNet">
   <div class="bg-cosmic min-h-screen w-full">
     <div class="mx-auto max-w-2xl p-4 sm:p-8">
       <Topbar />
@@ -16,8 +17,11 @@ Astro.response.status = 403;
         <p class="mb-4 text-blue-100/80">
           Ta część serwisu jest dostępna tylko dla koordynatorów wyznaczonych przez operatora.
         </p>
-        <a href="/profil" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-          Wróć do profilu
+        <a
+          href={user ? "/profil" : "/"}
+          class="inline-flex min-h-11 items-center text-purple-300 transition-colors hover:text-purple-100 hover:underline"
+        >
+          {user ? "Wróć do profilu" : "Wróć na stronę główną"}
         </a>
       </main>
     </div>

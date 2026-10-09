@@ -122,3 +122,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Leaflet's zoom buttons are 30 px; 44 px is the minimum touch target (QA-001). */
+.leaflet-container .leaflet-control-zoom.leaflet-bar a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  font-size: 22px;
+}

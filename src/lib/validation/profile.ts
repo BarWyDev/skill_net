@@ -1,20 +1,14 @@
 import { z } from "zod";
 import { SLOT_COUNT, slotsToMask } from "@/lib/availability";
 import { normalisePhone, PHONE_ERROR } from "@/lib/phone";
+import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
 import type { SaveProfileInput } from "@/types";
 
 export const MAX_SKILLS = 40;
 
-const POSTCODE_RE = /^(\d{2})-?(\d{3})$/;
 // `<slug>` for skills without a level, `<slug>:<1|2|3>` otherwise. Whether a level is
 // required for a given skill is decided by the database trigger, the single source of truth.
 const SKILL_RE = /^([a-z0-9-]+)(?::([123]))?$/;
-
-/** Normalises `NNNNN` or `NN-NNN` to `NN-NNN`; returns null for anything else. */
-export function normalisePostcode(raw: string): string | null {
-  const match = POSTCODE_RE.exec(raw.trim());
-  return match ? `${match[1]}-${match[2]}` : null;
-}
 
 const coordinate = (min: number, max: number) =>
   z
@@ -70,7 +64,7 @@ const profileFormSchema = z.discriminatedUnion("location_source", [
       if (value.trim() === "") return null;
       const postcode = normalisePostcode(value);
       if (postcode === null) {
-        ctx.addIssue({ code: "custom", message: "Podaj kod pocztowy w formacie 00-000." });
+        ctx.addIssue({ code: "custom", message: POSTCODE_ERROR });
         return z.NEVER;
       }
       return postcode;
