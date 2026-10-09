@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { normalisePostcode } from "@/lib/validation/profile";
+import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
 import type { ActivateCrisisInput, RadiusKm } from "@/types";
 
 export const RADIUS_PRESETS: RadiusKm[] = [1, 2, 5, 10, 20];
@@ -33,7 +33,7 @@ const crisisFormSchema = z.discriminatedUnion(
       postcode: z.string().transform((value, ctx) => {
         const postcode = normalisePostcode(value);
         if (postcode === null) {
-          ctx.addIssue({ code: "custom", message: "Podaj kod pocztowy w formacie 00-000." });
+          ctx.addIssue({ code: "custom", message: POSTCODE_ERROR });
           return z.NEVER;
         }
         return postcode;

@@ -3,7 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import Topbar from "@/components/Topbar.astro";
 import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
 import { formatAvailabilitySummary } from "@/lib/availability";
-import { availabilityBadge, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
+import { availabilityBadge, formatDistanceKm, formatPeople, matchedWord } from "@/lib/crisis-format";
 import { createClient } from "@/lib/supabase";
 import { assembleCrisisTeams, getCrisis, getTeamTemplates } from "@/lib/services/crisis";
 import { parseTeamRequest, TEAM_COUNT_MAX, TEAM_COUNT_MIN } from "@/lib/validation/crisis";
@@ -84,6 +84,11 @@ const formatRoles = (t: TeamTemplateDTO) =>
 const missingRoles = (team: CrisisTeamDTO) => [
   ...new Set(team.slots.filter((slot) => !slot.member).map((slot) => slot.roleName)),
 ];
+// Teams the list cannot fill at all are not returned, so say so instead of leaving them out (QA-027).
+const partialCount = teams?.filter((team) => !team.complete).length ?? 0;
+const unassembled = teams ? Math.max(0, requested - teams.length) : 0;
+const firstUnassembled = requested - unassembled + 1;
+const shortRoles = teams?.flatMap((team) => (team.complete ? [] : missingRoles(team))) ?? [];
 ---
 
 <Layout title={crisis ? `Zespoły: ${crisis.typeName}` : "Nie znaleziono kryzysu"}>
@@ -94,7 +99,7 @@ const missingRoles = (team: CrisisTeamDTO) => [
       <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
         <a
           href={crisis ? `/koordynator/kryzys/${crisis.id}` : "/koordynator"}
-          class="mb-4 inline-block text-sm text-purple-300 hover:text-purple-100 hover:underline"
+          class="mb-2 inline-flex min-h-11 items-center text-sm text-purple-300 hover:text-purple-100 hover:underline"
         >
           {crisis ? "← Lista dopasowanych" : "← Panel koordynatora"}
         </a>
@@ -125,8 +130,9 @@ const missingRoles = (team: CrisisTeamDTO) => [
           <>
             <h1 class="mb-1 text-2xl font-bold">Złóż zespoły</h1>
             <p class="mb-4 text-sm text-blue-100/80">
-              {crisis.typeName} · promień {crisis.radiusKm} km ·{" "}
-              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> dopasowanych
+              {crisis.typeName} · promień {crisis.radiusKm} km
+              {crisis.epicentrePostcode && <> · okolice {crisis.epicentrePostcode}</>} ·{" "}
+              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> {matchedWord(crisis.matchCount)}
             </p>
 
             <form method="get" class="mb-6 space-y-4 rounded-lg border border-white/15 bg-white/5 p-3">
@@ -169,12 +175,12 @@ const missingRoles = (team: CrisisTeamDTO) => [
                     required
                     aria-invalid={formError ? "true" : undefined}
                     aria-describedby={formError ? "teams-error" : undefined}
-                    class="mt-1 block w-24 rounded-lg border border-white/20 bg-slate-900/60 p-2 text-white focus:border-purple-300 focus:outline-none"
+                    class="mt-1 block h-11 w-24 rounded-lg border border-white/20 bg-slate-900/60 px-2 text-white focus:border-purple-300 focus:outline-none"
                   />
                 </label>
                 <button
                   type="submit"
-                  class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500"
+                  class="inline-flex min-h-11 items-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500"
                 >
                   Złóż zespoły
                 </button>
@@ -193,6 +199,8 @@ const missingRoles = (team: CrisisTeamDTO) => [
                 </h2>
                 <p class="mb-3 text-sm text-blue-100">
                   Pełne zespoły: <strong class="text-white">{completeCount}</strong> z {requested}
+                  {partialCount > 0 && <> · niepełne: {partialCount}</>}
+                  {unassembled > 0 && <> · niezłożone: {unassembled}</>}
                 </p>
                 <p class="mb-4 rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm text-blue-100">
                   Zespoły składamy z listy dopasowanych do tego kryzysu, według aktualnych umiejętności mieszkańców:
@@ -281,6 +289,16 @@ const missingRoles = (team: CrisisTeamDTO) => [
                       </li>
                     ))}
                   </ol>
+                )}
+                {teams.length > 0 && unassembled > 0 && (
+                  <p class="mt-4 rounded-lg border border-amber-300/40 bg-amber-500/10 p-3 text-sm text-amber-100">
+                    {unassembled === 1
+                      ? `Zespołu ${requested} nie da się złożyć`
+                      : `Zespołów ${firstUnassembled}–${requested} nie da się złożyć`}
+                    {shortRoles.length > 0
+                      ? `: na liście dopasowanych brakuje osób z rolą ${shortRoles.join(", ")}.`
+                      : ": na liście dopasowanych brakuje osób do tego szablonu."}
+                  </p>
                 )}
               </section>
             )}

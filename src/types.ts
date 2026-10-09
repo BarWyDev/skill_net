@@ -84,6 +84,8 @@ export interface CrisisDTO {
   id: string;
   typeName: string;
   radiusKm: number;
+  /** The typed postcode, or the one nearest to a pinned epicentre: a place label, not an address. */
+  epicentrePostcode: string | null;
   activatedAt: string;
   endedAt: string | null;
   /**

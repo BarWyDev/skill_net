@@ -43,6 +43,7 @@ if (!supabase) {
 
         {success && !error && (
           <p
+            data-page-notice
             role="status"
             class="mb-4 rounded-lg border border-green-400/50 bg-green-500/15 p-3 text-sm text-green-100"
           >
@@ -50,10 +51,18 @@ if (!supabase) {
           </p>
         )}
         {error && (
-          <p role="alert" class="mb-4 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
+          <p
+            data-page-notice
+            role="alert"
+            class="mb-4 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100"
+          >
             {error}
           </p>
         )}
+        {(success !== null || error !== null) && <script is:inline>
+          // The notice is for this page load only: a refresh must not show it again (QA-017, QA-019).
+          history.replaceState(history.state, "", location.pathname);
+        </script>}
 
         {profile?.paused && (
           <div class="mb-6 rounded-lg border border-amber-400/50 bg-amber-500/15 p-3 text-sm text-amber-100">
@@ -109,7 +118,7 @@ if (!supabase) {
           </ProfileForm>
         )}
 
-        {profile?.complete && <PauseAvailability paused={profile.paused} />}
+        {profile?.complete && <PauseAvailability paused={profile.paused} pausedUntil={profile.pausedUntil} />}
         {profile && !profile.complete && (
           <p class="mt-10 text-sm text-blue-100/70">
             Wstrzymać dostępność możesz, gdy profil jest kompletny: ma lokalizację i co najmniej jedną umiejętność.
