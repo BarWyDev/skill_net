@@ -3,7 +3,8 @@
 // SMOKE_READONLY=1 runs only the steps that create no accounts, for production.
 // A step's expected location is a prefix match, unless the step sets `exact: true`.
 // A step may set `bodyIncludes` / `bodyExcludes` to assert the response body does / does not contain a string,
-// and `cacheControlIncludes` to assert the Cache-Control header contains a string.
+// `cacheControlIncludes` to assert the Cache-Control header contains a string, and `header: [name, value]`
+// to assert a response header equals a value.
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const READONLY = process.env.SMOKE_READONLY === "1";
@@ -62,13 +63,30 @@ async function request(path, { method = "GET", form, json, rawBody, contentType 
     status: response.status,
     location: response.headers.get("location") ?? "",
     cacheControl: response.headers.get("cache-control") ?? "",
+    headers: response.headers,
     body: await response.text(),
   };
 }
 
 const readonlySteps = [
   ["home renders", () => request("/"), { status: 200 }],
+  ["home forbids framing", () => request("/"), { status: 200, header: ["x-frame-options", "DENY"] }],
+  [
+    "sign-in page forbids framing",
+    () => request("/auth/signin"),
+    { status: 200, header: ["content-security-policy", "frame-ancestors 'none'"] },
+  ],
+  [
+    "unknown path renders the Polish 404",
+    () => request("/nieistnieje"),
+    { status: 404, bodyIncludes: "Nie znaleziono strony" },
+  ],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  [
+    "protected page remembers where the visitor was going",
+    () => request("/profil"),
+    { status: 302, location: "/auth/signin?powrot=%2Fprofil", exact: true },
+  ],
   ["profil redirects anonymous user", () => request("/profil"), { status: 302, location: "/auth/signin" }],
   ["zgoda redirects anonymous user", () => request("/zgoda"), { status: 302, location: "/auth/signin" }],
   [
@@ -347,7 +365,22 @@ const writeSteps = [
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
     { status: 302, location: "/", exact: true },
   ],
-  ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+  [
+    "signin returns to the requested page",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password, powrot: "/mapa" } }),
+    { status: 302, location: "/mapa", exact: true },
+  ],
+  [
+    "signin ignores a return path to another site",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password, powrot: "//evil.example/" } }),
+    { status: 302, location: "/", exact: true },
+  ],
+  [
+    "dashboard sends signed-in user to profile",
+    () => request("/dashboard"),
+    { status: 302, location: "/profil", exact: true },
+  ],
+  ["profile renders for signed-in user", () => request("/profil"), { status: 200 }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   // Unregistering last also removes the account this run created.
@@ -385,7 +418,8 @@ for (const [name, run, expected] of steps) {
       (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location))) &&
     (expected.bodyIncludes === undefined || actual.body.includes(expected.bodyIncludes)) &&
     (expected.bodyExcludes === undefined || !actual.body.includes(expected.bodyExcludes)) &&
-    (expected.cacheControlIncludes === undefined || actual.cacheControl.includes(expected.cacheControlIncludes));
+    (expected.cacheControlIncludes === undefined || actual.cacheControl.includes(expected.cacheControlIncludes)) &&
+    (expected.header === undefined || actual.headers.get(expected.header[0]) === expected.header[1]);
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;
@@ -395,6 +429,10 @@ for (const [name, run, expected] of steps) {
     if (expected.cacheControlIncludes !== undefined)
       console.log(
         `      expected Cache-Control to include ${expected.cacheControlIncludes}, got "${actual.cacheControl}"`,
+      );
+    if (expected.header !== undefined)
+      console.log(
+        `      expected ${expected.header[0]}: ${expected.header[1]}, got "${actual.headers.get(expected.header[0])}"`,
       );
   }
 }

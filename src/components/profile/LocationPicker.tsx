@@ -1,8 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents, ZoomControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { OSM_ATTRIBUTION, OSM_TILE_URL, POLAND_VIEW, type ViewTarget } from "@/components/map/map-view";
+import {
+  OSM_ATTRIBUTION,
+  OSM_TILE_URL,
+  POLAND_MAX_BOUNDS,
+  POLAND_VIEW,
+  ZOOM_IN_TITLE,
+  ZOOM_OUT_TITLE,
+  type ViewTarget,
+} from "@/components/map/map-view";
+import { isInPoland, OUTSIDE_POLAND_ERROR } from "@/lib/poland";
+import { checkPostcodeInput, POSTCODE_ERROR } from "@/lib/postcode";
 import { cn } from "@/lib/utils";
 import type { LocationSource } from "@/types";
 
@@ -14,7 +24,6 @@ export interface LocationValue {
 }
 
 const POINT_ZOOM = 14;
-const POSTCODE_RE = /^(\d{2})-?(\d{3})$/;
 
 // A div icon instead of Leaflet's default marker, whose image URLs break under a bundler.
 const PIN_ICON = L.divIcon({
@@ -23,15 +32,34 @@ const PIN_ICON = L.divIcon({
   iconAnchor: [11, 11],
 });
 
-type LookupStatus = "idle" | "loading" | "found" | "unknown" | "failed";
+type LookupStatus = "idle" | "invalid" | "loading" | "found" | "unknown" | "failed";
+
+export const UNKNOWN_POSTCODE_MESSAGE = "Nie znamy tego kodu pocztowego — zaznacz lokalizację na mapie.";
 
 const LOOKUP_MESSAGES: Record<LookupStatus, string | null> = {
   idle: null,
+  invalid: POSTCODE_ERROR,
   loading: "Szukam kodu…",
   found: null,
-  unknown: "Nie znamy tego kodu pocztowego — zaznacz lokalizację na mapie.",
+  unknown: UNKNOWN_POSTCODE_MESSAGE,
   failed: "Nie udało się sprawdzić kodu. Zaznacz lokalizację na mapie.",
 };
+
+const PRIVACY_HINT = "Lokalizacja jest zaokrąglana do ok. 500 m — nikt nie zobaczy Twojego dokładnego adresu.";
+
+/**
+ * Why the current value cannot be saved yet, or null when it can (or when it is empty, which the
+ * server reports). Lets a form block the submit instead of losing its edits to a server error (QA-017).
+ */
+export function locationProblem(value: LocationValue): string | null {
+  if (value.source === "postcode" && value.postcode.trim() && (value.lat === null || value.lng === null)) {
+    return checkPostcodeInput(value.postcode).kind === "valid" ? UNKNOWN_POSTCODE_MESSAGE : POSTCODE_ERROR;
+  }
+  if (value.source === "pin" && value.lat !== null && value.lng !== null && !isInPoland(value.lat, value.lng)) {
+    return OUTSIDE_POLAND_ERROR;
+  }
+  return null;
+}
 
 function Recenter({ target }: { target: ViewTarget | null }) {
   const map = useMap();
@@ -55,9 +83,11 @@ interface Props {
   /** The location loaded with the page. An emptied postcode field goes back to it, or to a later pin. */
   initial: LocationValue;
   onChange: (next: LocationValue) => void;
+  /** The note under the map. Defaults to the resident's privacy note; a crisis epicentre needs its own. */
+  hint?: string;
 }
 
-export function LocationPicker({ value, initial, onChange }: Props) {
+export function LocationPicker({ value, initial, onChange, hint = PRIVACY_HINT }: Props) {
   const [lookup, setLookup] = useState<LookupStatus>("idle");
   const [viewTarget, setViewTarget] = useState<ViewTarget | null>(null);
   // What an emptied postcode field goes back to: the loaded location, or a later map pin.
@@ -82,9 +112,10 @@ export function LocationPicker({ value, initial, onChange }: Props) {
     const next: LocationValue = { source: "postcode", postcode: raw, lat: null, lng: null };
     onChange(next);
 
-    const match = POSTCODE_RE.exec(raw.trim());
-    if (!match) {
-      setLookup("idle");
+    const input = checkPostcodeInput(raw);
+    if (input.kind !== "valid") {
+      // An unfinished code is only flagged on blur; one that can never be valid is flagged now.
+      setLookup(input.kind === "invalid" ? "invalid" : "idle");
       return;
     }
 
@@ -94,7 +125,7 @@ export function LocationPicker({ value, initial, onChange }: Props) {
       const response = await fetch("/api/kody-pocztowe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postcode: `${match[1]}-${match[2]}` }),
+        body: JSON.stringify({ postcode: input.postcode }),
       });
       if (request !== latestLookup.current) return;
       if (response.status === 404) {
@@ -123,6 +154,8 @@ export function LocationPicker({ value, initial, onChange }: Props) {
   // The stored postcode is never read back, so a postcode location loads with an empty field.
   const storedFromPostcode = lookup === "idle" && value.source === "postcode" && !value.postcode.trim();
   const message = storedFromPostcode ? "Ustawiono z kodu pocztowego" : LOOKUP_MESSAGES[lookup];
+  const pinOutside =
+    value.source === "pin" && value.lat !== null && value.lng !== null && !isInPoland(value.lat, value.lng);
 
   return (
     <div className="space-y-3">
@@ -142,6 +175,10 @@ export function LocationPicker({ value, initial, onChange }: Props) {
           onChange={(e) => {
             void handlePostcodeChange(e.target.value);
           }}
+          onBlur={() => {
+            if (checkPostcodeInput(value.postcode).kind === "partial") setLookup("invalid");
+          }}
+          aria-invalid={lookup === "invalid"}
           aria-describedby="postcode-status"
           className="h-11 w-full rounded-lg border border-white/20 bg-white/10 px-3 text-white placeholder:text-white/40 focus:border-purple-400 focus:outline-none sm:w-40"
         />
@@ -164,7 +201,12 @@ export function LocationPicker({ value, initial, onChange }: Props) {
           zoom={initialView.zoom}
           className="h-72 w-full rounded-xl"
           scrollWheelZoom={false}
+          zoomControl={false}
+          minZoom={5}
+          maxBounds={POLAND_MAX_BOUNDS}
+          maxBoundsViscosity={1}
         >
+          <ZoomControl zoomInTitle={ZOOM_IN_TITLE} zoomOutTitle={ZOOM_OUT_TITLE} />
           <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
           <Recenter target={viewTarget} />
           <ClickToPin onPin={handlePin} />
@@ -182,11 +224,12 @@ export function LocationPicker({ value, initial, onChange }: Props) {
             />
           )}
         </MapContainer>
+        <p id="pin-status" role="status" className="mt-1 min-h-5 text-sm text-red-300">
+          {pinOutside && `${OUTSIDE_POLAND_ERROR} Przesuń znacznik.`}
+        </p>
       </div>
 
-      <p className="text-sm text-blue-100/70">
-        Lokalizacja jest zaokrąglana do ok. 500 m — nikt nie zobaczy Twojego dokładnego adresu.
-      </p>
+      <p className="text-sm text-blue-100/70">{hint}</p>
 
       <input type="hidden" name="location_source" value={value.source ?? ""} />
       <input type="hidden" name="lat" value={value.lat ?? ""} />

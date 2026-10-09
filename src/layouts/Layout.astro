@@ -3,14 +3,20 @@ import "../styles/global.css";
 import Banner from "@/components/Banner.astro";
 import { missingConfigs } from "@/lib/config-status";
 import { EMAIL_STORAGE_KEY } from "@/components/auth/SignInForm";
+import { SIGNUP_EMAIL_STORAGE_KEY } from "@/components/auth/SignUpForm";
 
 interface Props {
   title?: string;
 }
 
 const { title = "SkillNet" } = Astro.props;
-// The sign-in form reads (and then removes) the address itself; every other page just drops it.
-const clearSigninEmail = Astro.url.pathname !== "/auth/signin";
+// Each auth form reads (and then removes) its saved address itself; every other page drops it.
+const staleEmailKeys = [
+  [EMAIL_STORAGE_KEY, "/auth/signin"],
+  [SIGNUP_EMAIL_STORAGE_KEY, "/auth/signup"],
+]
+  .filter(([, page]) => Astro.url.pathname !== page)
+  .map(([key]) => key);
 ---
 
 <!doctype html>
@@ -19,12 +25,13 @@ const clearSigninEmail = Astro.url.pathname !== "/auth/signin";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>{title}</title>
-    {clearSigninEmail && <script is:inline define:vars={{ key: EMAIL_STORAGE_KEY }}>
+    <script is:inline define:vars={{ keys: staleEmailKeys }}>
       try {
-        sessionStorage.removeItem(key);
+        keys.forEach((key) => sessionStorage.removeItem(key));
       } catch {}
-    </script>}
+    </script>
   </head>
   <body>
     {missingConfigs.map((cfg) => (
@@ -42,6 +49,15 @@ const clearSigninEmail = Astro.url.pathname !== "/auth/signin";
       </Banner>
     ))}
     <slot />
+    <!-- Every page links the data-processing notice (QA-002). The colour continues bg-cosmic. -->
+    <footer class="bg-[#0a0e1a] px-4 pb-6 text-center text-sm text-blue-100/60">
+      <a
+        href="/prywatnosc"
+        class="inline-flex min-h-11 items-center text-purple-300 transition-colors hover:text-purple-100 hover:underline"
+      >
+        Prywatność i przetwarzanie danych
+      </a>
+    </footer>
   </body>
 </html>
 

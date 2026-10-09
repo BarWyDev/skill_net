@@ -49,6 +49,8 @@ export function SkillsPicker({ categories, skills, selected, showMissingLevels, 
 
                     {checked && skill.hasLevel && (
                       <fieldset
+                        id={`level-${skill.slug}`}
+                        aria-describedby={missingLevel ? `level-${skill.slug}-error` : undefined}
                         className={cn(
                           "mt-1 ml-8 rounded-lg border p-2",
                           missingLevel ? "border-red-400/70 bg-red-500/10" : "border-white/10",
@@ -57,11 +59,12 @@ export function SkillsPicker({ categories, skills, selected, showMissingLevels, 
                         <legend className="px-1 text-xs text-blue-100/70">Poziom: {skill.name}</legend>
                         <div className="flex flex-wrap gap-x-4 gap-y-1">
                           {LEVELS.map((value) => (
-                            <label key={value} className="flex min-h-9 cursor-pointer items-center gap-2 text-sm">
+                            <label key={value} className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
                               <input
                                 type="radio"
                                 name={`level-${skill.slug}`}
                                 checked={level === value}
+                                aria-invalid={missingLevel || undefined}
                                 onChange={() => {
                                   onLevel(skill.slug, value);
                                 }}
@@ -71,7 +74,11 @@ export function SkillsPicker({ categories, skills, selected, showMissingLevels, 
                             </label>
                           ))}
                         </div>
-                        {missingLevel && <p className="mt-1 text-xs text-red-300">Wybierz poziom.</p>}
+                        {missingLevel && (
+                          <p id={`level-${skill.slug}-error`} className="mt-1 text-xs text-red-300">
+                            Wybierz poziom.
+                          </p>
+                        )}
                       </fieldset>
                     )}
                   </li>

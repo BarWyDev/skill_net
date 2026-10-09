@@ -171,6 +171,7 @@ export type Database = {
           ended_at: string | null
           ended_by: string | null
           epicentre: unknown
+          epicentre_postcode: string | null
           id: string
           match_count: number
           radius_m: number
@@ -184,6 +185,7 @@ export type Database = {
           ended_at?: string | null
           ended_by?: string | null
           epicentre: unknown
+          epicentre_postcode?: string | null
           id?: string
           match_count?: number
           radius_m: number
@@ -196,6 +198,7 @@ export type Database = {
           ended_at?: string | null
           ended_by?: string | null
           epicentre?: unknown
+          epicentre_postcode?: string | null
           id?: string
           match_count?: number
           radius_m?: number
@@ -648,6 +651,7 @@ export type Database = {
         Returns: undefined
       }
       is_coordinator: { Args: never; Returns: boolean }
+      is_in_poland: { Args: { p_lat: number; p_lng: number }; Returns: boolean }
       lookup_postcode: {
         Args: { p_postcode: string }
         Returns: {

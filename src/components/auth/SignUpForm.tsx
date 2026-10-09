@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Mail, Lock, UserPlus, CircleAlert } from "lucide-react";
 import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
+import { authErrorMessage } from "@/lib/auth-errors";
 import { CONSENT_LABEL, CONSENT_LINK_TEXT, CONSENT_REQUIRED_MESSAGE } from "@/lib/consent";
 
 const MIN_PASSWORD_LENGTH = 6;
+
+// Like the sign-in form's key: keeps the address across a failed sign-up without putting it in
+// the URL. Removed by the next page load, here or by Layout.astro on any other page.
+export const SIGNUP_EMAIL_STORAGE_KEY = "skillnet:signup-email";
+const ACCOUNT_EXISTS_MESSAGE = authErrorMessage("user_already_exists");
 
 interface Props {
   serverError?: string | null;
@@ -33,6 +39,18 @@ export default function SignUpForm({ serverError }: Props) {
     confirmPassword?: string;
     consent?: string;
   }>({});
+
+  // After hydration, like SignInForm: the server render has no sessionStorage.
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(SIGNUP_EMAIL_STORAGE_KEY);
+      sessionStorage.removeItem(SIGNUP_EMAIL_STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-off read of external storage after hydration
+      if (serverError && saved) setEmail(saved);
+    } catch {
+      // Storage blocked: the address is typed again.
+    }
+  }, [serverError]);
 
   function validate() {
     const next: typeof errors = {};
@@ -70,6 +88,12 @@ export default function SignUpForm({ serverError }: Props) {
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     if (!validate()) {
       e.preventDefault();
+      return;
+    }
+    try {
+      sessionStorage.setItem(SIGNUP_EMAIL_STORAGE_KEY, email);
+    } catch {
+      // Storage blocked: only the prefill after an error is lost.
     }
   }
 
@@ -93,6 +117,7 @@ export default function SignUpForm({ serverError }: Props) {
           clearError("email");
         }}
         placeholder="ty@przyklad.pl"
+        autoComplete="email"
         error={errors.email}
         icon={<Mail className="size-4" />}
       />
@@ -107,6 +132,7 @@ export default function SignUpForm({ serverError }: Props) {
           clearError("password");
         }}
         placeholder={`Co najmniej ${MIN_PASSWORD_LENGTH} znaków`}
+        autoComplete="new-password"
         error={errors.password}
         hint={passwordHint}
         icon={<Lock className="size-4" />}
@@ -131,6 +157,7 @@ export default function SignUpForm({ serverError }: Props) {
           clearError("confirmPassword");
         }}
         placeholder="Wpisz hasło jeszcze raz"
+        autoComplete="new-password"
         error={errors.confirmPassword}
         icon={<Lock className="size-4" />}
         endContent={
@@ -144,7 +171,7 @@ export default function SignUpForm({ serverError }: Props) {
       />
 
       <div>
-        <label htmlFor="consent" className="flex items-start gap-2 text-sm text-blue-100/80">
+        <label htmlFor="consent" className="flex min-h-11 items-start gap-3 py-1 text-sm text-blue-100/80">
           <input
             id="consent"
             name="consent"
@@ -156,7 +183,7 @@ export default function SignUpForm({ serverError }: Props) {
             }}
             aria-invalid={errors.consent ? true : undefined}
             aria-describedby={errors.consent ? "consent-error" : undefined}
-            className="mt-1 size-4 shrink-0 accent-purple-500"
+            className="mt-0.5 size-5 shrink-0 accent-purple-500"
           />
           <span>
             {CONSENT_LABEL}{" "}
@@ -174,6 +201,14 @@ export default function SignUpForm({ serverError }: Props) {
       </div>
 
       <ServerError message={serverError} />
+      {serverError === ACCOUNT_EXISTS_MESSAGE && (
+        <a
+          href="/auth/signin"
+          className="-mt-2 inline-flex min-h-11 items-center text-sm text-purple-300 hover:underline"
+        >
+          Przejdź do logowania
+        </a>
+      )}
 
       <SubmitButton pendingText="Zakładanie konta..." icon={<UserPlus className="size-4" />}>
         Załóż konto

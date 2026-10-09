@@ -1,5 +1,7 @@
 ---
 import Topbar from "@/components/Topbar.astro";
+
+const { user } = Astro.locals;
 ---
 
 <div class="bg-cosmic relative min-h-screen w-full overflow-hidden">
@@ -39,18 +41,29 @@ import Topbar from "@/components/Topbar.astro";
         >
           Zobacz mapę umiejętności
         </a>
-        <a
-          href="/auth/signup"
-          class="inline-flex items-center justify-center rounded-lg border border-white/20 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10"
-        >
-          Załóż konto
-        </a>
-        <a
-          href="/auth/signin"
-          class="inline-flex items-center justify-center rounded-lg border border-white/20 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10"
-        >
-          Zaloguj się
-        </a>
+        {user ? (
+          <a
+            href="/profil"
+            class="inline-flex items-center justify-center rounded-lg border border-white/20 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10"
+          >
+            Mój profil
+          </a>
+        ) : (
+          <>
+            <a
+              href="/auth/signup"
+              class="inline-flex items-center justify-center rounded-lg border border-white/20 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10"
+            >
+              Załóż konto
+            </a>
+            <a
+              href="/auth/signin"
+              class="inline-flex items-center justify-center rounded-lg border border-white/20 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10"
+            >
+              Zaloguj się
+            </a>
+          </>
+        )}
       </div>
     </div>
 
@@ -59,7 +72,7 @@ import Topbar from "@/components/Topbar.astro";
       <div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
         <h2 class="mb-2 text-lg font-semibold text-white">Dodaj swoje umiejętności</h2>
         <p class="text-sm leading-relaxed text-blue-100/60">
-          Ratownictwo, elektryka, języki, sprzęt — zaznacz, w czym możesz pomóc i kiedy jesteś dostępny.
+          Ratownictwo, elektryka, języki, sprzęt — zaznacz, w czym możesz pomóc i kiedy możesz to robić.
         </p>
       </div>
       <div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">

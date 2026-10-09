@@ -6,10 +6,14 @@ import { pauseDateBounds } from "@/lib/pause";
 
 interface Props {
   paused: boolean;
+  /** The last paused day (YYYY-MM-DD), or null for an open-ended pause. */
+  pausedUntil: string | null;
 }
 
-const { paused } = Astro.props;
+const { paused, pausedUntil } = Astro.props;
 const { min, max } = pauseDateBounds(new Date());
+// The form starts from the current pause, so saving it unchanged keeps it (QA-022).
+const indefinite = paused && !pausedUntil;
 ---
 
 <section
@@ -28,7 +32,7 @@ const { min, max } = pauseDateBounds(new Date());
       <legend class="sr-only">Jak długo</legend>
       <div class="space-y-2">
         <label class="flex min-h-12 items-center gap-3 text-sm">
-          <input type="radio" name="mode" value="date" checked class="size-5 accent-blue-400" />
+          <input type="radio" name="mode" value="date" checked={!indefinite} class="size-5 accent-blue-400" />
           Do dnia (włącznie)
         </label>
         <label for="pause-until" class="sr-only">
@@ -40,11 +44,12 @@ const { min, max } = pauseDateBounds(new Date());
           type="date"
           min={min}
           max={max}
+          value={paused ? (pausedUntil ?? undefined) : undefined}
           class="h-12 w-full rounded-lg border border-white/20 bg-slate-900/60 px-3 text-sm text-white scheme-dark focus:border-blue-300 focus:outline-none sm:max-w-xs"
         />
       </div>
       <label class="flex min-h-12 items-center gap-3 text-sm">
-        <input type="radio" name="mode" value="indefinite" class="size-5 accent-blue-400" />
+        <input type="radio" name="mode" value="indefinite" checked={indefinite} class="size-5 accent-blue-400" />
         Bezterminowo, do wznowienia
       </label>
     </fieldset>

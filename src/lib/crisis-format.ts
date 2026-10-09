@@ -26,6 +26,20 @@ export function formatPeople(n: number): string {
   return `${n} ${few ? "osoby" : "osób"}`;
 }
 
+/** The adjective after `formatPeople`: "1 osoba dopasowana", "2 osoby dopasowane", "5 osób dopasowanych". */
+export function matchedWord(n: number): string {
+  if (n === 1) return "dopasowana";
+  const lastTwo = n % 100;
+  const last = n % 10;
+  return last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14) ? "dopasowane" : "dopasowanych";
+}
+
+/** "Awaria prądu · 5 km · okolice 31-001": tells apart crises of the same type and radius. */
+export function formatCrisisTitle(crisis: { typeName: string; radiusKm: number; epicentrePostcode: string | null }) {
+  const place = crisis.epicentrePostcode ? ` · okolice ${crisis.epicentrePostcode}` : "";
+  return `${crisis.typeName} · ${crisis.radiusKm} km${place}`;
+}
+
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;

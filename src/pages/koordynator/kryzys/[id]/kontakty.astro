@@ -3,7 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import Topbar from "@/components/Topbar.astro";
 import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
 import { formatAvailabilitySummary } from "@/lib/availability";
-import { availabilityBadge, formatActivatedAt, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
+import { availabilityBadge, formatActivatedAt, formatDistanceKm, formatPeople, matchedWord } from "@/lib/crisis-format";
 import { formatPhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase";
 import { getCrisis, revealCrisisContacts } from "@/lib/services/crisis";
@@ -85,7 +85,7 @@ const anyUnverified = contacts?.some((c) => !c.phoneVerified) ?? false;
       <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
         <a
           href={crisis ? `/koordynator/kryzys/${crisis.id}` : "/koordynator"}
-          class="mb-4 inline-block text-sm text-purple-300 hover:text-purple-100 hover:underline"
+          class="mb-2 inline-flex min-h-11 items-center text-sm text-purple-300 hover:text-purple-100 hover:underline"
         >
           {crisis ? "← Lista dopasowanych" : "← Panel koordynatora"}
         </a>
@@ -116,8 +116,9 @@ const anyUnverified = contacts?.some((c) => !c.phoneVerified) ?? false;
           <>
             <h1 class="mb-1 text-2xl font-bold">Ujawnij kontakty (break-glass)</h1>
             <p class="mb-4 text-sm text-blue-100/80">
-              {crisis.typeName} · promień {crisis.radiusKm} km ·{" "}
-              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> dopasowanych
+              {crisis.typeName} · promień {crisis.radiusKm} km
+              {crisis.epicentrePostcode && <> · okolice {crisis.epicentrePostcode}</>} ·{" "}
+              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> {matchedWord(crisis.matchCount)}
             </p>
 
             <div class="mb-5 space-y-2 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
@@ -162,13 +163,13 @@ const anyUnverified = contacts?.some((c) => !c.phoneVerified) ?? false;
               <div class="flex flex-wrap justify-end gap-2">
                 <a
                   href={`/koordynator/kryzys/${crisis.id}`}
-                  class="rounded-lg border border-white/20 px-4 py-2 text-sm text-blue-100 hover:bg-white/10"
+                  class="inline-flex min-h-11 items-center rounded-lg border border-white/20 px-4 py-2 text-sm text-blue-100 hover:bg-white/10"
                 >
                   Anuluj
                 </a>
                 <button
                   type="submit"
-                  class="rounded-lg border border-red-400/60 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
+                  class="inline-flex min-h-11 items-center rounded-lg border border-red-400/60 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
                 >
                   Ujawnij kontakty
                 </button>

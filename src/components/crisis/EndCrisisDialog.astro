@@ -1,5 +1,5 @@
 ---
-import { formatPeople } from "@/lib/crisis-format";
+import { formatCrisisTitle, formatPeople, matchedWord } from "@/lib/crisis-format";
 import type { CrisisDTO } from "@/types";
 
 // "Zakończ kryzys" with a native confirmation dialog. With JS the button opens the dialog;
@@ -17,7 +17,7 @@ const formId = "end-crisis-form";
   type="submit"
   form={formId}
   data-end-crisis-open
-  class="rounded-lg border border-red-400/60 bg-red-600/30 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600/50"
+  class="inline-flex min-h-11 items-center rounded-lg border border-red-400/60 bg-red-600/30 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600/50"
 >
   Zakończ kryzys
 </button>
@@ -32,7 +32,7 @@ const formId = "end-crisis-form";
       Zakończyć kryzys?
     </h2>
     <p class="mb-3 text-sm text-blue-100/80">
-      {crisis.typeName} · promień {crisis.radiusKm} km · {formatPeople(crisis.matchCount)} dopasowanych
+      {formatCrisisTitle(crisis)} · {formatPeople(crisis.matchCount)} {matchedWord(crisis.matchCount)}
     </p>
     <p class="mb-5 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
       Lista dopasowanych osób zostanie trwale usunięta. Tej operacji nie można cofnąć.
@@ -41,13 +41,13 @@ const formId = "end-crisis-form";
       <button
         type="submit"
         formmethod="dialog"
-        class="rounded-lg border border-white/20 px-4 py-2 text-sm text-blue-100 hover:bg-white/10"
+        class="inline-flex min-h-11 items-center rounded-lg border border-white/20 px-4 py-2 text-sm text-blue-100 hover:bg-white/10"
       >
         Anuluj
       </button>
       <button
         type="submit"
-        class="rounded-lg border border-red-400/60 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
+        class="inline-flex min-h-11 items-center rounded-lg border border-red-400/60 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
       >
         Zakończ kryzys
       </button>

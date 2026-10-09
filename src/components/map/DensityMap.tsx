@@ -1,16 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import type { PathOptions } from "leaflet";
 import type { FeatureCollection, Polygon } from "geojson";
-import { GeoJSON, MapContainer, TileLayer, useMap } from "react-leaflet";
+import { GeoJSON, MapContainer, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { OSM_ATTRIBUTION, OSM_TILE_URL, POLAND_VIEW, type ViewTarget } from "@/components/map/map-view";
+import {
+  OSM_ATTRIBUTION,
+  OSM_TILE_URL,
+  POLAND_MAX_BOUNDS,
+  POLAND_VIEW,
+  ZOOM_IN_TITLE,
+  ZOOM_OUT_TITLE,
+  type ViewTarget,
+} from "@/components/map/map-view";
+import { checkPostcodeInput, POSTCODE_ERROR } from "@/lib/postcode";
 import { cn } from "@/lib/utils";
 import type { DensityBand, DensityCellDTO, SkillCategoryDTO } from "@/types";
 
 // Only banded 2 km cells reach this island. Never log responses or the typed postcode.
 
 const AREA_ZOOM = 12;
-const POSTCODE_RE = /^(\d{2})-?(\d{3})$/;
 
 const BANDS: { band: DensityBand; label: string; color: string }[] = [
   { band: 1, label: "5–9 osób", color: "#c4b5fd" },
@@ -32,10 +40,11 @@ function toFeatures(cells: DensityCellDTO[]): FeatureCollection<Polygon, { band:
 
 type CellsState =
   { status: "loading" } | { status: "failed" } | { status: "ready"; cells: DensityCellDTO[]; request: number };
-type LookupStatus = "idle" | "loading" | "found" | "unknown" | "failed";
+type LookupStatus = "idle" | "invalid" | "loading" | "found" | "unknown" | "failed";
 
 const LOOKUP_MESSAGES: Record<LookupStatus, string | null> = {
   idle: null,
+  invalid: POSTCODE_ERROR,
   loading: "Szukam kodu…",
   found: null,
   unknown: "Nie znamy tego kodu pocztowego.",
@@ -86,9 +95,10 @@ export function DensityMap({ categories, start }: Props) {
   async function handlePostcodeChange(raw: string) {
     setPostcode(raw);
     const request = ++latestLookup.current;
-    const match = POSTCODE_RE.exec(raw.trim());
-    if (!match) {
-      setLookup("idle");
+    const input = checkPostcodeInput(raw);
+    if (input.kind !== "valid") {
+      // An unfinished code is only flagged on blur; one that can never be valid is flagged now.
+      setLookup(input.kind === "invalid" ? "invalid" : "idle");
       return;
     }
 
@@ -98,7 +108,7 @@ export function DensityMap({ categories, start }: Props) {
       const response = await fetch("/api/kody-pocztowe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postcode: `${match[1]}-${match[2]}` }),
+        body: JSON.stringify({ postcode: input.postcode }),
       });
       if (request !== latestLookup.current) return;
       if (response.status === 404) {
@@ -121,8 +131,13 @@ export function DensityMap({ categories, start }: Props) {
       : cells.status === "failed"
         ? "Nie udało się wczytać mapy. Odśwież stronę."
         : cells.cells.length === 0
-          ? "Brak obszarów z co najmniej 5 osobami dla tego filtra."
+          ? // Rare skills will always look like this, so say why rather than "nobody" (QA-008).
+            category
+            ? "W żadnym kwadracie nie ma jeszcze 5 osób z umiejętnościami z tej grupy. Mniejsze skupiska ukrywamy dla prywatności."
+            : "W żadnym kwadracie nie ma jeszcze 5 osób. Mniejsze skupiska ukrywamy dla prywatności."
           : null;
+  // At the whole-Poland zoom the 2 km cells are too small to see (QA-006).
+  const showAreaHint = !start && viewTarget === null;
 
   const filters = [{ slug: null, name: "Wszystkie" }, ...categories];
 
@@ -144,7 +159,7 @@ export function DensityMap({ categories, start }: Props) {
                   setCategory(f.slug);
                 }}
                 className={cn(
-                  "rounded-lg border px-3 py-1.5 text-sm transition-colors",
+                  "min-h-11 rounded-lg border px-3 text-sm transition-colors",
                   selected
                     ? "border-purple-400 bg-purple-600 text-white"
                     : "border-white/20 bg-white/5 text-blue-100 hover:bg-white/10",
@@ -172,6 +187,10 @@ export function DensityMap({ categories, start }: Props) {
           onChange={(e) => {
             void handlePostcodeChange(e.target.value);
           }}
+          onBlur={() => {
+            if (checkPostcodeInput(postcode).kind === "partial") setLookup("invalid");
+          }}
+          aria-invalid={lookup === "invalid"}
           aria-describedby="map-postcode-status"
           className="h-11 w-full rounded-lg border border-white/20 bg-white/10 px-3 text-white placeholder:text-white/40 focus:border-purple-400 focus:outline-none sm:w-40"
         />
@@ -187,13 +206,24 @@ export function DensityMap({ categories, start }: Props) {
       <p role="status" className="text-sm text-blue-100/70 empty:hidden">
         {statusMessage}
       </p>
+      {showAreaHint && (
+        <p className="rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm text-blue-100">
+          Wpisz kod pocztowy, żeby zobaczyć swoją okolicę. W skali całej Polski kwadraty 2 km są za małe, żeby je
+          zobaczyć.
+        </p>
+      )}
 
       <MapContainer
         center={[initialView.lat, initialView.lng]}
         zoom={initialView.zoom}
         className="h-[28rem] w-full rounded-xl"
         scrollWheelZoom={false}
+        zoomControl={false}
+        minZoom={5}
+        maxBounds={POLAND_MAX_BOUNDS}
+        maxBoundsViscosity={1}
       >
+        <ZoomControl zoomInTitle={ZOOM_IN_TITLE} zoomOutTitle={ZOOM_OUT_TITLE} />
         <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
         <Recenter target={viewTarget} />
         {cells.status === "ready" && (
