@@ -1,7 +1,13 @@
 {
   "name": "skillnet",
+  "description": "SkillNet: a local skills directory for crisis coordination and neighbour-to-neighbour help.",
+  "private": true,
   "type": "module",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BarWyDev/skill_net.git"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -20,7 +26,6 @@
     "@astrojs/cloudflare": "^14.3.1",
     "@astrojs/react": "^6.0.5",
     "@astrojs/sitemap": "^3.7.4",
-    "@eslint/config-helpers": "^0.7.0",
     "@radix-ui/react-slot": "^1.1.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.99.1",

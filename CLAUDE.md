@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SkillNet: a local skills directory for crisis coordination. A council coordinator activates a crisis and gets nearby residents ranked by distance, skill match and confirmed availability. The same directory is used day to day for neighbour-to-neighbour help. Product source of truth: @context/foundation/prd.md. Stack rationale: @context/foundation/tech-stack.md.
 
-The code is still the `10x-astro-starter` scaffold (auth only, no domain tables yet). The package and the Worker are named `skillnet`. Production runs at https://skillnet.barwy.workers.dev (see **Deploy** below).
+The app was bootstrapped from the `10x-astro-starter` template and now implements resident profiles, the public skills map and the coordinator's crisis mode on its own Supabase schema. The package and the Worker are named `skillnet`. Production runs at https://skillnet.barwy.workers.dev (see **Deploy** below).
 
 ## Commands
 
@@ -40,9 +40,9 @@ The app is an Astro 7 SSR app (`output: "server"`) deployed to Cloudflare Worker
 - Merge Tailwind classes with `cn()` from `@/lib/utils`. Do not concatenate class strings.
 - Add shadcn components with `npx shadcn@latest add <name>`.
 - API routes export uppercase `GET` / `POST` handlers.
-- Put services in `src/lib/` (or `src/lib/services/`), shared entity and DTO types in `src/types.ts`, and React hooks in `src/components/hooks/`. None of these locations exist yet.
-- Migrations go in `supabase/migrations/YYYYMMDDHHmmss_short_description.sql` (the folder doesn't exist yet). Enable RLS on every new table, with separate policies per operation and per role.
-- zod is only present as a transitive dependency. Add it to `package.json` before using it for input validation.
+- Put services in `src/lib/` (or `src/lib/services/`), shared entity and DTO types in `src/types.ts`, and React hooks in `src/components/hooks/` (that folder doesn't exist yet).
+- Migrations go in `supabase/migrations/YYYYMMDDHHmmss_short_description.sql`. Enable RLS on every new table, with separate policies per operation and per role.
+- zod is a direct dependency. Use it for input validation.
 - Never log personal data (names, emails, phone numbers, locations) with `console.*`. Workers Logs and `wrangler tail` capture it. Audit events go to Supabase tables instead.
 
 ## CI
@@ -67,48 +67,3 @@ Production is https://skillnet.barwy.workers.dev on the Workers **Free** plan. U
 - **Rollback**: `npx wrangler rollback <version-id> --message "<reason>"`. It takes seconds, but it doesn't undo migrations, KV data or secrets. The next push to `master` redeploys over a rollback, so revert the bad commit too.
 - **Admin-created accounts**: a database trigger refuses every email account without a published consent version. Creating a user in Studio or with `auth.admin.createUser` fails with `consent_required` unless the user metadata carries `{"consent_version": "<CURRENT_CONSENT_VERSION from src/lib/consent.ts>"}`.
 - **Human-only**: deleting the Worker, KV namespaces or named previews, rotating Supabase keys, changing the Workers plan, and granting or revoking the coordinator role on production. Once crisis mode exists, don't merge to `master` while a crisis is active.
-
-<!-- BEGIN @przeprogramowani/10x-cli -->
-
-## 10xDevs AI Toolkit - Module 2, Lesson 3
-
-Review AI-generated code before merge with the **implementation review chain**:
-
-```
-/10x-implement -> /10x-impl-review -> triage -> (/10x-lesson | fix | skip | disagree)
-```
-
-`/10x-impl-review` is the lesson focus. Review is a quality gate, not an instruction to fix every finding.
-
-### Task Router - Where to start
-
-| Skill                          | Use it when                                                                                                                                                                                                                             |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Code review (lesson focus)** |                                                                                                                                                                                                                                         |
-| `/10x-impl-review <change-id>` | You have implemented code and want a structured review before merge. The skill checks plan adherence, scope discipline, safety and quality, architecture, pattern consistency, and success criteria, then presents findings for triage. |
-| **Recurring lesson outcome**   |                                                                                                                                                                                                                                         |
-| `/10x-lesson`                  | A finding reveals a recurring project rule or agent failure pattern. Record it in `context/foundation/lessons.md` instead of treating it as a one-off note.                                                                             |
-
-### Triage discipline
-
-- Severity says how bad the finding is. Impact says how much the decision matters now.
-- Valid outcomes: fix now, fix differently, skip, accept as risk, record as recurring rule (`/10x-lesson`), disagree.
-- Fix critical findings. Do not burn hours on low-impact observations just because the agent found them.
-- Conscious skipping of low-impact findings is a valid review outcome, not negligence.
-- If you disagree with a finding, record why. Wrong agent reasoning is also signal.
-
-### Review boundaries
-
-- This lesson reviews implemented code. It does not create the plan, execute new phases, or teach CI review.
-- Testing strategy and quality gates are introduced in Module 3.
-- Do not use `/10x-contract` as a triage outcome in this lesson.
-
-### Paths used by this lesson
-
-- `context/changes/<change-id>/plan.md` - expected implementation contract
-- `context/changes/<change-id>/reviews/` - review output
-- `context/foundation/lessons.md` - recurring lessons
-
-Skills must not write to `context/archive/`. Archived changes are immutable; if a resolved target path starts with `context/archive/`, abort with: "This change is archived. Open a new change with `/10x-new` instead."
-
-<!-- END @przeprogramowani/10x-cli -->
