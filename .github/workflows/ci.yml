@@ -38,6 +38,14 @@ jobs:
         with:
           version: latest
       - run: npm ci
+      # A runner once had 54322 already bound, so `supabase start` failed before any app code ran.
+      # Free the API and DB ports (the only ones the start below publishes) first.
+      - name: Free local Supabase ports
+        run: |
+          for port in 54321 54322; do
+            docker ps -q --filter "publish=$port" | xargs -r docker rm -f
+            sudo fuser -k "$port/tcp" || true
+          done
       - name: Start local Supabase
         run: |
           supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
