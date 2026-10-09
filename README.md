@@ -1,155 +1,115 @@
-# 10x Astro Starter
+# SkillNet
 
-![](./public/template.png)
+A local skills directory for crisis coordination. Residents register their skills (medical, technical, logistics, languages, equipment), an approximate location and when they are available. When a crisis hits, a municipal coordinator activates it and gets nearby residents ranked by distance, skill match and confirmed availability. Day to day, the same directory supports neighbour-to-neighbour help through a public skills density map.
 
-A modern, opinionated starter template for building fast, accessible web applications.
+The UI is in Polish. Production runs at https://skillnet.barwy.workers.dev.
 
-## Tech Stack
+Product source of truth: [`context/foundation/prd.md`](context/foundation/prd.md). Stack rationale: [`context/foundation/tech-stack.md`](context/foundation/tech-stack.md).
 
-- [Astro](https://astro.build/) v7 - Modern web framework with server-first rendering
-- [React](https://react.dev/) v19 - UI library for interactive components
-- [TypeScript](https://www.typescriptlang.org/) v6 - Type-safe JavaScript
-- [Tailwind CSS](https://tailwindcss.com/) v4 - Utility-first CSS framework
-- [Supabase](https://supabase.com/) - Authentication and backend-as-a-service
-- [Cloudflare Workers](https://workers.cloudflare.com/) - Edge deployment runtime
+## Features
+
+- **Sign-up with consent:** email/password accounts with email confirmation and a versioned data-processing consent (`/zgoda`). The privacy notice is at `/prywatnosc`.
+- **Resident profile** (`/profil`): skills from a fixed taxonomy, location from a postcode or a map pin (stored only to about 500 m), phone number, weekly availability, pausing availability, and deleting the account with all its data.
+- **Public skills map** (`/mapa`): skill density in 2 km squares, shown as ranges only.
+- **Coordinator panel** (`/koordynator`): activate a crisis by type, place and radius, get a ranked list of matching residents, assemble teams from templates, reveal contact details through an audited break-glass step, and end the crisis.
+
+## Tech stack
+
+- [Astro](https://astro.build/) 7 (SSR, `output: "server"`) with [React](https://react.dev/) 19 islands
+- [TypeScript](https://www.typescriptlang.org/) 6, [Tailwind CSS](https://tailwindcss.com/) 4, [shadcn/ui](https://ui.shadcn.com/)
+- [Leaflet](https://leafletjs.com/) / react-leaflet for maps, [zod](https://zod.dev/) for input validation
+- [Supabase](https://supabase.com/): Postgres with PostGIS and RLS, Auth with cookie sessions via `@supabase/ssr`
+- [Cloudflare Workers](https://workers.cloudflare.com/) with static assets, via `@astrojs/cloudflare`
 
 ## Prerequisites
 
-- Node.js v22.14.0 (as specified in `.nvmrc`)
-- npm (comes with Node.js)
+- Node.js 22 (`.nvmrc`). `npm run test:unit` needs Node 22.18 or newer, because it relies on native TypeScript stripping.
+- npm
+- Docker, for the local Supabase stack
 
-## Getting Started
+## Getting started
 
-1. Clone the repository:
+1. Install dependencies:
 
-```bash
-git clone https://github.com/przeprogramowani/10x-astro-starter.git
-cd 10x-astro-starter
-```
+   ```bash
+   npm install
+   ```
 
-2. Install dependencies:
+2. Start the local Supabase stack. It applies all migrations and loads `supabase/seed.sql`:
 
-```bash
-npm install
-```
+   ```bash
+   npx supabase start
+   ```
 
-3. Set up Supabase and configure environment variables — see [Supabase Configuration](#supabase-configuration) below.
+3. Configure environment variables (see [Supabase setup](#supabase-setup)):
 
-4. Create a `.dev.vars` file for local Cloudflare dev secrets:
+   ```bash
+   cp .env.example .env
+   ```
 
-```bash
-cp .env.example .dev.vars
-```
+   ```bash
+   cp .env.example .dev.vars
+   ```
 
-5. Run the development server:
+4. Run the development server at http://localhost:4321:
 
-```bash
-npm run dev
-```
+   ```bash
+   npm run dev
+   ```
 
-## Available Scripts
+## Supabase setup
 
-- `npm run dev` - Start development server (Cloudflare workerd runtime)
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint with type-checked rules
-- `npm run lint:fix` - Auto-fix ESLint issues
-- `npm run format` - Run Prettier
-- `npm run smoke` - Smoke test the auth flow against a running server (`BASE_URL`, defaults to `http://localhost:4321`)
+| Variable       | Description                                                         |
+| -------------- | ------------------------------------------------------------------- |
+| `SUPABASE_URL` | API URL (`http://127.0.0.1:54321` locally)                          |
+| `SUPABASE_KEY` | Publishable (anon) key, printed by `npx supabase start` or `status` |
 
-## Project Structure
+Both are declared in the `env.schema` of `astro.config.mjs` as optional server-only secrets and read through `astro:env/server`. Put them in `.env` (Astro) and `.dev.vars` (the workerd runtime). Both files are gitignored. If they are missing, the app still starts, auth is disabled and a banner says so.
 
-```md
+Locally, email confirmation is turned off in `supabase/config.toml`, so new accounts can sign in right away. Studio runs at http://localhost:54323. Stop the stack with `npx supabase stop`.
+
+## Scripts
+
+| Script              | What it does                                                                      |
+| ------------------- | --------------------------------------------------------------------------------- |
+| `npm run dev`       | Dev server on http://localhost:4321, on the Cloudflare workerd runtime            |
+| `npm run build`     | Production build                                                                  |
+| `npm run preview`   | Serve the production build on the Cloudflare runtime                              |
+| `npm run lint`      | ESLint with type-checked rules (`lint:fix` to auto-fix)                           |
+| `npm run format`    | Prettier, with the Astro and Tailwind plugins                                     |
+| `npx astro check`   | Type check                                                                        |
+| `npm run test:unit` | Unit tests (`src/**/*.test.ts`) on Node's built-in `node:test`                    |
+| `npm run test:db`   | pgTAP suites in `supabase/tests/` against the local Supabase                      |
+| `npm run smoke`     | HTTP smoke test of the auth flow and access gates (see [Smoke test](#smoke-test)) |
+| `npm run db:types`  | Regenerate `src/db/database.types.ts` from the local database                     |
+
+A pre-commit hook (husky + lint-staged) runs `eslint --fix` and `prettier --write` on staged files.
+
+## Project structure
+
+```text
 .
 ├── src/
-│ ├── layouts/ # Astro layouts
-│ ├── pages/ # Astro pages
-│ │ └── api/ # API endpoints
-│ ├── components/ # UI components (Astro & React)
-│ └── assets/ # Static assets
-├── public/ # Public assets
-├── wrangler.jsonc # Cloudflare Workers config
+│   ├── components/      # Astro and React components (auth, crisis, map, profile, ui)
+│   ├── db/              # Generated Supabase types
+│   ├── layouts/         # Page layout
+│   ├── lib/             # Pure helpers (with unit tests), validation/ and services/
+│   ├── pages/           # Routes; pages/api/ holds the form POST endpoints
+│   ├── middleware.ts    # Session, protected routes, coordinator and consent gates
+│   └── types.ts         # Shared entity and DTO types
+├── supabase/
+│   ├── migrations/      # Schema, RLS policies, RPCs and seed data
+│   ├── tests/           # pgTAP suites
+│   └── seed.sql         # Local-only synthetic residents
+├── scripts/             # Smoke test, postcode-centroid builder, perf check
+├── context/             # Product docs, plans and change history
+├── docs/qa/             # Manual QA plan and findings
+└── wrangler.jsonc       # Cloudflare Workers config
 ```
 
-## Supabase Configuration
+Routes under `/profil`, `/zgoda` and `/koordynator` require sign-in (`PROTECTED_ROUTES` in `src/middleware.ts`). `/koordynator` also requires the coordinator role.
 
-This project uses [Supabase](https://supabase.com/) for authentication. Environment variables are declared via Astro's `astro:env` schema and are treated as **server-only secrets** — they are never exposed to the client.
-
-### First-time setup (local, no cloud project needed)
-
-Requires [Docker](https://www.docker.com/) and ~7 GB RAM.
-
-1. Create your `.env` file:
-
-```bash
-cp .env.example .env
-```
-
-2. Initialize the local Supabase project (creates a `supabase/` config folder):
-
-```bash
-npx supabase init
-```
-
-3. Start the local stack (downloads Docker images on first run):
-
-```bash
-npx supabase start
-```
-
-4. Copy the credentials printed by the CLI into your `.env` and `.dev.vars`:
-
-```
-SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_KEY=<anon key from CLI output>
-```
-
-5. To stop the stack when done:
-
-```bash
-npx supabase stop
-```
-
-The local Studio UI is available at `http://localhost:54323`.
-
-No database tables or migrations are required — this project uses Supabase Auth's built-in `auth.users` table only.
-
-### Using a cloud Supabase project instead
-
-If you prefer to use a hosted Supabase project, add these variables to your `.env` and `.dev.vars` files:
-
-| Variable       | Description                                                |
-| -------------- | ---------------------------------------------------------- |
-| `SUPABASE_URL` | Project URL from Supabase dashboard → Settings → API       |
-| `SUPABASE_KEY` | `anon` public key from Supabase dashboard → Settings → API |
-
-```
-SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_KEY=<anon-key>
-```
-
-### Email confirmation in local development
-
-By default Supabase requires email confirmation before a user can sign in. To skip this during local development:
-
-1. Open the Supabase dashboard for your project
-2. Go to **Authentication → Email → Confirm email**
-3. Toggle it **off**
-
-Users can then sign in immediately after sign-up without clicking a confirmation link.
-
-### Auth routes
-
-| Route                 | Description                                                             |
-| --------------------- | ----------------------------------------------------------------------- |
-| `/auth/signin`        | Email/password sign-in form                                             |
-| `/auth/signup`        | Email/password sign-up form                                             |
-| `/auth/confirm-email` | Post-signup "check your inbox" page                                     |
-| `/dashboard`          | Example protected page (redirects to `/auth/signin` if unauthenticated) |
-
-Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_ROUTES` array there to require authentication.
-
-### Dane kodów pocztowych
+## Postcode data
 
 The `postcodes` table holds one centroid per Polish postcode (the mean of that postcode's address points). It is loaded by the migration `supabase/migrations/20260927130000_seed_postcode_centroids.sql`, so postcode lookup never calls an external service at runtime.
 
@@ -163,7 +123,7 @@ The `postcodes` table holds one centroid per Polish postcode (the mean of that p
 
   The script needs only Node and `unzip`. For other inputs (for example the official GML converted with `ogr2ogr`), see the options in the script's header comment. The migration is an idempotent upsert, but an already applied migration is not re-run by `db push`, so ship updated data in a new migration with a fresh timestamp.
 
-### Rola koordynatora
+## Coordinator role
 
 The operator (the product owner) grants and revokes the coordinator role in the Supabase SQL editor (local Studio at http://localhost:54323, or the hosted dashboard). The app has no operator screen, and no client can call these functions.
 
@@ -180,7 +140,7 @@ select public.revoke_coordinator('jan@example.com', 'operator: pilot ended');
 - History: `select e.*, u.email from public.coordinator_role_events e left join auth.users u on u.id = e.user_id order by e.occurred_at;`
 - On production, a grant or revoke is a production data change. Only the operator does it.
 
-### Demo trybu kryzysowego (lokalnie)
+## Local crisis-mode demo
 
 `supabase/seed.sql` loads about 500 synthetic residents around Kraków (within about 15 km of 31-001) on every `npx supabase db reset`. The data is the same on every reset. It is **local only**: `supabase db push` never runs seeds, so production never gets it. The synthetic accounts use `@seed.skillnet.test` emails and have no password, so nobody can sign in as them.
 
@@ -279,15 +239,13 @@ Against production, run only the read-only steps. They create no accounts:
 SMOKE_READONLY=1 BASE_URL=https://skillnet.barwy.workers.dev npm run smoke
 ```
 
-> **Note:** this script exists primarily to guard the development of the starter itself — it is a fast sanity check that dependency upgrades did not break the build, the Cloudflare adapter or the Supabase auth flow. It is **not** a substitute for a real test suite. Once you build your own product on top of this starter, add proper tests (unit, integration, end-to-end) suited to your application.
+It also checks the access gates (coordinator-only routes, consent gate, break-glass contact reveal) and security headers. It is a sanity check, not a substitute for the unit and pgTAP suites.
 
 ## CI
 
 GitHub Actions runs two jobs on every push and PR to `master`:
 
-- **ci** — lint, `astro check` and build. Configure `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
-- **smoke** — starts a local Supabase via the Supabase CLI, builds, serves the production preview on the Cloudflare runtime and runs `npm run smoke` against it. No secrets required.
+- **ci** — lint, unit tests, `astro check` and build. Configure `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
+- **smoke** — starts a local Supabase via the Supabase CLI, runs the pgTAP suites, builds, serves the production preview on the Cloudflare runtime and runs `npm run smoke` against it. No secrets required.
 
-## License
-
-MIT
+GitHub Actions never deploys. Branch protection on `master` requires both jobs to pass.
