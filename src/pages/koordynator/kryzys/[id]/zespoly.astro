@@ -1,6 +1,6 @@
 ---
-import { CircleAlert } from "lucide-react";
 import PageShell from "@/components/PageShell.astro";
+import { FieldError } from "@/components/auth/FieldError";
 import StatusLine from "@/components/StatusLine.astro";
 import StatusMark from "@/components/StatusMark.astro";
 import CrisisFacts from "@/components/crisis/CrisisFacts.astro";
@@ -101,7 +101,7 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
 ---
 
 <PageShell
-  title={crisis ? `Zespoły: ${crisis.typeName}` : "Nie znaleziono kryzysu"}
+  title={`${crisis ? `Zespoły: ${crisis.typeName}` : "Nie znaleziono kryzysu"} — SkillNet`}
   heading={heading}
   crumbs={crumbs}
   crumbLabel={crisis ? "Zespoły" : undefined}
@@ -173,10 +173,9 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
             class="field block h-12 w-28 px-3 text-lg tabular-nums"
           />
           {formError ? (
-            <p id="teams-error" role="alert" class="text-alarm mt-2 flex gap-2 text-[0.9375rem]">
-              <CircleAlert aria-hidden="true" className="mt-[0.2em] size-4 shrink-0" />
+            <FieldError id="teams-error" role="alert">
               {formError}
-            </p>
+            </FieldError>
           ) : (
             <p id="teams-hint" class="text-ash mt-2 text-[0.9375rem]">
               Od {TEAM_COUNT_MIN} do {TEAM_COUNT_MAX}.

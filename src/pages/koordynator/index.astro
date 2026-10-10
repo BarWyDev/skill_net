@@ -42,7 +42,7 @@ const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okolice ${c.epicentrePostcode}` : ""}`;
 ---
 
-<PageShell title="Panel koordynatora" heading="Panel koordynatora" wide>
+<PageShell title="Panel koordynatora — SkillNet" heading="Panel koordynatora" wide>
   {ended && (
     <StatusLine tone="done" role="status" class="mb-10 text-lg font-bold">
       Kryzys zakończony. Lista dopasowanych osób została usunięta.

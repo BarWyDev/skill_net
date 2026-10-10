@@ -45,7 +45,7 @@ const panel = { href: "/koordynator", label: "Panel koordynatora" };
 ---
 
 <PageShell
-  title={crisis ? `Kryzys: ${crisis.typeName}` : "Nie znaleziono kryzysu"}
+  title={`${crisis ? `Kryzys: ${crisis.typeName}` : "Nie znaleziono kryzysu"} — SkillNet`}
   heading={crisis?.typeName ?? (loadError ? "Kryzys" : "Nie znaleziono kryzysu")}
   crumbs={[panel]}
   wide

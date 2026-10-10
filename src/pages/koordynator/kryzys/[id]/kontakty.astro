@@ -1,6 +1,6 @@
 ---
-import { CircleAlert } from "lucide-react";
 import PageShell from "@/components/PageShell.astro";
+import { FieldError } from "@/components/auth/FieldError";
 import StatusLine from "@/components/StatusLine.astro";
 import StatusMark from "@/components/StatusMark.astro";
 import CrisisFacts from "@/components/crisis/CrisisFacts.astro";
@@ -95,7 +95,7 @@ const heading = !crisis
 ---
 
 <PageShell
-  title={crisis ? `Kontakty: ${crisis.typeName}` : "Nie znaleziono kryzysu"}
+  title={`${crisis ? `Kontakty: ${crisis.typeName}` : "Nie znaleziono kryzysu"} — SkillNet`}
   heading={heading}
   crumbs={crumbs}
   crumbLabel={crisis ? "Kontakty" : undefined}
@@ -151,10 +151,9 @@ const heading = !crisis
           placeholder="np. brak potwierdzeń od 30 minut, awaria sieci komórkowej"
         >{reason}</textarea>
         {formError ? (
-          <p id="reason-error" role="alert" class="text-alarm mt-2 flex gap-2 text-[0.9375rem]">
-            <CircleAlert aria-hidden="true" className="mt-[0.2em] size-4 shrink-0" />
+          <FieldError id="reason-error" role="alert">
             {formError}
-          </p>
+          </FieldError>
         ) : (
           <p id="reason-hint" class="text-ash mt-2 text-[0.9375rem]">
             Od {REASON_MIN} do {REASON_MAX} znaków.
