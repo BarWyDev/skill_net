@@ -83,6 +83,11 @@ const readonlySteps = [
   ],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   [
+    "sign-in page drops a return path that normalises to another site",
+    () => request("/auth/signin?powrot=/.//evil.example/login"),
+    { status: 200, bodyExcludes: "evil.example" },
+  ],
+  [
     "protected page remembers where the visitor was going",
     () => request("/profil"),
     { status: 302, location: "/auth/signin?powrot=%2Fprofil", exact: true },
@@ -373,6 +378,11 @@ const writeSteps = [
   [
     "signin ignores a return path to another site",
     () => request("/api/auth/signin", { method: "POST", form: { email, password, powrot: "//evil.example/" } }),
+    { status: 302, location: "/", exact: true },
+  ],
+  [
+    "signin ignores a dot-segment return path to another site",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password, powrot: "/.//evil.example/" } }),
     { status: 302, location: "/", exact: true },
   ],
   [
