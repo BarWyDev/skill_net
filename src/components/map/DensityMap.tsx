@@ -235,7 +235,7 @@ export function DensityMap({ categories, start }: Props) {
         <MapContainer
           center={[initialView.lat, initialView.lng]}
           zoom={initialView.zoom}
-          className="density-map border-seam h-[min(70vh,640px)] min-h-[26rem] w-full border"
+          className="site-map border-seam h-[min(70vh,640px)] min-h-[26rem] w-full border"
           scrollWheelZoom={false}
           zoomControl={false}
           zoomAnimation={!reduceMotion}

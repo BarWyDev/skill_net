@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ALL_SLOTS_MASK, DAY_LABELS, DAY_NAMES, SLOT_HOURS, SLOT_NAMES, slotBit, slotLabel } from "@/lib/availability";
+import { NAV_LINK } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -15,15 +16,14 @@ export function AvailabilityGrid({ initial }: Props) {
     setMask((prev) => (checked ? prev | (1 << bit) : prev & ~(1 << bit)));
   }
 
-  const buttonClass =
-    "min-h-11 rounded-lg border border-white/20 bg-white/5 px-4 text-sm text-white transition-colors hover:bg-white/10";
+  const shortcut = cn(NAV_LINK, "text-chalk cursor-pointer underline");
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
+    <div>
+      <div className="flex flex-wrap gap-x-6">
         <button
           type="button"
-          className={buttonClass}
+          className={shortcut}
           onClick={() => {
             setMask(ALL_SLOTS_MASK);
           }}
@@ -32,7 +32,7 @@ export function AvailabilityGrid({ initial }: Props) {
         </button>
         <button
           type="button"
-          className={buttonClass}
+          className={shortcut}
           onClick={() => {
             setMask(0);
           }}
@@ -41,24 +41,26 @@ export function AvailabilityGrid({ initial }: Props) {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Square cells, one per day and time of day, like the map grid. Below 18rem it scrolls here,
+          never the page. */}
+      <div className="mt-4 overflow-x-auto pb-1">
         <div
           role="group"
           aria-label="Tygodniowa dostępność"
-          className="grid min-w-72 grid-cols-[2.5rem_repeat(4,minmax(0,1fr))] gap-1"
+          className="grid w-full max-w-[21rem] min-w-[18rem] grid-cols-[2rem_repeat(4,minmax(2.75rem,1fr))] gap-1.5 p-1"
         >
           <span aria-hidden="true" />
           {SLOT_NAMES.map((name, slot) => (
-            <span key={name} aria-hidden="true" className="text-center text-xs leading-tight text-blue-100/80">
+            <span key={name} aria-hidden="true" className="pb-1 text-center text-[0.8125rem] leading-tight">
               {name}
               <br />
-              <span className="text-blue-100/50">{SLOT_HOURS[slot]}</span>
+              <span className="text-ash tabular-nums">{SLOT_HOURS[slot]}</span>
             </span>
           ))}
 
           {DAY_LABELS.map((day, dayIndex) => (
             <div key={day} className="contents">
-              <span aria-hidden="true" className="flex items-center text-sm font-medium text-blue-100">
+              <span aria-hidden="true" className="text-ash flex items-center">
                 {day}
               </span>
               {SLOT_NAMES.map((name, slot) => {
@@ -80,14 +82,14 @@ export function AvailabilityGrid({ initial }: Props) {
                     <span
                       aria-hidden="true"
                       className={cn(
-                        "flex h-11 items-center justify-center rounded-md border text-base transition-colors",
-                        "peer-focus-visible:ring-2 peer-focus-visible:ring-purple-300",
+                        "flex aspect-square min-h-11 items-center justify-center text-lg font-bold",
+                        "peer-focus-visible:outline-signal peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2",
                         checked
-                          ? "border-purple-400 bg-purple-600 text-white"
-                          : "border-white/15 bg-white/5 text-transparent hover:bg-white/10",
+                          ? "bg-signal text-graphite"
+                          : "shadow-[inset_0_0_0_2px_var(--color-ash)] hover:shadow-[inset_0_0_0_2px_var(--color-chalk)]",
                       )}
                     >
-                      ✓
+                      {checked && "✓"}
                     </span>
                   </label>
                 );

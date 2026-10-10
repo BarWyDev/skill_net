@@ -1,12 +1,15 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import Topbar from "@/components/Topbar.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import StatusLine from "@/components/StatusLine.astro";
 import DeleteAccount from "@/components/profile/DeleteAccount.astro";
 import PauseAvailability from "@/components/profile/PauseAvailability.astro";
 import ProfileForm from "@/components/profile/ProfileForm";
 import { formatPauseUntil } from "@/lib/pause";
 import { createClient } from "@/lib/supabase";
 import { getMyProfile, getTaxonomy } from "@/lib/services/profile";
+import { BUTTON } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
 import type { MyProfileDTO, TaxonomyDTO } from "@/types";
 
 const SUCCESS_MESSAGES: [param: string, message: string][] = [
@@ -33,99 +36,93 @@ if (!supabase) {
 }
 ---
 
-<Layout title="Mój profil">
-  <div class="bg-cosmic min-h-screen w-full">
-    <div class="mx-auto max-w-2xl p-4 sm:p-8">
-      <Topbar />
+<Layout title="Mój profil — SkillNet" footer="graphite">
+  <div class="site min-h-screen">
+    <div class="mx-auto max-w-6xl px-4 sm:px-8">
+      <SiteHeader />
 
-      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
-        <h1 class="mb-4 text-2xl font-bold">Mój profil</h1>
+      <main class="pt-12 pb-20 sm:pt-20 lg:pb-28">
+        <h1 class="font-display text-[clamp(2.75rem,10vw,6.5rem)] leading-[0.9]">Mój profil</h1>
 
-        {success && !error && (
-          <p
-            data-page-notice
-            role="status"
-            class="mb-4 rounded-lg border border-green-400/50 bg-green-500/15 p-3 text-sm text-green-100"
-          >
-            {success}
-          </p>
-        )}
-        {error && (
-          <p
-            data-page-notice
-            role="alert"
-            class="mb-4 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100"
-          >
-            {error}
-          </p>
-        )}
-        {(success !== null || error !== null) && <script is:inline>
-          // The notice is for this page load only: a refresh must not show it again (QA-017, QA-019).
-          history.replaceState(history.state, "", location.pathname);
-        </script>}
+        <!-- One column of about 42rem keeps every line under 80 characters. -->
+        <div class="mt-8 max-w-[42rem] sm:mt-10">
+          {profile && (
+            <div class="space-y-3 text-lg">
+              {profile.paused ? (
+                <StatusLine tone="attention">
+                  <p class="font-bold">
+                    {profile.pausedUntil
+                      ? `Twoja dostępność jest wstrzymana do ${formatPauseUntil(profile.pausedUntil)} włącznie.`
+                      : "Twoja dostępność jest wstrzymana bezterminowo."}
+                  </p>
+                  <p class="text-ash mt-1 text-base">
+                    Nie pojawisz się w nowych kryzysach ani na mapie, a w trwających kryzysach koordynator Cię nie
+                    widzi.
+                  </p>
+                  <form method="post" action="/api/profile/resume" class="mt-4">
+                    <button type="submit" class:list={cn(BUTTON, "btn-secondary text-chalk cursor-pointer")}>
+                      Wznów dostępność
+                    </button>
+                  </form>
+                </StatusLine>
+              ) : profile.complete ? (
+                <StatusLine tone="done">
+                  <p class="font-bold">Profil kompletny</p>
+                </StatusLine>
+              ) : (
+                <StatusLine tone="attention">
+                  <p>
+                    <strong>Profil niekompletny</strong> — dodaj lokalizację i co najmniej jedną umiejętność, aby
+                    koordynator mógł Cię znaleźć.
+                  </p>
+                </StatusLine>
+              )}
+              {profile.phone === null && (
+                <StatusLine tone="attention">
+                  <p>Bez numeru telefonu nie otrzymasz alertów kryzysowych.</p>
+                </StatusLine>
+              )}
+            </div>
+          )}
 
-        {profile?.paused && (
-          <div class="mb-6 rounded-lg border border-amber-400/50 bg-amber-500/15 p-3 text-sm text-amber-100">
-            <p class="font-medium">
-              {profile.pausedUntil
-                ? `Twoja dostępność jest wstrzymana do ${formatPauseUntil(profile.pausedUntil)} włącznie.`
-                : "Twoja dostępność jest wstrzymana bezterminowo."}
+          {success && !error && (
+            <StatusLine tone="done" data-page-notice role="status" class="mt-6 font-bold">
+              {success}
+            </StatusLine>
+          )}
+          {error && (
+            <StatusLine tone="error" data-page-notice role="alert" class="mt-6 font-bold">
+              {error}
+            </StatusLine>
+          )}
+          {(success !== null || error !== null) && <script is:inline>
+            // The notice is for this page load only: a refresh must not show it again (QA-017, QA-019).
+            history.replaceState(history.state, "", location.pathname);
+          </script>}
+
+          {loadError && (
+            <StatusLine tone="error" role="alert" class="mt-6 font-bold">
+              {loadError}
+            </StatusLine>
+          )}
+
+          {taxonomy && profile && (
+            <ProfileForm client:only="react" taxonomy={taxonomy} profile={profile}>
+              <p slot="fallback" class="text-ash mt-14">
+                Ładowanie formularza…
+              </p>
+            </ProfileForm>
+          )}
+
+          {profile?.complete && <PauseAvailability paused={profile.paused} pausedUntil={profile.pausedUntil} />}
+          {profile && !profile.complete && (
+            <p class="border-seam text-ash mt-16 border-t pt-10 leading-relaxed">
+              Wstrzymać dostępność możesz, gdy profil jest kompletny: ma lokalizację i co najmniej jedną umiejętność.
             </p>
-            <p class="mt-1 text-amber-100/80">
-              Nie pojawisz się w nowych kryzysach ani na mapie, a w trwających kryzysach koordynator Cię nie widzi.
-            </p>
-            <form method="post" action="/api/profile/resume" class="mt-3">
-              <button
-                type="submit"
-                class="h-12 w-full rounded-lg border border-amber-300/60 bg-amber-500/30 px-6 text-sm font-medium text-white transition-colors hover:bg-amber-500/40 sm:w-auto"
-              >
-                Wznów dostępność
-              </button>
-            </form>
-          </div>
-        )}
-        {profile && !profile.paused && (
-          <p
-            class:list={[
-              "mb-6 rounded-lg border p-3 text-sm",
-              profile.complete
-                ? "border-green-400/40 bg-green-500/10 text-green-100"
-                : "border-amber-400/40 bg-amber-500/10 text-amber-100",
-            ]}
-          >
-            {profile.complete
-              ? "Profil kompletny"
-              : "Profil niekompletny — dodaj lokalizację i co najmniej jedną umiejętność, aby koordynator mógł Cię znaleźć."}
-          </p>
-        )}
-        {profile?.phone === null && (
-          <p class="-mt-4 mb-6 rounded-lg border border-amber-400/30 bg-amber-500/5 p-3 text-sm text-amber-100/90">
-            Bez numeru telefonu nie otrzymasz alertów kryzysowych.
-          </p>
-        )}
+          )}
 
-        {loadError && (
-          <p role="alert" class="text-red-200">
-            {loadError}
-          </p>
-        )}
-
-        {taxonomy && profile && (
-          <ProfileForm client:only="react" taxonomy={taxonomy} profile={profile}>
-            <p slot="fallback" class="text-blue-100/70">
-              Ładowanie formularza…
-            </p>
-          </ProfileForm>
-        )}
-
-        {profile?.complete && <PauseAvailability paused={profile.paused} pausedUntil={profile.pausedUntil} />}
-        {profile && !profile.complete && (
-          <p class="mt-10 text-sm text-blue-100/70">
-            Wstrzymać dostępność możesz, gdy profil jest kompletny: ma lokalizację i co najmniej jedną umiejętność.
-          </p>
-        )}
-
-        {Astro.locals.user && <DeleteAccount />}
+          {Astro.locals.user && <DeleteAccount />}
+        </div>
       </main>
     </div>
   </div>

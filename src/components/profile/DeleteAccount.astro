@@ -1,6 +1,9 @@
 ---
 // "Usuń konto": a plain form POST, so it works without JS. Errors come back through the `?error=` alert
 // at the top of the page named by `returnTo` (/profil or /zgoda).
+import { BUTTON } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
+
 interface Props {
   returnTo?: "/profil" | "/zgoda";
 }
@@ -8,40 +11,35 @@ interface Props {
 const { returnTo = "/profil" } = Astro.props;
 ---
 
-<section
-  aria-labelledby="delete-account-title"
-  class="mt-10 rounded-2xl border border-red-400/40 bg-red-500/10 p-4 text-white sm:p-6"
->
-  <h2 id="delete-account-title" class="mb-3 text-lg font-semibold">
+<!-- Destructive, so it sits last and furthest from "Zapisz", in the alarm tone: a heading and an
+     outline button, never a filled red panel. -->
+<section aria-labelledby="delete-account-title" class="border-seam mt-24 border-t pt-10 sm:mt-32">
+  <h2 id="delete-account-title" class="font-display text-alarm text-[2rem] leading-none">
     Usuń konto
   </h2>
-  <p class="mb-2 text-sm text-red-100">
+  <p id="delete-account-consequence" class="mt-4 leading-relaxed">
     Twoje konto, profil, umiejętności, numer telefonu i dostępność zostaną usunięte natychmiast. Tej operacji nie można
     cofnąć.
   </p>
-  <p class="mb-4 text-sm text-blue-100/70">
+  <p class="text-ash mt-3 leading-relaxed">
     Dzienniki audytowe zachowują wyłącznie anonimowy identyfikator, który po usunięciu konta nie wskazuje na żadną
     osobę.
   </p>
-  <form method="post" action="/api/auth/unregister" class="space-y-3">
+  <form method="post" action="/api/auth/unregister" class="mt-6">
     <input type="hidden" name="return_to" value={returnTo} />
-    <div class="space-y-1">
-      <label for="delete-account-password" class="block text-sm font-medium">
-        Potwierdź hasłem
-      </label>
-      <input
-        id="delete-account-password"
-        name="password"
-        type="password"
-        autocomplete="current-password"
-        required
-        class="h-12 w-full rounded-lg border border-white/20 bg-slate-900/60 px-3 text-sm text-white focus:border-red-300 focus:outline-none sm:max-w-sm"
-      />
-    </div>
-    <button
-      type="submit"
-      class="h-12 w-full rounded-lg border border-red-400/60 bg-red-600 px-6 text-sm font-medium text-white transition-colors hover:bg-red-500 sm:w-auto"
-    >
+    <label for="delete-account-password" class="mb-2 block font-bold">
+      Potwierdź hasłem
+    </label>
+    <input
+      id="delete-account-password"
+      name="password"
+      type="password"
+      autocomplete="current-password"
+      required
+      aria-describedby="delete-account-consequence"
+      class="field block h-12 w-full px-3 text-lg sm:max-w-sm"
+    />
+    <button type="submit" class:list={cn(BUTTON, "btn-danger mt-6 w-full cursor-pointer sm:w-auto")}>
       Usuń konto na zawsze
     </button>
   </form>
