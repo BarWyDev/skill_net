@@ -17,6 +17,8 @@ const {
   description = "Lokalny katalog umiejętności na czas kryzysu i na co dzień: sąsiedzi, którzy mogą pomóc w okolicy.",
   footer = "dark",
 } = Astro.props;
+const ogImage = new URL("/og-image.png", Astro.site).href;
+const OG_IMAGE_ALT = "SkillNet: lokalny katalog umiejętności na czas kryzysu. Ciemne tło i siatka kwadratów mapy.";
 // Each auth form reads (and then removes) its saved address itself; every other page drops it.
 const staleEmailKeys = [
   [EMAIL_STORAGE_KEY, "/auth/signin"],
@@ -31,8 +33,12 @@ const staleEmailKeys = [
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    <!-- Icons and the share image come from scripts/generate-brand-assets.mjs. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="96x96" />
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#1e2024" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta property="og:type" content="website" />
@@ -40,6 +46,13 @@ const staleEmailKeys = [
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={OG_IMAGE_ALT} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={OG_IMAGE_ALT} />
     <script is:inline define:vars={{ keys: staleEmailKeys }}>
       try {
         keys.forEach((key) => sessionStorage.removeItem(key));

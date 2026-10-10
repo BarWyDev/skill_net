@@ -25,6 +25,10 @@ const CONSENT_GATE_EXEMPT = [
   "/_astro",
   "/_image",
   "/favicon.png",
+  "/favicon.svg",
+  "/favicon.ico",
+  "/apple-touch-icon.png",
+  "/og-image.png",
 ];
 
 export function isConsentGateExempt(path: string): boolean {
