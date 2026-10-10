@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { formatCrisisTitle, formatPeople, matchedWord } from "./crisis-format.ts";
+import { availabilityStatus, formatCrisisTitle, formatPeople, matchedWord } from "./crisis-format.ts";
 
 test("the adjective agrees with the number (QA-025)", () => {
   const phrase = (n: number) => `${formatPeople(n)} ${matchedWord(n)}`;
@@ -24,4 +24,10 @@ test("the crisis title names the place when it is known (QA-026)", () => {
     "Awaria prądu · 5 km · okolice 31-001",
   );
   assert.equal(formatCrisisTitle({ typeName: "Powódź", radiusKm: 2, epicentrePostcode: null }), "Powódź · 2 km");
+});
+
+test("availability is a status with words, not colour alone", () => {
+  assert.deepEqual(availabilityStatus(true), { label: "Deklaruje dostępność teraz", tone: "done" });
+  assert.deepEqual(availabilityStatus(false), { label: "Teraz poza deklarowaną dostępnością", tone: "neutral" });
+  assert.deepEqual(availabilityStatus(null), { label: "Dostępności nie podano", tone: "neutral" });
 });

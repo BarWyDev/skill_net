@@ -1,0 +1,62 @@
+---
+// The facts under a crisis heading: its status in words (with the grid-motif marker), then radius, area,
+// times and the number of matched people as a definition list.
+import StatusMark from "@/components/StatusMark.astro";
+import { formatActivatedAt, formatActiveFor, formatPeople, isStale } from "@/lib/crisis-format";
+import type { CrisisDTO } from "@/types";
+
+interface Props {
+  crisis: CrisisDTO;
+  /** Repeat the crisis type when the page heading names something else (teams, contacts). */
+  showType?: boolean;
+}
+
+const { crisis, showType = false } = Astro.props;
+const now = new Date();
+const stale = crisis.status === "active" && isStale(crisis.activatedAt, now);
+---
+
+<p class="text-lg font-bold">
+  {crisis.status === "ended" ? (
+    <StatusMark tone="neutral">Kryzys zakończony</StatusMark>
+  ) : stale ? (
+    <StatusMark tone="attention">
+      Kryzys {formatActiveFor(crisis.activatedAt, now)}. Sprawdź, czy nadal trwa.
+    </StatusMark>
+  ) : (
+    <StatusMark tone="done">Kryzys {formatActiveFor(crisis.activatedAt, now)}</StatusMark>
+  )}
+</p>
+
+<dl class="mt-6 flex flex-wrap gap-x-10 gap-y-4">
+  {showType && (
+    <div>
+      <dt class="text-ash text-[0.9375rem]">Rodzaj</dt>
+      <dd class="text-lg font-bold">{crisis.typeName}</dd>
+    </div>
+  )}
+  <div>
+    <dt class="text-ash text-[0.9375rem]">Promień</dt>
+    <dd class="text-lg font-bold tabular-nums">{crisis.radiusKm} km</dd>
+  </div>
+  {crisis.epicentrePostcode && (
+    <div>
+      <dt class="text-ash text-[0.9375rem]">Obszar</dt>
+      <dd class="text-lg font-bold tabular-nums">okolice {crisis.epicentrePostcode}</dd>
+    </div>
+  )}
+  <div>
+    <dt class="text-ash text-[0.9375rem]">Aktywowano</dt>
+    <dd class="text-lg font-bold tabular-nums">{formatActivatedAt(crisis.activatedAt)}</dd>
+  </div>
+  {crisis.endedAt && (
+    <div>
+      <dt class="text-ash text-[0.9375rem]">Zakończono</dt>
+      <dd class="text-lg font-bold tabular-nums">{formatActivatedAt(crisis.endedAt)}</dd>
+    </div>
+  )}
+  <div>
+    <dt class="text-ash text-[0.9375rem]">Dopasowano</dt>
+    <dd class="text-lg font-bold tabular-nums">{formatPeople(crisis.matchCount)}</dd>
+  </div>
+</dl>

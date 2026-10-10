@@ -1,11 +1,11 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import Topbar from "@/components/Topbar.astro";
+import PageShell from "@/components/PageShell.astro";
+import StatusLine from "@/components/StatusLine.astro";
+import StatusMark from "@/components/StatusMark.astro";
 import CrisisActivationForm from "@/components/crisis/CrisisActivationForm";
 import { createClient } from "@/lib/supabase";
 import { getCrisisTypes, listActiveCrises, listRecentEndedCrises } from "@/lib/services/crisis";
-import { formatActivatedAt, formatActiveFor, formatCrisisTitle, formatPeople, isStale } from "@/lib/crisis-format";
-import { cn } from "@/lib/utils";
+import { formatActivatedAt, formatActiveFor, formatPeople, isStale } from "@/lib/crisis-format";
 import type { CrisisDTO, CrisisTypeDTO } from "@/types";
 
 // The middleware gates this route: only coordinators get here.
@@ -33,115 +33,110 @@ if (!supabase) {
     loadError = "Nie udało się wczytać panelu. Odśwież stronę.";
   }
 }
+
+// One row per crisis: the type and its status first, then the area, the activation time and the count.
+const ROW =
+  "group grid gap-x-6 gap-y-1 border-t border-seam py-4 md:grid-cols-[minmax(0,1fr)_11.5rem_16.5rem_6rem] md:items-baseline";
+const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okolice ${c.epicentrePostcode}` : ""}`;
 ---
 
-<Layout title="Panel koordynatora">
-  <div class="bg-cosmic min-h-screen w-full">
-    <div class="mx-auto max-w-2xl p-4 sm:p-8">
-      <Topbar />
+<PageShell title="Panel koordynatora" heading="Panel koordynatora" wide>
+  {ended && (
+    <StatusLine tone="done" role="status" class="mb-10 text-lg font-bold">
+      Kryzys zakończony. Lista dopasowanych osób została usunięta.
+    </StatusLine>
+  )}
+  {error && (
+    <StatusLine tone="error" role="alert" class="mb-10">
+      <p class="font-bold">Kryzysu nie aktywowano.</p>
+      <p>{error}</p>
+    </StatusLine>
+  )}
+  {loadError && (
+    <StatusLine tone="error" role="alert" class="mb-10 font-bold">
+      {loadError}
+    </StatusLine>
+  )}
 
-      <main class="space-y-6">
-        <section class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
-          <h1 class="mb-4 text-2xl font-bold">Aktywuj tryb kryzysowy</h1>
-
-          {ended && (
-            <p
-              role="status"
-              class="mb-4 rounded-lg border border-green-400/50 bg-green-500/15 p-3 text-sm text-green-100"
-            >
-              Kryzys zakończony. Lista dopasowanych osób została usunięta.
-            </p>
-          )}
-          {error && (
-            <p role="alert" class="mb-4 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
-              {error}
-            </p>
-          )}
-          {loadError && (
-            <p role="alert" class="text-red-200">
-              {loadError}
-            </p>
-          )}
-
-          {crisisTypes && (
-            <CrisisActivationForm client:only="react" crisisTypes={crisisTypes}>
-              <p slot="fallback" class="text-blue-100/70">
-                Ładowanie formularza…
-              </p>
-            </CrisisActivationForm>
-          )}
-        </section>
-
-        {activeCrises && (
-          <section
-            aria-labelledby="active-heading"
-            class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6"
-          >
-            <h2 id="active-heading" class="mb-4 text-xl font-semibold">
-              Aktywne kryzysy
-            </h2>
-            {activeCrises.length === 0 ? (
-              <p class="text-blue-100/70">Brak aktywnych kryzysów.</p>
-            ) : (
-              <ul class="space-y-2">
-                {activeCrises.map((c) => {
-                  const stale = isStale(c.activatedAt, now);
-                  return (
-                    <li>
-                      <a
-                        href={`/koordynator/kryzys/${c.id}`}
-                        class:list={cn(
-                          "block rounded-xl border p-3 transition-colors hover:bg-white/15",
-                          stale ? "border-amber-400/60 bg-amber-500/15" : "border-white/10 bg-white/5",
-                        )}
-                      >
-                        <span class="block font-medium text-white">{formatCrisisTitle(c)}</span>
-                        <span class="block text-sm text-blue-100/70">
-                          {formatActivatedAt(c.activatedAt)} · {formatPeople(c.matchCount)}
-                        </span>
-                        <span
-                          class:list={cn("block text-sm", stale ? "font-medium text-amber-200" : "text-blue-100/70")}
-                        >
-                          {formatActiveFor(c.activatedAt, now)}
-                          {stale && " — sprawdź, czy nadal trwa"}
-                        </span>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-        )}
-
-        {endedCrises && endedCrises.length > 0 && (
-          <section
-            aria-labelledby="ended-heading"
-            class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6"
-          >
-            <h2 id="ended-heading" class="mb-4 text-xl font-semibold">
-              Zakończone
-            </h2>
-            <ul class="space-y-2">
-              {endedCrises.map((c) => (
-                <li>
-                  <a
-                    href={`/koordynator/kryzys/${c.id}`}
-                    class="block rounded-xl border border-white/10 bg-white/5 p-3 transition-colors hover:bg-white/15"
-                  >
-                    <span class="block font-medium text-white">{formatCrisisTitle(c)}</span>
-                    <span class="block text-sm text-blue-100/70">
-                      aktywowano {formatActivatedAt(c.activatedAt)}
-                      {c.endedAt && <> · zakończono {formatActivatedAt(c.endedAt)}</>}
+  {activeCrises && (
+    <section aria-labelledby="active-heading">
+      <h2 id="active-heading" class="font-display text-[2rem] leading-none">
+        Aktywne kryzysy
+      </h2>
+      {activeCrises.length === 0 ? (
+        <p class="text-ash mt-4 text-lg">Brak aktywnych kryzysów.</p>
+      ) : (
+        <ul class="border-seam mt-6 border-b">
+          {activeCrises.map((c) => {
+            const stale = isStale(c.activatedAt, now);
+            return (
+              <li>
+                <a href={`/koordynator/kryzys/${c.id}`} class:list={ROW}>
+                  <span class="min-w-0">
+                    <span class="block text-xl font-bold underline-offset-4 group-hover:underline">{c.typeName}</span>
+                    <span class="mt-1 block text-[0.9375rem]">
+                      {stale ? (
+                        <StatusMark tone="attention" class="font-bold">
+                          {sentence(formatActiveFor(c.activatedAt, now))}. Sprawdź, czy nadal trwa.
+                        </StatusMark>
+                      ) : (
+                        <StatusMark tone="done">{sentence(formatActiveFor(c.activatedAt, now))}</StatusMark>
+                      )}
                     </span>
-                    <span class="block text-sm text-blue-100/70">{formatPeople(c.matchCount)}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </main>
-    </div>
-  </div>
-</Layout>
+                  </span>
+                  <span class="tabular-nums">{area(c)}</span>
+                  <span class="text-ash tabular-nums">{`aktywowano ${formatActivatedAt(c.activatedAt)}`}</span>
+                  <span class="font-bold tabular-nums md:text-right">{formatPeople(c.matchCount)}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  )}
+
+  {crisisTypes && (
+    <section aria-labelledby="activate-heading" class="mt-16 max-w-[42rem] sm:mt-20">
+      <h2 id="activate-heading" class="font-display text-[2rem] leading-none">
+        Aktywuj kryzys
+      </h2>
+      <p class="text-ash mt-3 leading-relaxed">
+        Wybierz rodzaj, wskaż epicentrum i promień. Po aktywacji dostaniesz listę mieszkańców z okolicy.
+      </p>
+      <CrisisActivationForm client:only="react" crisisTypes={crisisTypes}>
+        <p slot="fallback" class="text-ash mt-8">
+          Ładowanie formularza…
+        </p>
+      </CrisisActivationForm>
+    </section>
+  )}
+
+  {endedCrises && endedCrises.length > 0 && (
+    <section aria-labelledby="ended-heading" class="mt-16 sm:mt-20">
+      <h2 id="ended-heading" class="font-display text-[2rem] leading-none">
+        Zakończone
+      </h2>
+      <ul class="border-seam mt-6 border-b">
+        {endedCrises.map((c) => (
+          <li>
+            <a href={`/koordynator/kryzys/${c.id}`} class:list={ROW}>
+              <span class="min-w-0">
+                <span class="block text-xl font-bold underline-offset-4 group-hover:underline">{c.typeName}</span>
+                <span class="mt-1 block text-[0.9375rem]">
+                  <StatusMark tone="neutral">
+                    {c.endedAt ? `Zakończony ${formatActivatedAt(c.endedAt)}` : "Zakończony"}
+                  </StatusMark>
+                </span>
+              </span>
+              <span class="text-ash tabular-nums">{area(c)}</span>
+              <span class="text-ash tabular-nums">{`aktywowano ${formatActivatedAt(c.activatedAt)}`}</span>
+              <span class="text-ash tabular-nums md:text-right">{formatPeople(c.matchCount)}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</PageShell>

@@ -1,29 +1,18 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import Topbar from "@/components/Topbar.astro";
+import PageShell from "@/components/PageShell.astro";
+import { TEXT_LINK } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
 
 // Rendered in place by the middleware for signed-in users without the coordinator role.
 Astro.response.status = 403;
 const { user } = Astro.locals;
 ---
 
-<Layout title="Brak dostępu — SkillNet">
-  <div class="bg-cosmic min-h-screen w-full">
-    <div class="mx-auto max-w-2xl p-4 sm:p-8">
-      <Topbar />
-
-      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
-        <h1 class="mb-4 text-2xl font-bold">Brak dostępu</h1>
-        <p class="mb-4 text-blue-100/80">
-          Ta część serwisu jest dostępna tylko dla koordynatorów wyznaczonych przez operatora.
-        </p>
-        <a
-          href={user ? "/profil" : "/"}
-          class="inline-flex min-h-11 items-center text-purple-300 transition-colors hover:text-purple-100 hover:underline"
-        >
-          {user ? "Wróć do profilu" : "Wróć na stronę główną"}
-        </a>
-      </main>
-    </div>
-  </div>
-</Layout>
+<PageShell title="Brak dostępu — SkillNet" heading="Brak dostępu">
+  <p class="max-w-[52ch] text-lg leading-relaxed">
+    Ta część serwisu jest dostępna tylko dla koordynatorów wyznaczonych przez operatora.
+  </p>
+  <a href={user ? "/profil" : "/"} class:list={cn(TEXT_LINK, "mt-6")}>
+    {user ? "Wróć do profilu" : "Wróć na stronę główną"}
+  </a>
+</PageShell>
