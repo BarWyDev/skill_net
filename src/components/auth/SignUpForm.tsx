@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Mail, Lock, UserPlus, CircleAlert } from "lucide-react";
 import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
+import { FieldError } from "@/components/auth/FieldError";
+import { TEXT_LINK } from "@/lib/site-styles";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { CONSENT_LABEL, CONSENT_LINK_TEXT, CONSENT_REQUIRED_MESSAGE } from "@/lib/consent";
 
@@ -99,14 +100,12 @@ export default function SignUpForm({ serverError }: Props) {
 
   const missing = MIN_PASSWORD_LENGTH - password.length;
   const passwordHint =
-    !errors.password && password.length > 0 && missing > 0 ? (
-      <p className="mt-1 text-xs text-blue-100/50">
-        Jeszcze {missing} {charactersWord(missing)}
-      </p>
-    ) : undefined;
+    !errors.password && password.length > 0 && missing > 0
+      ? `Jeszcze ${missing} ${charactersWord(missing)}`
+      : undefined;
 
   return (
-    <form method="POST" action="/api/auth/signup" className="space-y-4" onSubmit={handleSubmit} noValidate>
+    <form method="POST" action="/api/auth/signup" className="space-y-6" onSubmit={handleSubmit} noValidate>
       <FormField
         id="email"
         type="email"
@@ -119,7 +118,6 @@ export default function SignUpForm({ serverError }: Props) {
         placeholder="ty@przyklad.pl"
         autoComplete="email"
         error={errors.email}
-        icon={<Mail className="size-4" />}
       />
 
       <FormField
@@ -135,7 +133,6 @@ export default function SignUpForm({ serverError }: Props) {
         autoComplete="new-password"
         error={errors.password}
         hint={passwordHint}
-        icon={<Lock className="size-4" />}
         endContent={
           <PasswordToggle
             visible={showPassword}
@@ -159,7 +156,6 @@ export default function SignUpForm({ serverError }: Props) {
         placeholder="Wpisz hasło jeszcze raz"
         autoComplete="new-password"
         error={errors.confirmPassword}
-        icon={<Lock className="size-4" />}
         endContent={
           <PasswordToggle
             visible={showConfirmPassword}
@@ -171,7 +167,10 @@ export default function SignUpForm({ serverError }: Props) {
       />
 
       <div>
-        <label htmlFor="consent" className="flex min-h-11 items-start gap-3 py-1 text-sm text-blue-100/80">
+        <label
+          htmlFor="consent"
+          className="flex min-h-11 cursor-pointer items-start gap-4 py-2.5 text-[0.9375rem] leading-relaxed"
+        >
           <input
             id="consent"
             name="consent"
@@ -183,36 +182,34 @@ export default function SignUpForm({ serverError }: Props) {
             }}
             aria-invalid={errors.consent ? true : undefined}
             aria-describedby={errors.consent ? "consent-error" : undefined}
-            className="mt-0.5 size-5 shrink-0 accent-purple-500"
+            className="check mt-0.5"
           />
           <span>
             {CONSENT_LABEL}{" "}
-            <a href="/prywatnosc" target="_blank" rel="noopener" className="text-purple-300 hover:underline">
+            <a
+              href="/prywatnosc"
+              target="_blank"
+              rel="noopener"
+              className="text-chalk font-bold underline underline-offset-4"
+            >
               {CONSENT_LINK_TEXT}
             </a>
           </span>
         </label>
-        {errors.consent && (
-          <p id="consent-error" className="mt-1 flex items-center gap-1 text-xs text-red-300">
-            <CircleAlert className="size-3" />
-            {errors.consent}
-          </p>
-        )}
+        {errors.consent && <FieldError id="consent-error">{errors.consent}</FieldError>}
       </div>
 
-      <ServerError message={serverError} />
-      {serverError === ACCOUNT_EXISTS_MESSAGE && (
-        <a
-          href="/auth/signin"
-          className="-mt-2 inline-flex min-h-11 items-center text-sm text-purple-300 hover:underline"
-        >
-          Przejdź do logowania
-        </a>
-      )}
-
-      <SubmitButton pendingText="Zakładanie konta..." icon={<UserPlus className="size-4" />}>
-        Załóż konto
-      </SubmitButton>
+      <div className="space-y-4">
+        <ServerError message={serverError} />
+        {serverError === ACCOUNT_EXISTS_MESSAGE && (
+          <p>
+            <a href="/auth/signin" className={TEXT_LINK}>
+              Przejdź do logowania
+            </a>
+          </p>
+        )}
+        <SubmitButton pendingText="Zakładanie konta...">Załóż konto</SubmitButton>
+      </div>
     </form>
   );
 }
