@@ -1,12 +1,11 @@
 ---
-// The header of the graphite pages (landing, map). Other pages still use Topbar.
+// The header of the graphite pages (landing, map, auth). Other pages still use Topbar.
 import { cn } from "@/lib/utils";
+import { NAV_LINK } from "@/lib/site-styles";
 
 const { user, isCoordinator } = Astro.locals;
 const path = Astro.url.pathname;
 
-// At least 44 px tall, so every link and button is easy to tap on a phone (QA-001).
-const NAV_LINK = "inline-flex min-h-11 items-center text-ash underline-offset-4 hover:text-chalk hover:underline";
 // The current page reads as chalk with a signal underline.
 const CURRENT = "text-chalk underline decoration-signal decoration-2";
 

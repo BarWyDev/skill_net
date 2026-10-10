@@ -1,33 +1,34 @@
 import type { ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { BUTTON } from "@/lib/site-styles";
 
 interface SubmitButtonProps {
   pendingText: string;
-  icon: ReactNode;
   children: ReactNode;
 }
 
-export function SubmitButton({ pendingText, icon, children }: SubmitButtonProps) {
+// The landing's primary CTA. The spinner is the only motion on the auth pages.
+export function SubmitButton({ pendingText, children }: SubmitButtonProps) {
   const { pending } = useFormStatus();
 
   return (
-    <Button
+    <button
       type="submit"
       disabled={pending}
-      className="h-12 w-full rounded-lg bg-purple-600 px-4 font-medium text-white transition-colors hover:bg-purple-500"
+      className={cn(BUTTON, "btn-primary w-full cursor-pointer gap-3 disabled:cursor-wait sm:w-auto")}
     >
       {pending ? (
-        <span className="flex items-center gap-2">
-          <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        <>
+          <span
+            aria-hidden="true"
+            className="border-graphite/30 border-t-graphite size-4 animate-spin rounded-full border-2 motion-reduce:animate-none"
+          />
           {pendingText}
-        </span>
+        </>
       ) : (
-        <span className="flex items-center gap-2">
-          {icon}
-          {children}
-        </span>
+        children
       )}
-    </Button>
+    </button>
   );
 }

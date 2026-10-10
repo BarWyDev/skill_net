@@ -1,55 +1,46 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import AuthHomeLink from "@/components/auth/AuthHomeLink.astro";
+import AuthShell from "@/components/auth/AuthShell.astro";
 import { ServerError } from "@/components/auth/ServerError";
+import { cn } from "@/lib/utils";
+import { BUTTON, TEXT_LINK } from "@/lib/site-styles";
 
 Astro.response.headers.set("Cache-Control", "private, no-store");
 
 const error = Astro.url.searchParams.get("error");
 ---
 
-<Layout title="Link wygasł — SkillNet">
-  <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
-    <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
-      <AuthHomeLink />
-      <div class="mb-4 text-center text-5xl">⏳</div>
-      <h1 class="mb-3 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
-        Link jest nieważny
-      </h1>
-      <p class="mb-6 text-center text-blue-100/80">
-        Link potwierdzający wygasł, został już użyty albo jest niepełny. Podaj adres e-mail, a wyślemy nowy.
-      </p>
+<AuthShell title="Link wygasł — SkillNet" heading="Link jest nieważny">
+  <p class="text-lg leading-relaxed sm:text-xl">
+    Link potwierdzający wygasł, został już użyty albo jest niepełny. Podaj adres e-mail, a wyślemy nowy.
+  </p>
 
-      <form method="POST" action="/api/auth/resend" class="space-y-4">
-        <div>
-          <label for="email" class="mb-1 block text-sm text-blue-100/80">
-            E-mail
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autocomplete="email"
-            placeholder="ty@przyklad.pl"
-            class="h-11 w-full rounded-lg border border-white/20 bg-white/10 px-3 text-white placeholder-white/40 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-          />
-        </div>
-        <ServerError message={error} />
-        <button
-          type="submit"
-          class="h-12 w-full rounded-lg bg-purple-600 px-4 font-medium text-white transition-colors hover:bg-purple-500"
-        >
-          Wyślij nowy link
-        </button>
-      </form>
-
-      <p class="mt-4 text-center text-sm text-blue-100/60">
-        Konto jest już potwierdzone?{" "}
-        <a href="/auth/signin" class="inline-flex min-h-11 items-center text-purple-300 hover:underline">
-          Zaloguj się
-        </a>
-      </p>
+  <form method="POST" action="/api/auth/resend" class="mt-10 space-y-6">
+    <div>
+      <label for="email" class="mb-2 block font-bold">
+        E-mail
+      </label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        required
+        autocomplete="email"
+        placeholder="ty@przyklad.pl"
+        class="field h-12 w-full px-3 text-lg"
+      />
     </div>
-  </div>
-</Layout>
+    <div class="space-y-4 pt-2">
+      <ServerError message={error} />
+      <button type="submit" class:list={cn(BUTTON, "btn-primary w-full cursor-pointer sm:w-auto")}>
+        Wyślij nowy link
+      </button>
+    </div>
+  </form>
+
+  <p class="text-ash mt-10">
+    Konto jest już potwierdzone?{" "}
+    <a href="/auth/signin" class:list={TEXT_LINK}>
+      Zaloguj się
+    </a>
+  </p>
+</AuthShell>
