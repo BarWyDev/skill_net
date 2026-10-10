@@ -1,19 +1,14 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import Topbar from "@/components/Topbar.astro";
+import PageShell from "@/components/PageShell.astro";
+import StatusLine from "@/components/StatusLine.astro";
+import CrisisFacts from "@/components/crisis/CrisisFacts.astro";
 import EndCrisisDialog from "@/components/crisis/EndCrisisDialog.astro";
-import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
-import { formatAvailabilitySummary } from "@/lib/availability";
+import PersonStatus from "@/components/crisis/PersonStatus.astro";
+import SkillList from "@/components/crisis/SkillList.astro";
 import { createClient } from "@/lib/supabase";
 import { getCrisis, getCrisisMatches, MATCHES_PAGE_SIZE } from "@/lib/services/crisis";
-import {
-  availabilityBadge,
-  formatActivatedAt,
-  formatActiveFor,
-  formatDistanceKm,
-  formatPeople,
-  matchedWord,
-} from "@/lib/crisis-format";
+import { formatDistanceKm, formatPeople } from "@/lib/crisis-format";
+import { BUTTON } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import type { CrisisDTO, CrisisMatchDTO } from "@/types";
 
@@ -46,175 +41,122 @@ if (!supabase) {
 
 if (!crisis && !loadError) Astro.response.status = 404;
 const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - matches.length) : 0;
+const panel = { href: "/koordynator", label: "Panel koordynatora" };
 ---
 
-<Layout title={crisis ? `Kryzys: ${crisis.typeName}` : "Nie znaleziono kryzysu"}>
-  <div class="bg-cosmic min-h-screen w-full">
-    <div class="mx-auto max-w-2xl p-4 sm:p-8">
-      <Topbar />
+<PageShell
+  title={crisis ? `Kryzys: ${crisis.typeName}` : "Nie znaleziono kryzysu"}
+  heading={crisis?.typeName ?? (loadError ? "Kryzys" : "Nie znaleziono kryzysu")}
+  crumbs={[panel]}
+  wide
+>
+  {loadError && (
+    <StatusLine tone="error" role="alert" class="font-bold">
+      {loadError}
+    </StatusLine>
+  )}
 
-      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
-        <a
-          href="/koordynator"
-          class="mb-2 inline-flex min-h-11 items-center text-sm text-purple-300 hover:text-purple-100 hover:underline"
-        >
-          ← Panel koordynatora
-        </a>
+  {!crisis && !loadError && (
+    <p class="max-w-[52ch] text-lg leading-relaxed">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
+  )}
 
-        {loadError && (
-          <p role="alert" class="text-red-200">
-            {loadError}
+  {crisis?.status === "ended" && (
+    <>
+      <CrisisFacts crisis={crisis} />
+      <p class="text-ash mt-8 max-w-[64ch] leading-relaxed">Lista osób została usunięta po zakończeniu kryzysu.</p>
+    </>
+  )}
+
+  {crisis?.status === "active" && (
+    <>
+      {error && (
+        <StatusLine tone="error" role="alert" class="mb-8 font-bold">
+          {error}
+        </StatusLine>
+      )}
+
+      <CrisisFacts crisis={crisis} />
+
+      <!-- Destructive, so it stands alone under the facts, in the alarm outline, and asks first. -->
+      <div class="mt-8">
+        <EndCrisisDialog crisis={crisis} />
+      </div>
+
+      <p class="text-ash mt-14 max-w-[64ch] leading-relaxed">
+        Kolejność i umiejętności to stan z chwili aktywacji. Dostępność to aktualna deklaracja mieszkańca, sprawdzana
+        względem bieżącej godziny, i nie wpływa na kolejność. Numery telefonów są domyślnie ukryte. „Bez telefonu”
+        oznacza, że ta osoba nie otrzyma alertu.
+      </p>
+
+      <ul class="mt-8 space-y-6">
+        <li class="grid gap-x-8 gap-y-3 md:grid-cols-[16rem_minmax(0,1fr)] md:items-center">
+          <a
+            href={`/koordynator/kryzys/${crisis.id}/zespoly`}
+            class:list={cn(BUTTON, "btn-secondary w-full md:w-auto")}
+          >
+            Złóż zespoły
+          </a>
+          <p class="max-w-[52ch] leading-relaxed">
+            Potrzebujesz gotowych składów? Złóż zespoły z szablonu (np. ewakuacyjny) z osób z tej listy.
+          </p>
+        </li>
+        <li class="grid gap-x-8 gap-y-3 md:grid-cols-[16rem_minmax(0,1fr)] md:items-center">
+          <a
+            href={`/koordynator/kryzys/${crisis.id}/kontakty`}
+            class:list={cn(BUTTON, "btn-secondary w-full md:w-auto")}
+          >
+            Ujawnij kontakty
+          </a>
+          <p class="max-w-[52ch] leading-relaxed">
+            Nikt nie potwierdza? Możesz ujawnić numery wszystkich dopasowanych osób. Każde ujawnienie jest zapisywane
+            razem z Twoim kontem i powodem.
+          </p>
+        </li>
+      </ul>
+
+      <section aria-labelledby="matches-heading" class="mt-16 sm:mt-20">
+        <h2 id="matches-heading" class="font-display text-[2rem] leading-none">
+          Dopasowane osoby
+        </h2>
+
+        {matches.length === 0 ? (
+          <p class="mt-4 max-w-[64ch] text-lg leading-relaxed">W tym promieniu nie ma dopasowanych mieszkańców.</p>
+        ) : (
+          <>
+            <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">
+              Od najlepiej dopasowanej. Pogrubione umiejętności są priorytetowe dla tego rodzaju kryzysu.
+            </p>
+            <ol class="border-seam mt-6 border-b">
+              {matches.map((m) => (
+                <li class="border-seam grid grid-cols-[2.75rem_minmax(0,1fr)_auto] gap-x-4 gap-y-2 border-t py-5 md:grid-cols-[4rem_minmax(0,1fr)_6rem_17rem] md:grid-rows-[auto_1fr] md:gap-x-6">
+                  <p class="font-display row-span-3 text-right text-[2.25rem] leading-[0.85] tabular-nums md:row-span-2 md:text-[2.75rem]">
+                    <span class="sr-only">Miejsce </span>
+                    {m.rank}
+                  </p>
+                  <p class="text-lg leading-tight font-bold">Osoba #{m.position}</p>
+                  <p class="text-right text-lg leading-tight tabular-nums md:text-left">
+                    {formatDistanceKm(m.distanceKm)}
+                    <span class="sr-only"> od epicentrum</span>
+                  </p>
+                  <SkillList skills={m.skills} class="col-span-2 col-start-2 md:col-span-1" />
+                  <PersonStatus
+                    availableNow={m.availableNow}
+                    availabilitySlots={m.availabilitySlots}
+                    hasPhone={m.hasPhone}
+                    class="col-span-2 col-start-2 md:col-span-1 md:col-start-4 md:row-span-2 md:row-start-1"
+                  />
+                </li>
+              ))}
+            </ol>
+          </>
+        )}
+
+        {hidden > 0 && (
+          <p class="text-ash mt-6 leading-relaxed">
+            Pokazano pierwsze {MATCHES_PAGE_SIZE}. Niewyświetlonych: {formatPeople(hidden)}.
           </p>
         )}
-
-        {!crisis && !loadError && (
-          <>
-            <h1 class="mb-2 text-2xl font-bold">Nie znaleziono kryzysu</h1>
-            <p class="text-blue-100/80">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
-          </>
-        )}
-
-        {crisis?.status === "ended" && (
-          <>
-            <div class="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <h1 class="text-2xl font-bold">{crisis.typeName}</h1>
-              <span class="rounded-full border border-white/25 bg-white/10 px-2.5 py-0.5 text-xs text-blue-100">
-                Zakończony
-              </span>
-            </div>
-            <p class="mb-4 text-sm text-blue-100/80">
-              Promień {crisis.radiusKm} km
-              {crisis.epicentrePostcode && <> · okolice {crisis.epicentrePostcode}</>} · aktywowano{" "}
-              {formatActivatedAt(crisis.activatedAt)}
-              {crisis.endedAt && <> · zakończono {formatActivatedAt(crisis.endedAt)}</>} ·{" "}
-              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> {matchedWord(crisis.matchCount)}
-            </p>
-            <p class="rounded-lg border border-white/15 bg-white/5 p-3 text-sm text-blue-100">
-              Lista osób została usunięta po zakończeniu kryzysu.
-            </p>
-          </>
-        )}
-
-        {crisis?.status === "active" && (
-          <>
-            {error && (
-              <p role="alert" class="mb-4 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
-                {error}
-              </p>
-            )}
-            <div class="mb-1 flex flex-wrap items-start justify-between gap-3">
-              <h1 class="text-2xl font-bold">{crisis.typeName}</h1>
-              <EndCrisisDialog crisis={crisis} />
-            </div>
-            <p class="mb-4 text-sm text-blue-100/80">
-              Promień {crisis.radiusKm} km
-              {crisis.epicentrePostcode && <> · okolice {crisis.epicentrePostcode}</>} · aktywowano{" "}
-              {formatActivatedAt(crisis.activatedAt)} · {formatActiveFor(crisis.activatedAt)} ·{" "}
-              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> {matchedWord(crisis.matchCount)}
-            </p>
-
-            <p class="mb-6 rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm text-blue-100">
-              Kolejność i umiejętności to stan z chwili aktywacji. Dostępność to aktualna deklaracja mieszkańca,
-              sprawdzana względem bieżącej godziny, i nie wpływa na kolejność. Numery telefonów są domyślnie ukryte;
-              „bez telefonu” oznacza, że ta osoba nie otrzyma alertu.
-            </p>
-
-            <div class="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-purple-300/40 bg-purple-600/15 p-3">
-              <p class="text-sm text-blue-100">
-                Potrzebujesz gotowych składów? Złóż zespoły z szablonu (np. ewakuacyjny) z osób z tej listy.
-              </p>
-              <a
-                href={`/koordynator/kryzys/${crisis.id}/zespoly`}
-                class="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-500"
-              >
-                Złóż zespoły
-              </a>
-            </div>
-
-            <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-400/40 bg-red-500/10 p-3">
-              <p class="text-sm text-red-100">
-                Nikt nie potwierdza? Możesz ujawnić numery wszystkich dopasowanych osób. Każde ujawnienie jest
-                zapisywane razem z Twoim kontem i powodem.
-              </p>
-              <a
-                href={`/koordynator/kryzys/${crisis.id}/kontakty`}
-                class="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-red-400/60 px-4 py-2 text-sm font-medium text-red-100 transition-colors hover:bg-red-600/30"
-              >
-                Ujawnij kontakty (break-glass)
-              </a>
-            </div>
-
-            {matches.length === 0 ? (
-              <p class="text-blue-100/80">W tym promieniu nie ma dopasowanych mieszkańców.</p>
-            ) : (
-              <ol class="space-y-2">
-                {matches.map((m) => (
-                  <li class="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                    <span class="w-8 shrink-0 text-right text-lg font-bold text-purple-200">
-                      <span class="sr-only">Miejsce </span>
-                      {m.rank}.
-                    </span>
-                    <div class="min-w-0 flex-1">
-                      <div class="flex flex-wrap items-baseline justify-between gap-x-3">
-                        <span class="font-medium">Osoba #{m.position}</span>
-                        <span class="text-sm text-blue-100/80">{formatDistanceKm(m.distanceKm)}</span>
-                      </div>
-                      <ul class="mt-2 flex flex-wrap gap-1.5">
-                        {m.skills.map((s) => (
-                          <li
-                            class:list={cn(
-                              "rounded-full border px-2.5 py-0.5 text-xs",
-                              s.tier === "priority"
-                                ? "border-purple-300/60 bg-purple-600/40 text-white"
-                                : "border-white/20 bg-white/5 text-blue-100",
-                            )}
-                          >
-                            {s.tier === "priority" ? "★ " : ""}
-                            {s.name}
-                            {s.level !== null && <span class="text-white/70"> · {LEVEL_LABELS[s.level]}</span>}
-                            <span class="sr-only">
-                              {s.tier === "priority" ? " (umiejętność priorytetowa)" : " (umiejętność wspierająca)"}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                      <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                        <span
-                          class:list={cn(
-                            "rounded-full border px-2.5 py-0.5",
-                            availabilityBadge(m.availableNow).className,
-                          )}
-                        >
-                          {availabilityBadge(m.availableNow).label}
-                        </span>
-                        {m.availabilitySlots !== null && (
-                          <span class="text-blue-100/80">
-                            <span class="sr-only">Deklarowana dostępność: </span>
-                            {formatAvailabilitySummary(m.availabilitySlots)}
-                          </span>
-                        )}
-                        {!m.hasPhone && (
-                          <span class="rounded-full border border-amber-300/50 bg-amber-500/15 px-2.5 py-0.5 text-amber-100">
-                            bez telefonu
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            )}
-
-            {hidden > 0 && (
-              <p class="mt-4 text-sm text-blue-100/70">
-                Pokazano pierwsze {MATCHES_PAGE_SIZE}. Niewyświetlonych: {formatPeople(hidden)}.
-              </p>
-            )}
-
-            <p class="mt-4 text-xs text-blue-100/60">★ umiejętność priorytetowa dla tego rodzaju kryzysu</p>
-          </>
-        )}
-      </main>
-    </div>
-  </div>
-</Layout>
+      </section>
+    </>
+  )}
+</PageShell>

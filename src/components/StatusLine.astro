@@ -1,35 +1,23 @@
 ---
 // A quiet status statement: a marker from the map-grid motif, then the text. The marker's shape carries
-// the meaning, so colour is never the only signal: a filled square is done, an empty square needs
-// attention, and an error gets the same icon as the form errors.
+// the meaning, so colour is never the only signal (see STATUS_SQUARE in site-styles).
 import type { HTMLAttributes } from "astro/types";
 import { CircleAlert } from "lucide-react";
+import { STATUS_SQUARE, STATUS_TEXT, type StatusTone } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 
 interface Props extends HTMLAttributes<"div"> {
-  tone: "done" | "attention" | "error";
+  tone: StatusTone;
 }
 
 const { tone, class: className, ...rest } = Astro.props;
 ---
 
-<div
-  class:list={cn(
-    "flex gap-3 leading-relaxed",
-    tone === "done" && "text-chalk",
-    tone === "attention" && "text-signal",
-    tone === "error" && "text-alarm",
-    className,
-  )}
-  {...rest}
->
+<div class:list={cn("flex gap-3 leading-relaxed", STATUS_TEXT[tone], className)} {...rest}>
   {tone === "error" ? (
     <CircleAlert aria-hidden="true" className="mt-[0.3em] size-4 shrink-0" />
   ) : (
-    <span
-      aria-hidden="true"
-      class:list={["mt-[0.4em] size-3.5 shrink-0", tone === "done" ? "bg-signal" : "border-signal border-2"]}
-    ></span>
+    <span aria-hidden="true" class:list={["mt-[0.4em] size-3.5 shrink-0", STATUS_SQUARE[tone]]}></span>
   )}
   <div class="min-w-0">
     <slot />

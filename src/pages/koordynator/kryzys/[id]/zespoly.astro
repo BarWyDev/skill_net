@@ -1,9 +1,13 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import Topbar from "@/components/Topbar.astro";
-import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
-import { formatAvailabilitySummary } from "@/lib/availability";
-import { availabilityBadge, formatDistanceKm, formatPeople, matchedWord } from "@/lib/crisis-format";
+import { CircleAlert } from "lucide-react";
+import PageShell from "@/components/PageShell.astro";
+import StatusLine from "@/components/StatusLine.astro";
+import StatusMark from "@/components/StatusMark.astro";
+import CrisisFacts from "@/components/crisis/CrisisFacts.astro";
+import PersonStatus from "@/components/crisis/PersonStatus.astro";
+import SkillList from "@/components/crisis/SkillList.astro";
+import { formatDistanceKm } from "@/lib/crisis-format";
+import { BUTTON } from "@/lib/site-styles";
 import { createClient } from "@/lib/supabase";
 import { assembleCrisisTeams, getCrisis, getTeamTemplates } from "@/lib/services/crisis";
 import { parseTeamRequest, TEAM_COUNT_MAX, TEAM_COUNT_MIN } from "@/lib/validation/crisis";
@@ -89,222 +93,182 @@ const partialCount = teams?.filter((team) => !team.complete).length ?? 0;
 const unassembled = teams ? Math.max(0, requested - teams.length) : 0;
 const firstUnassembled = requested - unassembled + 1;
 const shortRoles = teams?.flatMap((team) => (team.complete ? [] : missingRoles(team))) ?? [];
+const crumbs = [
+  { href: "/koordynator", label: "Panel koordynatora" },
+  ...(crisis ? [{ href: `/koordynator/kryzys/${crisis.id}`, label: crisis.typeName }] : []),
+];
+const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : ended ? crisis.typeName : "Złóż zespoły";
 ---
 
-<Layout title={crisis ? `Zespoły: ${crisis.typeName}` : "Nie znaleziono kryzysu"}>
-  <div class="bg-cosmic min-h-screen w-full">
-    <div class="mx-auto max-w-2xl p-4 sm:p-8">
-      <Topbar />
+<PageShell
+  title={crisis ? `Zespoły: ${crisis.typeName}` : "Nie znaleziono kryzysu"}
+  heading={heading}
+  crumbs={crumbs}
+  crumbLabel={crisis ? "Zespoły" : undefined}
+  wide
+>
+  {loadError && (
+    <StatusLine tone="error" role="alert" class="font-bold">
+      {loadError}
+    </StatusLine>
+  )}
 
-      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
-        <a
-          href={crisis ? `/koordynator/kryzys/${crisis.id}` : "/koordynator"}
-          class="mb-2 inline-flex min-h-11 items-center text-sm text-purple-300 hover:text-purple-100 hover:underline"
-        >
-          {crisis ? "← Lista dopasowanych" : "← Panel koordynatora"}
-        </a>
+  {!crisis && !loadError && (
+    <p class="max-w-[52ch] text-lg leading-relaxed">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
+  )}
 
-        {loadError && (
-          <p role="alert" class="text-red-200">
-            {loadError}
+  {crisis && ended && (
+    <StatusLine tone="neutral" role="alert" class="max-w-[64ch] text-lg">
+      Ten kryzys został zakończony. Lista osób została usunięta, więc nie można złożyć zespołów.
+    </StatusLine>
+  )}
+
+  {crisis && !ended && !loadError && (
+    <>
+      <CrisisFacts crisis={crisis} showType />
+
+      <form method="get" class="border-seam mt-12 max-w-[42rem] border-t pt-10">
+        <fieldset>
+          <legend class="font-display mb-4 text-[2rem] leading-none">Szablon zespołu</legend>
+          <div class="space-y-1">
+            {templates.map((t) => (
+              <label
+                for={`szablon-${t.slug}`}
+                aria-label={`${t.name}: ${formatRoles(t)}`}
+                class="flex min-h-11 cursor-pointer items-start gap-4 py-2"
+              >
+                <input
+                  id={`szablon-${t.slug}`}
+                  type="radio"
+                  name="szablon"
+                  value={t.slug}
+                  checked={t.slug === selectedSlug}
+                  required
+                  class="radio mt-0.5"
+                />
+                <span>
+                  <span class="block text-lg font-bold">{t.name}</span>
+                  <span class="text-ash block leading-relaxed">{formatRoles(t)}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div class="mt-8">
+          <label for="liczba" class="mb-2 block font-bold">
+            Liczba zespołów
+          </label>
+          <input
+            id="liczba"
+            type="number"
+            name="liczba"
+            min={TEAM_COUNT_MIN}
+            max={TEAM_COUNT_MAX}
+            step="1"
+            value={selectedCount}
+            required
+            aria-invalid={formError ? "true" : undefined}
+            aria-describedby={formError ? "teams-error" : "teams-hint"}
+            class="field block h-12 w-28 px-3 text-lg tabular-nums"
+          />
+          {formError ? (
+            <p id="teams-error" role="alert" class="text-alarm mt-2 flex gap-2 text-[0.9375rem]">
+              <CircleAlert aria-hidden="true" className="mt-[0.2em] size-4 shrink-0" />
+              {formError}
+            </p>
+          ) : (
+            <p id="teams-hint" class="text-ash mt-2 text-[0.9375rem]">
+              Od {TEAM_COUNT_MIN} do {TEAM_COUNT_MAX}.
+            </p>
+          )}
+        </div>
+
+        <button type="submit" class:list={cn(BUTTON, "btn-primary mt-8 w-full cursor-pointer sm:w-auto")}>
+          Złóż zespoły
+        </button>
+      </form>
+
+      {teams && template && (
+        <section aria-labelledby="teams-heading" class="border-seam mt-16 border-t pt-10">
+          <h2 id="teams-heading" class="font-display text-[2rem] leading-none">
+            {template.name}
+          </h2>
+          <p class="mt-4 text-lg">
+            Pełne zespoły: <strong>{completeCount}</strong> z {requested}
+            {partialCount > 0 && <>, niepełne: {partialCount}</>}
+            {unassembled > 0 && <>, niezłożone: {unassembled}</>}
           </p>
-        )}
+          <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">
+            Zespoły składamy z listy dopasowanych do tego kryzysu, według aktualnych umiejętności mieszkańców: najpierw
+            jak najwięcej pełnych zespołów, potem osoby wyżej na liście. Deklarowana dostępność nie wpływa na wybór.
+          </p>
 
-        {!crisis && !loadError && (
-          <>
-            <h1 class="mb-2 text-2xl font-bold">Nie znaleziono kryzysu</h1>
-            <p class="text-blue-100/80">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
-          </>
-        )}
-
-        {crisis && ended && (
-          <>
-            <h1 class="mb-2 text-2xl font-bold">{crisis.typeName}</h1>
-            <p role="alert" class="rounded-lg border border-white/15 bg-white/5 p-3 text-sm text-blue-100">
-              Ten kryzys został zakończony — lista osób została usunięta, więc nie można złożyć zespołów.
-            </p>
-          </>
-        )}
-
-        {crisis && !ended && !loadError && (
-          <>
-            <h1 class="mb-1 text-2xl font-bold">Złóż zespoły</h1>
-            <p class="mb-4 text-sm text-blue-100/80">
-              {crisis.typeName} · promień {crisis.radiusKm} km
-              {crisis.epicentrePostcode && <> · okolice {crisis.epicentrePostcode}</>} ·{" "}
-              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> {matchedWord(crisis.matchCount)}
-            </p>
-
-            <form method="get" class="mb-6 space-y-4 rounded-lg border border-white/15 bg-white/5 p-3">
-              <fieldset>
-                <legend class="mb-2 text-sm font-medium">Szablon zespołu</legend>
-                <div class="space-y-2">
-                  {templates.map((t) => (
-                    <label
-                      for={`szablon-${t.slug}`}
-                      aria-label={`${t.name}: ${formatRoles(t)}`}
-                      class="flex cursor-pointer gap-3 rounded-lg border border-white/10 p-2 hover:bg-white/5 has-[:checked]:border-purple-300/60 has-[:checked]:bg-purple-600/20"
-                    >
-                      <input
-                        id={`szablon-${t.slug}`}
-                        type="radio"
-                        name="szablon"
-                        value={t.slug}
-                        checked={t.slug === selectedSlug}
-                        required
-                        class="mt-1 accent-purple-400"
-                      />
-                      <span>
-                        <span class="block text-sm font-medium">{t.name}</span>
-                        <span class="block text-xs text-blue-100/70">{formatRoles(t)}</span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-              <div class="flex flex-wrap items-end justify-between gap-3">
-                <label class="text-sm font-medium">
-                  Liczba zespołów
-                  <input
-                    type="number"
-                    name="liczba"
-                    min={TEAM_COUNT_MIN}
-                    max={TEAM_COUNT_MAX}
-                    step="1"
-                    value={selectedCount}
-                    required
-                    aria-invalid={formError ? "true" : undefined}
-                    aria-describedby={formError ? "teams-error" : undefined}
-                    class="mt-1 block h-11 w-24 rounded-lg border border-white/20 bg-slate-900/60 px-2 text-white focus:border-purple-300 focus:outline-none"
-                  />
-                </label>
-                <button
-                  type="submit"
-                  class="inline-flex min-h-11 items-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500"
-                >
-                  Złóż zespoły
-                </button>
-              </div>
-              {formError && (
-                <p id="teams-error" role="alert" class="text-sm text-red-200">
-                  {formError}
-                </p>
-              )}
-            </form>
-
-            {teams && template && (
-              <section aria-labelledby="teams-heading">
-                <h2 id="teams-heading" class="text-xl font-bold">
-                  {template.name}
-                </h2>
-                <p class="mb-3 text-sm text-blue-100">
-                  Pełne zespoły: <strong class="text-white">{completeCount}</strong> z {requested}
-                  {partialCount > 0 && <> · niepełne: {partialCount}</>}
-                  {unassembled > 0 && <> · niezłożone: {unassembled}</>}
-                </p>
-                <p class="mb-4 rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm text-blue-100">
-                  Zespoły składamy z listy dopasowanych do tego kryzysu, według aktualnych umiejętności mieszkańców:
-                  najpierw jak najwięcej pełnych zespołów, potem osoby wyżej na liście. Deklarowana dostępność nie
-                  wpływa na wybór.
-                </p>
-
-                {teams.length === 0 ? (
-                  <p class="text-blue-100/80">Nikt z listy dopasowanych nie pasuje do tego szablonu.</p>
-                ) : (
-                  <ol class="space-y-4">
-                    {teams.map((team) => (
-                      <li
-                        class:list={cn(
-                          "rounded-xl border p-3",
-                          team.complete ? "border-white/10 bg-white/5" : "border-amber-300/40 bg-amber-500/10",
+          {teams.length === 0 ? (
+            <p class="mt-8 text-lg">Nikt z listy dopasowanych nie pasuje do tego szablonu.</p>
+          ) : (
+            <ol class="mt-10 space-y-12">
+              {teams.map((team) => (
+                <li>
+                  <div class="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+                    <h3 id={`team-${team.number}`} class="font-display text-[1.75rem] leading-none">
+                      Zespół {team.number}
+                    </h3>
+                    {team.complete ? (
+                      <StatusMark tone="done">pełny</StatusMark>
+                    ) : (
+                      <StatusMark tone="attention" class="font-bold">
+                        niepełny, brakuje: {missingRoles(team).join(", ")}
+                      </StatusMark>
+                    )}
+                  </div>
+                  <ul class="border-seam mt-4 border-b">
+                    {team.slots.map((slot) => (
+                      <li class="border-seam grid gap-x-6 gap-y-2 border-t py-4 md:grid-cols-[11rem_minmax(0,1fr)_6rem_17rem]">
+                        <p class="font-bold">{slot.roleName}</p>
+                        {slot.member ? (
+                          <>
+                            <div class="min-w-0">
+                              <p class="font-bold">
+                                Osoba #{slot.member.position}
+                                <span class="text-ash font-normal">, miejsce {slot.member.rank}.</span>
+                              </p>
+                              <SkillList skills={slot.member.skills} class="mt-1" />
+                            </div>
+                            <p class="tabular-nums">
+                              {formatDistanceKm(slot.member.distanceKm)}
+                              <span class="sr-only"> od epicentrum</span>
+                            </p>
+                            <PersonStatus
+                              availableNow={slot.member.availableNow}
+                              availabilitySlots={slot.member.availabilitySlots}
+                              hasPhone={slot.member.hasPhone}
+                            />
+                          </>
+                        ) : (
+                          <p class="md:col-span-3">
+                            <StatusMark tone="attention">brak osoby</StatusMark>
+                          </p>
                         )}
-                      >
-                        <div class="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                          <h3 class="font-semibold">Zespół {team.number}</h3>
-                          {!team.complete && (
-                            <span class="rounded-full border border-amber-300/50 bg-amber-500/15 px-2.5 py-0.5 text-xs text-amber-100">
-                              niepełny
-                            </span>
-                          )}
-                        </div>
-                        {!team.complete && (
-                          <p class="mb-2 text-sm text-amber-100">Brakuje: {missingRoles(team).join(", ")}</p>
-                        )}
-                        <ul class="space-y-2">
-                          {team.slots.map((slot) => (
-                            <li class="rounded-lg border border-white/10 bg-slate-900/30 p-2">
-                              <div class="text-xs tracking-wide text-purple-200 uppercase">{slot.roleName}</div>
-                              {slot.member ? (
-                                <>
-                                  <div class="flex flex-wrap items-baseline justify-between gap-x-3">
-                                    <span class="font-medium">
-                                      Osoba #{slot.member.position}
-                                      <span class="text-sm font-normal text-blue-100/70">
-                                        {" "}
-                                        · miejsce {slot.member.rank}.
-                                      </span>
-                                    </span>
-                                    <span class="text-sm text-blue-100/80">
-                                      {formatDistanceKm(slot.member.distanceKm)}
-                                    </span>
-                                  </div>
-                                  <ul class="mt-1.5 flex flex-wrap gap-1.5">
-                                    {slot.member.skills.map((s) => (
-                                      <li class="rounded-full border border-white/20 bg-white/5 px-2.5 py-0.5 text-xs text-blue-100">
-                                        {s.name}
-                                        {s.level !== null && (
-                                          <span class="text-white/70"> · {LEVEL_LABELS[s.level]}</span>
-                                        )}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                  <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                                    <span
-                                      class:list={cn(
-                                        "rounded-full border px-2.5 py-0.5",
-                                        availabilityBadge(slot.member.availableNow).className,
-                                      )}
-                                    >
-                                      {availabilityBadge(slot.member.availableNow).label}
-                                    </span>
-                                    {slot.member.availabilitySlots !== null && (
-                                      <span class="text-blue-100/80">
-                                        <span class="sr-only">Deklarowana dostępność: </span>
-                                        {formatAvailabilitySummary(slot.member.availabilitySlots)}
-                                      </span>
-                                    )}
-                                    {!slot.member.hasPhone && (
-                                      <span class="rounded-full border border-amber-300/50 bg-amber-500/15 px-2.5 py-0.5 text-amber-100">
-                                        bez telefonu
-                                      </span>
-                                    )}
-                                  </div>
-                                </>
-                              ) : (
-                                <span class="text-sm text-amber-200">brak</span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
                       </li>
                     ))}
-                  </ol>
-                )}
-                {teams.length > 0 && unassembled > 0 && (
-                  <p class="mt-4 rounded-lg border border-amber-300/40 bg-amber-500/10 p-3 text-sm text-amber-100">
-                    {unassembled === 1
-                      ? `Zespołu ${requested} nie da się złożyć`
-                      : `Zespołów ${firstUnassembled}–${requested} nie da się złożyć`}
-                    {shortRoles.length > 0
-                      ? `: na liście dopasowanych brakuje osób z rolą ${shortRoles.join(", ")}.`
-                      : ": na liście dopasowanych brakuje osób do tego szablonu."}
-                  </p>
-                )}
-              </section>
-            )}
-          </>
-        )}
-      </main>
-    </div>
-  </div>
-</Layout>
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          )}
+          {teams.length > 0 && unassembled > 0 && (
+            <StatusLine tone="attention" class="mt-10 max-w-[64ch]">
+              {unassembled === 1
+                ? `Zespołu ${requested} nie da się złożyć`
+                : `Zespołów ${firstUnassembled}–${requested} nie da się złożyć`}
+              {shortRoles.length > 0
+                ? `: na liście dopasowanych brakuje osób z rolą ${shortRoles.join(", ")}.`
+                : ": na liście dopasowanych brakuje osób do tego szablonu."}
+            </StatusLine>
+          )}
+        </section>
+      )}
+    </>
+  )}
+</PageShell>

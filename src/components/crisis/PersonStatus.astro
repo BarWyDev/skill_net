@@ -1,0 +1,37 @@
+---
+// A matched person's live status: declared availability now, the declared hours and, when known, a
+// missing phone number. Display-only: none of it changes the order of the list.
+import StatusMark from "@/components/StatusMark.astro";
+import { formatAvailabilitySummary } from "@/lib/availability";
+import { availabilityStatus } from "@/lib/crisis-format";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  availableNow: boolean | null;
+  availabilitySlots: number | null;
+  /** Omitted where every person shown has a number (the revealed contacts). */
+  hasPhone?: boolean;
+  class?: string;
+}
+
+const { availableNow, availabilitySlots, hasPhone, class: className } = Astro.props;
+const availability = availabilityStatus(availableNow);
+const hours = formatAvailabilitySummary(availabilitySlots);
+---
+
+<div class:list={cn("space-y-1 text-[0.9375rem] leading-snug", className)}>
+  <p>
+    <StatusMark tone={availability.tone}>{availability.label}</StatusMark>
+  </p>
+  {hours && (
+    <p class="text-ash pl-5">
+      <span class="sr-only">Deklarowana dostępność: </span>
+      {hours}
+    </p>
+  )}
+  {hasPhone === false && (
+    <p>
+      <StatusMark tone="attention">bez telefonu</StatusMark>
+    </p>
+  )}
+</div>

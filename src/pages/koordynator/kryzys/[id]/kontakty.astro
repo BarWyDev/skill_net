@@ -1,9 +1,13 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import Topbar from "@/components/Topbar.astro";
-import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
-import { formatAvailabilitySummary } from "@/lib/availability";
-import { availabilityBadge, formatActivatedAt, formatDistanceKm, formatPeople, matchedWord } from "@/lib/crisis-format";
+import { CircleAlert } from "lucide-react";
+import PageShell from "@/components/PageShell.astro";
+import StatusLine from "@/components/StatusLine.astro";
+import StatusMark from "@/components/StatusMark.astro";
+import CrisisFacts from "@/components/crisis/CrisisFacts.astro";
+import PersonStatus from "@/components/crisis/PersonStatus.astro";
+import SkillList from "@/components/crisis/SkillList.astro";
+import { formatActivatedAt, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
+import { BUTTON, NAV_LINK } from "@/lib/site-styles";
 import { formatPhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase";
 import { getCrisis, revealCrisisContacts } from "@/lib/services/crisis";
@@ -75,197 +79,159 @@ if (crisis?.status === "ended") {
 
 const withoutPhone = crisis && contacts ? Math.max(0, crisis.matchCount - contacts.length) : 0;
 const anyUnverified = contacts?.some((c) => !c.phoneVerified) ?? false;
+const crumbs = [
+  { href: "/koordynator", label: "Panel koordynatora" },
+  ...(crisis ? [{ href: `/koordynator/kryzys/${crisis.id}`, label: crisis.typeName }] : []),
+];
+const heading = !crisis
+  ? loadError
+    ? "Kontakty"
+    : "Nie znaleziono kryzysu"
+  : endedMessage
+    ? crisis.typeName
+    : contacts
+      ? "Kontakty ujawnione"
+      : "Ujawnij kontakty";
 ---
 
-<Layout title={crisis ? `Kontakty: ${crisis.typeName}` : "Nie znaleziono kryzysu"}>
-  <div class="bg-cosmic min-h-screen w-full">
-    <div class="mx-auto max-w-2xl p-4 sm:p-8">
-      <Topbar />
+<PageShell
+  title={crisis ? `Kontakty: ${crisis.typeName}` : "Nie znaleziono kryzysu"}
+  heading={heading}
+  crumbs={crumbs}
+  crumbLabel={crisis ? "Kontakty" : undefined}
+  wide
+>
+  {loadError && (
+    <StatusLine tone="error" role="alert" class="font-bold">
+      {loadError}
+    </StatusLine>
+  )}
 
-      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
-        <a
-          href={crisis ? `/koordynator/kryzys/${crisis.id}` : "/koordynator"}
-          class="mb-2 inline-flex min-h-11 items-center text-sm text-purple-300 hover:text-purple-100 hover:underline"
-        >
-          {crisis ? "← Lista dopasowanych" : "← Panel koordynatora"}
-        </a>
+  {!crisis && !loadError && (
+    <p class="max-w-[52ch] text-lg leading-relaxed">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
+  )}
 
-        {loadError && (
-          <p role="alert" class="text-red-200">
-            {loadError}
+  {crisis && endedMessage && (
+    <StatusLine tone="neutral" role="alert" class="max-w-[64ch] text-lg">
+      {endedMessage}
+    </StatusLine>
+  )}
+
+  {crisis && !endedMessage && !contacts && (
+    <>
+      <CrisisFacts crisis={crisis} showType />
+
+      <!-- Serious, not loud: plain statements, and the alarm tone only on the action that reveals. -->
+      <div class="border-seam mt-12 max-w-[42rem] space-y-4 border-t pt-10 leading-relaxed">
+        <p class="text-lg">
+          Zobaczysz numery telefonów <strong>wszystkich</strong> dopasowanych osób, które podały numer. Używaj tego
+          tylko wtedy, gdy nie da się ich zawiadomić inaczej.
+        </p>
+        <p>Ujawnienie zostanie trwale zapisane: Twoje konto, czas, powód i lista osób, których numery zobaczysz.</p>
+        <p class="text-ash">
+          Numery znikną po opuszczeniu strony. Każde ponowne wyświetlenie to nowe, osobno zapisane ujawnienie.
+        </p>
+      </div>
+
+      <form method="post" class="mt-10 max-w-[42rem]">
+        <label for="reason" class="mb-2 block font-bold">
+          Powód ujawnienia
+        </label>
+        <textarea
+          id="reason"
+          name="reason"
+          required
+          minlength={REASON_MIN}
+          maxlength={REASON_MAX}
+          rows="3"
+          autocomplete="off"
+          aria-invalid={formError ? "true" : undefined}
+          aria-describedby={formError ? "reason-error" : "reason-hint"}
+          class="field block w-full resize-y px-3 py-3 text-lg leading-relaxed"
+          placeholder="np. brak potwierdzeń od 30 minut, awaria sieci komórkowej"
+        >{reason}</textarea>
+        {formError ? (
+          <p id="reason-error" role="alert" class="text-alarm mt-2 flex gap-2 text-[0.9375rem]">
+            <CircleAlert aria-hidden="true" className="mt-[0.2em] size-4 shrink-0" />
+            {formError}
+          </p>
+        ) : (
+          <p id="reason-hint" class="text-ash mt-2 text-[0.9375rem]">
+            Od {REASON_MIN} do {REASON_MAX} znaków.
           </p>
         )}
+        <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <button type="submit" class:list={cn(BUTTON, "btn-danger w-full cursor-pointer sm:w-auto")}>
+            Ujawnij kontakty
+          </button>
+          <a href={`/koordynator/kryzys/${crisis.id}`} class:list={NAV_LINK}>
+            Anuluj
+          </a>
+        </div>
+      </form>
+    </>
+  )}
 
-        {!crisis && !loadError && (
-          <>
-            <h1 class="mb-2 text-2xl font-bold">Nie znaleziono kryzysu</h1>
-            <p class="text-blue-100/80">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
-          </>
-        )}
+  {crisis && contacts && revealedAt && (
+    <>
+      <StatusLine tone="done" role="status" class="max-w-[64ch] text-lg">
+        <p class="font-bold">Ujawnienie zapisano w dzienniku, {formatActivatedAt(revealedAt)}.</p>
+        <p class="text-ash text-base">
+          {crisis.typeName}, promień {crisis.radiusKm} km. Numery znikną po opuszczeniu tej strony.
+        </p>
+      </StatusLine>
 
-        {crisis && endedMessage && (
-          <>
-            <h1 class="mb-2 text-2xl font-bold">{crisis.typeName}</h1>
-            <p role="alert" class="rounded-lg border border-white/15 bg-white/5 p-3 text-sm text-blue-100">
-              {endedMessage}
-            </p>
-          </>
-        )}
+      {anyUnverified && (
+        <StatusLine tone="attention" class="mt-6 max-w-[64ch] font-bold">
+          Numery nie są zweryfikowane i mogą być błędne.
+        </StatusLine>
+      )}
 
-        {crisis && !endedMessage && !contacts && (
-          <>
-            <h1 class="mb-1 text-2xl font-bold">Ujawnij kontakty (break-glass)</h1>
-            <p class="mb-4 text-sm text-blue-100/80">
-              {crisis.typeName} · promień {crisis.radiusKm} km
-              {crisis.epicentrePostcode && <> · okolice {crisis.epicentrePostcode}</>} ·{" "}
-              <strong class="text-white">{formatPeople(crisis.matchCount)}</strong> {matchedWord(crisis.matchCount)}
-            </p>
-
-            <div class="mb-5 space-y-2 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
-              <p>
-                Zobaczysz numery telefonów <strong>wszystkich</strong> dopasowanych osób, które podały numer. Używaj
-                tego tylko wtedy, gdy nie da się ich zawiadomić inaczej.
+      {contacts.length === 0 ? (
+        <p class="mt-10 text-lg">Żadna z dopasowanych osób nie podała numeru telefonu.</p>
+      ) : (
+        <ol class="border-seam mt-10 border-b">
+          {contacts.map((c) => (
+            <li class="border-seam grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-4 gap-y-2 border-t py-5 md:grid-cols-[4rem_minmax(0,1fr)_13rem_17rem] md:grid-rows-[auto_1fr] md:gap-x-6">
+              <p class="font-display row-span-4 text-right text-[2.25rem] leading-[0.85] tabular-nums md:row-span-2 md:text-[2.75rem]">
+                <span class="sr-only">Miejsce </span>
+                {c.rank}
               </p>
-              <p>
-                Ujawnienie zostanie trwale zapisane: Twoje konto, czas, powód i lista osób, których numery zobaczysz.
+              <p class="text-lg leading-tight">
+                <span class="font-bold">Osoba #{c.position}</span>
+                <span class="text-ash tabular-nums">
+                  , {formatDistanceKm(c.distanceKm)}
+                  <span class="sr-only"> od epicentrum</span>
+                </span>
               </p>
-              <p>
-                Numery znikną po opuszczeniu strony. Każde ponowne wyświetlenie to nowe, osobno zapisane ujawnienie.
-              </p>
-            </div>
-
-            <form method="post" class="space-y-3">
-              <label for="reason" class="block text-sm font-medium">
-                Powód ujawnienia
-              </label>
-              <textarea
-                id="reason"
-                name="reason"
-                required
-                minlength={REASON_MIN}
-                maxlength={REASON_MAX}
-                rows="3"
-                autocomplete="off"
-                aria-invalid={formError ? "true" : undefined}
-                aria-describedby={formError ? "reason-error" : "reason-hint"}
-                class="w-full rounded-lg border border-white/20 bg-slate-900/60 p-3 text-sm text-white placeholder:text-blue-100/40 focus:border-red-300 focus:outline-none"
-                placeholder="np. brak potwierdzeń od 30 minut, awaria sieci komórkowej"
-              >{reason}</textarea>
-              {formError ? (
-                <p id="reason-error" role="alert" class="text-sm text-red-200">
-                  {formError}
-                </p>
-              ) : (
-                <p id="reason-hint" class="text-xs text-blue-100/60">
-                  Od {REASON_MIN} do {REASON_MAX} znaków.
-                </p>
-              )}
-              <div class="flex flex-wrap justify-end gap-2">
+              <div class="md:col-start-3 md:row-span-2 md:row-start-1">
                 <a
-                  href={`/koordynator/kryzys/${crisis.id}`}
-                  class="inline-flex min-h-11 items-center rounded-lg border border-white/20 px-4 py-2 text-sm text-blue-100 hover:bg-white/10"
+                  href={`tel:${c.phone}`}
+                  class="inline-flex min-h-12 items-center text-2xl font-bold tabular-nums underline decoration-2 underline-offset-6 hover:decoration-signal"
                 >
-                  Anuluj
+                  <span class="sr-only">Zadzwoń: </span>
+                  {formatPhone(c.phone)}
                 </a>
-                <button
-                  type="submit"
-                  class="inline-flex min-h-11 items-center rounded-lg border border-red-400/60 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
-                >
-                  Ujawnij kontakty
-                </button>
+                {anyUnverified && c.phoneVerified && (
+                  <p class="text-[0.9375rem]">
+                    <StatusMark tone="done">zweryfikowany</StatusMark>
+                  </p>
+                )}
               </div>
-            </form>
-          </>
-        )}
+              <SkillList skills={c.skills} class="md:col-start-2 md:row-start-2" />
+              <PersonStatus
+                availableNow={c.availableNow}
+                availabilitySlots={c.availabilitySlots}
+                class="md:col-start-4 md:row-span-2 md:row-start-1"
+              />
+            </li>
+          ))}
+        </ol>
+      )}
 
-        {crisis && contacts && revealedAt && (
-          <>
-            <div class="mb-4 rounded-lg border border-red-400/60 bg-red-600/30 p-3">
-              <h1 class="text-xl font-bold">Break-glass: kontakty ujawnione</h1>
-              <p class="text-sm text-red-100">
-                {crisis.typeName} · promień {crisis.radiusKm} km · ujawniono {formatActivatedAt(revealedAt)} · zapisano
-                w dzienniku
-              </p>
-            </div>
-
-            {anyUnverified && (
-              <p class="mb-4 rounded-lg border border-amber-300/50 bg-amber-500/15 p-3 text-sm text-amber-100">
-                Numery nie są zweryfikowane — mogą być błędne.
-              </p>
-            )}
-
-            {contacts.length === 0 ? (
-              <p class="text-blue-100/80">Żadna z dopasowanych osób nie podała numeru telefonu.</p>
-            ) : (
-              <ol class="space-y-2">
-                {contacts.map((c) => (
-                  <li class="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                    <span class="w-8 shrink-0 text-right text-lg font-bold text-purple-200">
-                      <span class="sr-only">Miejsce </span>
-                      {c.rank}.
-                    </span>
-                    <div class="min-w-0 flex-1">
-                      <div class="flex flex-wrap items-baseline justify-between gap-x-3">
-                        <span class="font-medium">Osoba #{c.position}</span>
-                        <span class="text-sm text-blue-100/80">{formatDistanceKm(c.distanceKm)}</span>
-                      </div>
-                      <a
-                        href={`tel:${c.phone}`}
-                        class="mt-2 inline-flex min-h-11 items-center rounded-lg border border-emerald-300/50 bg-emerald-500/20 px-4 py-2 text-lg font-semibold tracking-wide text-white hover:bg-emerald-500/35"
-                      >
-                        <span class="sr-only">Zadzwoń: </span>
-                        {formatPhone(c.phone)}
-                      </a>
-                      {anyUnverified && c.phoneVerified && (
-                        <span class="ml-2 text-xs text-emerald-200">zweryfikowany</span>
-                      )}
-                      <ul class="mt-2 flex flex-wrap gap-1.5">
-                        {c.skills.map((s) => (
-                          <li
-                            class:list={cn(
-                              "rounded-full border px-2.5 py-0.5 text-xs",
-                              s.tier === "priority"
-                                ? "border-purple-300/60 bg-purple-600/40 text-white"
-                                : "border-white/20 bg-white/5 text-blue-100",
-                            )}
-                          >
-                            {s.tier === "priority" ? "★ " : ""}
-                            {s.name}
-                            {s.level !== null && <span class="text-white/70"> · {LEVEL_LABELS[s.level]}</span>}
-                            <span class="sr-only">
-                              {s.tier === "priority" ? " (umiejętność priorytetowa)" : " (umiejętność wspierająca)"}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                      <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                        <span
-                          class:list={cn(
-                            "rounded-full border px-2.5 py-0.5",
-                            availabilityBadge(c.availableNow).className,
-                          )}
-                        >
-                          {availabilityBadge(c.availableNow).label}
-                        </span>
-                        {c.availabilitySlots !== null && (
-                          <span class="text-blue-100/80">
-                            <span class="sr-only">Deklarowana dostępność: </span>
-                            {formatAvailabilitySummary(c.availabilitySlots)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            )}
-
-            <p class="mt-4 text-sm text-blue-100/70">
-              Bez numeru telefonu: {formatPeople(withoutPhone)}. Numery znikną po opuszczeniu tej strony.
-            </p>
-          </>
-        )}
-      </main>
-    </div>
-  </div>
-</Layout>
+      <p class="text-ash mt-6 leading-relaxed">
+        Bez numeru telefonu: {formatPeople(withoutPhone)}. Numery znikną po opuszczeniu tej strony.
+      </p>
+    </>
+  )}
+</PageShell>
