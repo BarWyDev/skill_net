@@ -626,6 +626,14 @@ export type Database = {
           rank: number
         }[]
       }
+      get_my_number_reveals: {
+        Args: never
+        Returns: {
+          crisis_type: string
+          epicentre_postcode: string
+          revealed_at: string
+        }[]
+      }
       get_my_profile: { Args: never; Returns: Json }
       get_skills_density: {
         Args: { p_category?: string }
