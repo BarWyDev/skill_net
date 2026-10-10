@@ -7,7 +7,7 @@ import CrisisFacts from "@/components/crisis/CrisisFacts.astro";
 import PersonStatus from "@/components/crisis/PersonStatus.astro";
 import SkillList from "@/components/crisis/SkillList.astro";
 import { formatDistanceKm } from "@/lib/crisis-format";
-import { BUTTON } from "@/lib/site-styles";
+import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { createClient } from "@/lib/supabase";
 import { assembleCrisisTeams, getCrisis, getTeamTemplates } from "@/lib/services/crisis";
 import { parseTeamRequest, TEAM_COUNT_MAX, TEAM_COUNT_MIN } from "@/lib/validation/crisis";
@@ -129,7 +129,7 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
 
       <form method="get" class="border-seam mt-12 max-w-[42rem] border-t pt-10">
         <fieldset>
-          <legend class="font-display mb-4 text-[2rem] leading-none">Szablon zespołu</legend>
+          <legend class:list={cn(SECTION_TITLE, "mb-4")}>Szablon zespołu</legend>
           <div class="space-y-1">
             {templates.map((t) => (
               <label
@@ -191,7 +191,7 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
 
       {teams && template && (
         <section aria-labelledby="teams-heading" class="border-seam mt-16 border-t pt-10">
-          <h2 id="teams-heading" class="font-display text-[2rem] leading-none">
+          <h2 id="teams-heading" class:list={SECTION_TITLE}>
             {template.name}
           </h2>
           <p class="mt-4 text-lg">

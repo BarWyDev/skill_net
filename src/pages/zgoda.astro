@@ -3,7 +3,7 @@ import AuthShell from "@/components/auth/AuthShell.astro";
 import StatusLine from "@/components/StatusLine.astro";
 import DeleteAccount from "@/components/profile/DeleteAccount.astro";
 import { CONSENT_LABEL, CONSENT_LINK_TEXT } from "@/lib/consent";
-import { BUTTON, TEXT_LINK } from "@/lib/site-styles";
+import { BUTTON, INLINE_LINK, TEXT_LINK } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 
 // The consent gate (roadmap S-05). The middleware sends every signed-in user whose latest consent is
@@ -32,7 +32,7 @@ const error = Astro.url.searchParams.get("error");
       <input id="consent" name="consent" type="checkbox" required class="check mt-0.5" />
       <span>
         {CONSENT_LABEL}{" "}
-        <a href="/prywatnosc" target="_blank" rel="noopener" class="text-chalk font-bold underline underline-offset-4">
+        <a href="/prywatnosc" target="_blank" rel="noopener" class:list={INLINE_LINK}>
           {CONSENT_LINK_TEXT}
         </a>
       </span>

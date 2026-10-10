@@ -1,6 +1,6 @@
 ---
 import { formatCrisisTitle, formatPeople, matchedWord } from "@/lib/crisis-format";
-import { BUTTON } from "@/lib/site-styles";
+import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import type { CrisisDTO } from "@/types";
 
@@ -33,7 +33,7 @@ const formId = "end-crisis-form";
   class="end-crisis-dialog bg-graphite text-chalk border-seam m-auto w-[calc(100%-2rem)] max-w-lg border p-0"
 >
   <form id={formId} method="post" action={`/api/koordynator/kryzysy/${crisis.id}/zakoncz`} class="p-6 sm:p-8">
-    <h2 id="end-crisis-title" class="font-display text-[2rem] leading-none">
+    <h2 id="end-crisis-title" class:list={SECTION_TITLE}>
       Zakończyć kryzys?
     </h2>
     <p class="text-ash mt-4 leading-relaxed">
