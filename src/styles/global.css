@@ -1,5 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Self-hosted through Fontsource. The per-weight files declare unicode-range, so a browser only
+   downloads a font (and the latin-ext subset for Polish diacritics) when a page uses it. */
+@import "@fontsource/big-shoulders-display/800";
+@import "@fontsource/atkinson-hyperlegible-next/400";
+@import "@fontsource/atkinson-hyperlegible-next/700";
 
 @custom-variant dark (&:is(.dark *));
 
