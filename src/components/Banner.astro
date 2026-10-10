@@ -1,4 +1,6 @@
 ---
+// A site-wide notice above the header (missing configuration). Graphite like every page, with the
+// status colour only on the bottom edge, so the text keeps the palette's contrast.
 type Variant = "info" | "warning" | "error";
 
 interface Props {
@@ -9,34 +11,37 @@ const { variant = "info" } = Astro.props;
 ---
 
 <div class:list={["banner", `banner--${variant}`]} role={variant === "error" ? "alert" : "status"}>
-  <slot />
+  <div class="mx-auto max-w-6xl px-4 py-3 sm:px-8">
+    <slot />
+  </div>
 </div>
 
 <style>
   .banner {
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    text-align: center;
-    border-bottom: 1px solid;
+    background: var(--color-graphite);
+    color: var(--color-chalk);
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    border-bottom: 2px solid var(--banner-edge);
   }
   .banner :global(a) {
     color: inherit;
     text-decoration: underline;
-    font-weight: 600;
+    text-underline-offset: 4px;
+    font-weight: 700;
+  }
+  .banner :global(a:focus-visible) {
+    outline: 3px solid var(--color-signal);
+    outline-offset: 3px;
   }
   .banner--info {
-    background: #dbeafe;
-    color: #1e3a8a;
-    border-color: #3b82f6;
+    --banner-edge: var(--color-ash);
   }
   .banner--warning {
-    background: #fef3c7;
-    color: #78350f;
-    border-color: #f59e0b;
+    --banner-edge: var(--color-signal);
   }
   .banner--error {
-    background: #fee2e2;
-    color: #7f1d1d;
-    border-color: #dc2626;
+    --banner-edge: var(--color-alarm);
   }
 </style>
