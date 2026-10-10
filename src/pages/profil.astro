@@ -1,6 +1,5 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import SiteHeader from "@/components/SiteHeader.astro";
+import PageShell from "@/components/PageShell.astro";
 import StatusLine from "@/components/StatusLine.astro";
 import DeleteAccount from "@/components/profile/DeleteAccount.astro";
 import PauseAvailability from "@/components/profile/PauseAvailability.astro";
@@ -36,94 +35,81 @@ if (!supabase) {
 }
 ---
 
-<Layout title="Mój profil — SkillNet" footer="graphite">
-  <div class="site min-h-screen">
-    <div class="mx-auto max-w-6xl px-4 sm:px-8">
-      <SiteHeader />
-
-      <main class="pt-12 pb-20 sm:pt-20 lg:pb-28">
-        <h1 class="font-display text-[clamp(2.75rem,10vw,6.5rem)] leading-[0.9]">Mój profil</h1>
-
-        <!-- One column of about 42rem keeps every line under 80 characters. -->
-        <div class="mt-8 max-w-[42rem] sm:mt-10">
-          {profile && (
-            <div class="space-y-3 text-lg">
-              {profile.paused ? (
-                <StatusLine tone="attention">
-                  <p class="font-bold">
-                    {profile.pausedUntil
-                      ? `Twoja dostępność jest wstrzymana do ${formatPauseUntil(profile.pausedUntil)} włącznie.`
-                      : "Twoja dostępność jest wstrzymana bezterminowo."}
-                  </p>
-                  <p class="text-ash mt-1 text-base">
-                    Nie pojawisz się w nowych kryzysach ani na mapie, a w trwających kryzysach koordynator Cię nie
-                    widzi.
-                  </p>
-                  <form method="post" action="/api/profile/resume" class="mt-4">
-                    <button type="submit" class:list={cn(BUTTON, "btn-secondary text-chalk cursor-pointer")}>
-                      Wznów dostępność
-                    </button>
-                  </form>
-                </StatusLine>
-              ) : profile.complete ? (
-                <StatusLine tone="done">
-                  <p class="font-bold">Profil kompletny</p>
-                </StatusLine>
-              ) : (
-                <StatusLine tone="attention">
-                  <p>
-                    <strong>Profil niekompletny</strong> — dodaj lokalizację i co najmniej jedną umiejętność, aby
-                    koordynator mógł Cię znaleźć.
-                  </p>
-                </StatusLine>
-              )}
-              {profile.phone === null && (
-                <StatusLine tone="attention">
-                  <p>Bez numeru telefonu nie otrzymasz alertów kryzysowych.</p>
-                </StatusLine>
-              )}
-            </div>
-          )}
-
-          {success && !error && (
-            <StatusLine tone="done" data-page-notice role="status" class="mt-6 font-bold">
-              {success}
-            </StatusLine>
-          )}
-          {error && (
-            <StatusLine tone="error" data-page-notice role="alert" class="mt-6 font-bold">
-              {error}
-            </StatusLine>
-          )}
-          {(success !== null || error !== null) && <script is:inline>
-            // The notice is for this page load only: a refresh must not show it again (QA-017, QA-019).
-            history.replaceState(history.state, "", location.pathname);
-          </script>}
-
-          {loadError && (
-            <StatusLine tone="error" role="alert" class="mt-6 font-bold">
-              {loadError}
-            </StatusLine>
-          )}
-
-          {taxonomy && profile && (
-            <ProfileForm client:only="react" taxonomy={taxonomy} profile={profile}>
-              <p slot="fallback" class="text-ash mt-14">
-                Ładowanie formularza…
-              </p>
-            </ProfileForm>
-          )}
-
-          {profile?.complete && <PauseAvailability paused={profile.paused} pausedUntil={profile.pausedUntil} />}
-          {profile && !profile.complete && (
-            <p class="border-seam text-ash mt-16 border-t pt-10 leading-relaxed">
-              Wstrzymać dostępność możesz, gdy profil jest kompletny: ma lokalizację i co najmniej jedną umiejętność.
-            </p>
-          )}
-
-          {Astro.locals.user && <DeleteAccount />}
-        </div>
-      </main>
+<!-- PageShell's 42rem column keeps every line under 80 characters. -->
+<PageShell title="Mój profil — SkillNet" heading="Mój profil">
+  {profile && (
+    <div class="space-y-3 text-lg">
+      {profile.paused ? (
+        <StatusLine tone="attention">
+          <p class="font-bold">
+            {profile.pausedUntil
+              ? `Twoja dostępność jest wstrzymana do ${formatPauseUntil(profile.pausedUntil)} włącznie.`
+              : "Twoja dostępność jest wstrzymana bezterminowo."}
+          </p>
+          <p class="text-ash mt-1 text-base">
+            Nie pojawisz się w nowych kryzysach ani na mapie, a w trwających kryzysach koordynator Cię nie widzi.
+          </p>
+          <form method="post" action="/api/profile/resume" class="mt-4">
+            <button type="submit" class:list={cn(BUTTON, "btn-secondary text-chalk cursor-pointer")}>
+              Wznów dostępność
+            </button>
+          </form>
+        </StatusLine>
+      ) : profile.complete ? (
+        <StatusLine tone="done">
+          <p class="font-bold">Profil kompletny</p>
+        </StatusLine>
+      ) : (
+        <StatusLine tone="attention">
+          <p>
+            <strong>Profil niekompletny.</strong> Dodaj lokalizację i co najmniej jedną umiejętność, aby koordynator
+            mógł Cię znaleźć.
+          </p>
+        </StatusLine>
+      )}
+      {profile.phone === null && (
+        <StatusLine tone="attention">
+          <p>Bez numeru telefonu nie otrzymasz alertów kryzysowych.</p>
+        </StatusLine>
+      )}
     </div>
-  </div>
-</Layout>
+  )}
+
+  {success && !error && (
+    <StatusLine tone="done" data-page-notice role="status" class="mt-6 font-bold">
+      {success}
+    </StatusLine>
+  )}
+  {error && (
+    <StatusLine tone="error" data-page-notice role="alert" class="mt-6 font-bold">
+      {error}
+    </StatusLine>
+  )}
+  {(success !== null || error !== null) && <script is:inline>
+    // The notice is for this page load only: a refresh must not show it again (QA-017, QA-019).
+    history.replaceState(history.state, "", location.pathname);
+  </script>}
+
+  {loadError && (
+    <StatusLine tone="error" role="alert" class="mt-6 font-bold">
+      {loadError}
+    </StatusLine>
+  )}
+
+  {taxonomy && profile && (
+    <ProfileForm client:only="react" taxonomy={taxonomy} profile={profile}>
+      <p slot="fallback" class="text-ash mt-14">
+        Ładowanie formularza…
+      </p>
+    </ProfileForm>
+  )}
+
+  {profile?.complete && <PauseAvailability paused={profile.paused} pausedUntil={profile.pausedUntil} />}
+  {profile && !profile.complete && (
+    <p class="border-seam text-ash mt-16 border-t pt-10 leading-relaxed">
+      Wstrzymać dostępność możesz, gdy profil jest kompletny: ma lokalizację i co najmniej jedną umiejętność.
+    </p>
+  )}
+
+  {Astro.locals.user && <DeleteAccount />}
+</PageShell>

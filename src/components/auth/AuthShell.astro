@@ -3,6 +3,8 @@
 // column on the landing's grid. The optional `aside` slot holds one quiet sentence of context.
 import Layout from "@/layouts/Layout.astro";
 import SiteHeader from "@/components/SiteHeader.astro";
+import { cn } from "@/lib/utils";
+import { PAGE_TITLE } from "@/lib/site-styles";
 
 interface Props {
   title: string;
@@ -13,13 +15,13 @@ const { title, heading } = Astro.props;
 const hasAside = Astro.slots.has("aside");
 ---
 
-<Layout title={title} footer="graphite">
+<Layout title={title}>
   <div class="site min-h-screen">
     <div class="mx-auto max-w-6xl px-4 sm:px-8">
       <SiteHeader />
 
       <main class="grid grid-cols-12 gap-x-6 pt-12 pb-20 sm:pt-20 lg:pb-28">
-        <h1 class="font-display col-span-12 text-[clamp(2.75rem,10vw,6.5rem)] leading-[0.9]">{heading}</h1>
+        <h1 class:list={cn(PAGE_TITLE, "col-span-12")}>{heading}</h1>
         <div class="col-span-12 mt-10 max-w-md sm:mt-12 md:col-span-7 lg:col-span-5">
           <slot />
         </div>

@@ -4,7 +4,7 @@ import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
 import { FieldError } from "@/components/auth/FieldError";
-import { TEXT_LINK } from "@/lib/site-styles";
+import { INLINE_LINK, TEXT_LINK } from "@/lib/site-styles";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { CONSENT_LABEL, CONSENT_LINK_TEXT, CONSENT_REQUIRED_MESSAGE } from "@/lib/consent";
 
@@ -186,12 +186,7 @@ export default function SignUpForm({ serverError }: Props) {
           />
           <span>
             {CONSENT_LABEL}{" "}
-            <a
-              href="/prywatnosc"
-              target="_blank"
-              rel="noopener"
-              className="text-chalk font-bold underline underline-offset-4"
-            >
+            <a href="/prywatnosc" target="_blank" rel="noopener" className={INLINE_LINK}>
               {CONSENT_LINK_TEXT}
             </a>
           </span>

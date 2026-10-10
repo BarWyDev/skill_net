@@ -1,13 +1,13 @@
 ---
-import { CircleAlert } from "lucide-react";
 import PageShell from "@/components/PageShell.astro";
+import { FieldError } from "@/components/auth/FieldError";
 import StatusLine from "@/components/StatusLine.astro";
 import StatusMark from "@/components/StatusMark.astro";
 import CrisisFacts from "@/components/crisis/CrisisFacts.astro";
 import PersonStatus from "@/components/crisis/PersonStatus.astro";
 import SkillList from "@/components/crisis/SkillList.astro";
 import { formatDistanceKm } from "@/lib/crisis-format";
-import { BUTTON } from "@/lib/site-styles";
+import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { createClient } from "@/lib/supabase";
 import { assembleCrisisTeams, getCrisis, getTeamTemplates } from "@/lib/services/crisis";
 import { parseTeamRequest, TEAM_COUNT_MAX, TEAM_COUNT_MIN } from "@/lib/validation/crisis";
@@ -101,7 +101,7 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
 ---
 
 <PageShell
-  title={crisis ? `Zespoły: ${crisis.typeName}` : "Nie znaleziono kryzysu"}
+  title={`${crisis ? `Zespoły: ${crisis.typeName}` : "Nie znaleziono kryzysu"} — SkillNet`}
   heading={heading}
   crumbs={crumbs}
   crumbLabel={crisis ? "Zespoły" : undefined}
@@ -129,7 +129,7 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
 
       <form method="get" class="border-seam mt-12 max-w-[42rem] border-t pt-10">
         <fieldset>
-          <legend class="font-display mb-4 text-[2rem] leading-none">Szablon zespołu</legend>
+          <legend class:list={cn(SECTION_TITLE, "mb-4")}>Szablon zespołu</legend>
           <div class="space-y-1">
             {templates.map((t) => (
               <label
@@ -173,10 +173,9 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
             class="field block h-12 w-28 px-3 text-lg tabular-nums"
           />
           {formError ? (
-            <p id="teams-error" role="alert" class="text-alarm mt-2 flex gap-2 text-[0.9375rem]">
-              <CircleAlert aria-hidden="true" className="mt-[0.2em] size-4 shrink-0" />
+            <FieldError id="teams-error" role="alert">
               {formError}
-            </p>
+            </FieldError>
           ) : (
             <p id="teams-hint" class="text-ash mt-2 text-[0.9375rem]">
               Od {TEAM_COUNT_MIN} do {TEAM_COUNT_MAX}.
@@ -191,7 +190,7 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
 
       {teams && template && (
         <section aria-labelledby="teams-heading" class="border-seam mt-16 border-t pt-10">
-          <h2 id="teams-heading" class="font-display text-[2rem] leading-none">
+          <h2 id="teams-heading" class:list={SECTION_TITLE}>
             {template.name}
           </h2>
           <p class="mt-4 text-lg">

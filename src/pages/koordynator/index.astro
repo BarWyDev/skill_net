@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase";
 import { getCrisisTypes, listActiveCrises, listRecentEndedCrises } from "@/lib/services/crisis";
 import { formatActivatedAt, formatActiveFor, formatPeople, isStale } from "@/lib/crisis-format";
 import type { CrisisDTO, CrisisTypeDTO } from "@/types";
+import { SECTION_TITLE } from "@/lib/site-styles";
 
 // The middleware gates this route: only coordinators get here.
 
@@ -41,7 +42,7 @@ const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okolice ${c.epicentrePostcode}` : ""}`;
 ---
 
-<PageShell title="Panel koordynatora" heading="Panel koordynatora" wide>
+<PageShell title="Panel koordynatora — SkillNet" heading="Panel koordynatora" wide>
   {ended && (
     <StatusLine tone="done" role="status" class="mb-10 text-lg font-bold">
       Kryzys zakończony. Lista dopasowanych osób została usunięta.
@@ -61,7 +62,7 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
 
   {activeCrises && (
     <section aria-labelledby="active-heading">
-      <h2 id="active-heading" class="font-display text-[2rem] leading-none">
+      <h2 id="active-heading" class:list={SECTION_TITLE}>
         Aktywne kryzysy
       </h2>
       {activeCrises.length === 0 ? (
@@ -99,7 +100,7 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
 
   {crisisTypes && (
     <section aria-labelledby="activate-heading" class="mt-16 max-w-[42rem] sm:mt-20">
-      <h2 id="activate-heading" class="font-display text-[2rem] leading-none">
+      <h2 id="activate-heading" class:list={SECTION_TITLE}>
         Aktywuj kryzys
       </h2>
       <p class="text-ash mt-3 leading-relaxed">
@@ -115,7 +116,7 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
 
   {endedCrises && endedCrises.length > 0 && (
     <section aria-labelledby="ended-heading" class="mt-16 sm:mt-20">
-      <h2 id="ended-heading" class="font-display text-[2rem] leading-none">
+      <h2 id="ended-heading" class:list={SECTION_TITLE}>
         Zakończone
       </h2>
       <ul class="border-seam mt-6 border-b">
