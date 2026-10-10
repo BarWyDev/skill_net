@@ -18,6 +18,16 @@ const CRISIS_END_PATH = "/api/koordynator/kryzysy/00000000-0000-0000-0000-000000
 // The break-glass page: the gates must refuse both the reason form (GET) and the reveal (POST).
 const REVEAL_PATH = "/koordynator/kryzys/00000000-0000-0000-0000-000000000000/kontakty";
 const REVEAL_FORM = { reason: "Smoke test: brak potwierdzeń" };
+// The auth throttle (src/lib/auth-throttle.ts) ignores loopback visitors, which is what local workerd
+// reports, so the steps that exercise it claim a documentation address and a fresh email per run.
+const THROTTLE_IP = `192.0.2.${Date.now() % 250}`;
+const THROTTLE_EMAIL = `smoke-throttle-${Date.now()}@example.com`;
+const throttledSignin = () =>
+  request("/api/auth/signin", {
+    method: "POST",
+    form: { email: THROTTLE_EMAIL, password: "Wrong-Passw0rd" },
+    headers: { "cf-connecting-ip": THROTTLE_IP },
+  });
 const TEAMS_PATH = "/koordynator/kryzys/00000000-0000-0000-0000-000000000000/zespoly";
 
 function cookieHeader() {
@@ -35,7 +45,7 @@ function storeCookies(response) {
 }
 
 // `form` sends a urlencoded body, `json` a JSON body, and `rawBody` is sent as is with `contentType`.
-async function request(path, { method = "GET", form, json, rawBody, contentType } = {}) {
+async function request(path, { method = "GET", form, json, rawBody, contentType, headers: extra = {} } = {}) {
   let body;
   let type;
   if (form) {
@@ -55,6 +65,7 @@ async function request(path, { method = "GET", form, json, rawBody, contentType 
       Cookie: cookieHeader(),
       Origin: BASE_URL,
       ...(type ? { "Content-Type": type } : {}),
+      ...extra,
     },
     body,
   });
@@ -154,6 +165,11 @@ const readonlySteps = [
     () => request("/auth/confirm?token_hash=smoke-not-a-token&type=email"),
     { status: 302, location: "/auth/link-wygasl" },
   ],
+  [
+    "throttle page answers 429",
+    () => request("/auth/zbyt-wiele-prob"),
+    { status: 429, bodyIncludes: "Zbyt wiele prób", header: ["retry-after", "60"] },
+  ],
   ["link error page renders", () => request("/auth/link-wygasl"), { status: 200, cacheControlIncludes: "no-store" }],
   // An unregistered address gets the same answer as a registered one, and no email is sent.
   [
@@ -173,6 +189,12 @@ const writeSteps = [
   [
     "signup rejects missing consent",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
+    { status: 302, location: "/auth/signup?error=" },
+  ],
+  // Refused before GoTrue is called, so no account is created.
+  [
+    "signup rejects a weak password",
+    () => request("/api/auth/signup", { method: "POST", form: { email, password: "123456", consent: "on" } }),
     { status: 302, location: "/auth/signup?error=" },
   ],
   [
@@ -405,6 +427,13 @@ const writeSteps = [
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
     { status: 302, location: "/auth/signin?error=" },
   ],
+  // Five attempts per account per minute, then the throttle page; the account never exists.
+  ...[1, 2, 3, 4, 5].map((n) => [
+    `throttle allows sign-in attempt ${n}`,
+    throttledSignin,
+    { status: 302, location: "/auth/signin?error=" },
+  ]),
+  ["throttle stops the 6th attempt", throttledSignin, { status: 303, location: "/auth/zbyt-wiele-prob", exact: true }],
 ];
 
 const steps = READONLY ? readonlySteps : [...readonlySteps, ...writeSteps];

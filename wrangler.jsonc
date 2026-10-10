@@ -20,6 +20,21 @@
       "id": "ac680c0499b04685bdd941b6d25b6b77",
     },
   ],
+  // Auth form throttle (security audit F-09, src/lib/auth-throttle.ts). Counted per Cloudflare
+  // location. The namespace ids are this account's own; don't reuse them for another limiter.
+  // Previews inherit no bindings, so the throttle is off there (it fails open).
+  "ratelimits": [
+    {
+      "name": "AUTH_IP_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 20, "period": 60 },
+    },
+    {
+      "name": "AUTH_ACCOUNT_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 5, "period": 60 },
+    },
+  ],
   // Previews don't inherit bindings, and the adapter would inject an ID-less SESSION here (error 10021).
   // A separate namespace keeps previews from writing to production KV.
   "previews": {

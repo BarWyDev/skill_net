@@ -1,5 +1,7 @@
 import type { APIContext, MiddlewareNext } from "astro";
 import { defineMiddleware } from "astro:middleware";
+import { env } from "cloudflare:workers";
+import { authThrottled, THROTTLED_PAGE } from "@/lib/auth-throttle";
 import { createClient } from "@/lib/supabase";
 import { isCoordinator } from "@/lib/services/roles";
 import { latestConsentVersion } from "@/lib/services/consent";
@@ -37,6 +39,16 @@ function withSecurityHeaders(response: Response): Response {
 export const onRequest = defineMiddleware(async (context, next) => withSecurityHeaders(await route(context, next)));
 
 async function route(context: APIContext, next: MiddlewareNext): Promise<Response> {
+  // Before any Supabase call, so a throttled request costs Supabase nothing.
+  if (
+    await authThrottled(context.request, context.url.pathname, {
+      ip: env.AUTH_IP_LIMITER,
+      account: env.AUTH_ACCOUNT_LIMITER,
+    })
+  ) {
+    return context.redirect(THROTTLED_PAGE, 303);
+  }
+
   const supabase = createClient(context.request.headers, context.cookies);
   context.locals.user = null;
   context.locals.isCoordinator = false;
