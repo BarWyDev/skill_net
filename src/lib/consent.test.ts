@@ -21,13 +21,27 @@ test("the consent page, the notice, auth routes and assets are exempt from the g
     "/api/auth/unregister",
     "/_astro/client.js",
     "/favicon.png",
+    "/favicon.svg",
+    "/favicon.ico",
+    "/apple-touch-icon.png",
+    "/og-image.png",
   ]) {
     assert.equal(isConsentGateExempt(path), true, path);
   }
 });
 
 test("every other path is gated, including look-alike prefixes", () => {
-  for (const path of ["/", "/profil", "/mapa", "/api/mapa", "/koordynator", "/zgodax", "/authx", "/api/profile"]) {
+  for (const path of [
+    "/",
+    "/profil",
+    "/mapa",
+    "/api/mapa",
+    "/koordynator",
+    "/zgodax",
+    "/authx",
+    "/og-image.pngx",
+    "/api/profile",
+  ]) {
     assert.equal(isConsentGateExempt(path), false, path);
   }
 });
