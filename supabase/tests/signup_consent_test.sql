@@ -192,7 +192,13 @@ select ok(
 create temp table crisis_ids (id uuid);
 grant select, insert on crisis_ids to authenticated;
 
--- The map reads an hourly snapshot (skills density snapshot migration): mark it stale, so the read
+-- The map counts only accounts at least 14 days old with a confirmed email, and blurs counts with
+-- noise (density k-anonymity migration). Age and confirm the fixtures; no noise, so counts are exact.
+update auth.users
+set created_at = least(created_at, now() - interval '30 days'),
+    email_confirmed_at = coalesce(email_confirmed_at, now() - interval '30 days');
+update public.skills_density_config set noise_amplitude = 0;
+-- The map reads a daily snapshot (skills density snapshot migration): mark it stale, so the read
 -- below is computed from these fixtures.
 delete from public.skills_density_refreshes;
 

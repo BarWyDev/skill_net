@@ -137,7 +137,13 @@ select throws_ok(
 -- ---------------------------------------------------------------------------
 
 reset role;
--- The map reads an hourly snapshot (skills density snapshot migration). Marking it stale makes the
+-- The map counts only accounts at least 14 days old with a confirmed email, and blurs counts with
+-- noise (density k-anonymity migration). Age and confirm the fixtures; no noise, so counts are exact.
+update auth.users
+set created_at = least(created_at, now() - interval '30 days'),
+    email_confirmed_at = coalesce(email_confirmed_at, now() - interval '30 days');
+update public.skills_density_config set noise_amplitude = 0;
+-- The map reads a daily snapshot (skills density snapshot migration). Marking it stale makes the
 -- next call recompute it, so each read below reflects the residents at that point.
 delete from public.skills_density_refreshes;
 set local role anon;
