@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/auth/SubmitButton";
 import { formatPhone, normalisePhone, PHONE_ERROR } from "@/lib/phone";
 import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
 import type { MyProfileDTO, SkillLevel, TaxonomyDTO } from "@/types";
+import { SECTION_TITLE } from "@/lib/site-styles";
 
 interface Props {
   taxonomy: TaxonomyDTO;
@@ -190,7 +191,7 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
 function SectionHeading({ id, help, children }: { id: string; help: string; children: React.ReactNode }) {
   return (
     <div className="mb-6">
-      <h2 id={id} className="font-display text-[2rem] leading-none">
+      <h2 id={id} className={SECTION_TITLE}>
         {children}
       </h2>
       <p className="text-ash mt-3 leading-relaxed">{help}</p>
