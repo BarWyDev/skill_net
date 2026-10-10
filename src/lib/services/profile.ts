@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Database } from "@/db/database.types";
 import { PHONE_ERROR } from "@/lib/phone";
 import type { SupabaseClient } from "@/lib/supabase";
-import type { MyProfileDTO, SaveProfileInput, TaxonomyDTO } from "@/types";
+import type { MyProfileDTO, NumberRevealDTO, SaveProfileInput, TaxonomyDTO } from "@/types";
 
 // Never log input values here: postcodes, coordinates, skills, phones and availability are personal data.
 
@@ -80,6 +80,18 @@ export async function getMyProfile(supabase: SupabaseClient): Promise<MyProfileD
     phoneVerified: profile.phone_verified,
     availabilitySlots: profile.availability_slots,
   };
+}
+
+/** Every break-glass reveal of the caller's number, newest first (security audit F-11). */
+export async function getMyNumberReveals(supabase: SupabaseClient): Promise<NumberRevealDTO[]> {
+  const { data, error } = await supabase.rpc("get_my_number_reveals");
+  if (error) throw new Error(`getMyNumberReveals: ${error.code}`);
+  // The generated types mark the postcode non-null, but crises from before it was stored have none.
+  return data.map((row) => ({
+    revealedAt: row.revealed_at,
+    crisisType: row.crisis_type,
+    epicentrePostcode: (row.epicentre_postcode as string | null) ?? null,
+  }));
 }
 
 /** Saves the caller's location, whole skill set, phone and availability atomically. Returns a Polish message on failure. */

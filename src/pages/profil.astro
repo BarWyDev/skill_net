@@ -2,14 +2,15 @@
 import PageShell from "@/components/PageShell.astro";
 import StatusLine from "@/components/StatusLine.astro";
 import DeleteAccount from "@/components/profile/DeleteAccount.astro";
+import NumberReveals from "@/components/profile/NumberReveals.astro";
 import PauseAvailability from "@/components/profile/PauseAvailability.astro";
 import ProfileForm from "@/components/profile/ProfileForm";
 import { formatPauseUntil } from "@/lib/pause";
 import { createClient } from "@/lib/supabase";
-import { getMyProfile, getTaxonomy } from "@/lib/services/profile";
+import { getMyNumberReveals, getMyProfile, getTaxonomy } from "@/lib/services/profile";
 import { BUTTON } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
-import type { MyProfileDTO, TaxonomyDTO } from "@/types";
+import type { MyProfileDTO, NumberRevealDTO, TaxonomyDTO } from "@/types";
 
 const SUCCESS_MESSAGES: [param: string, message: string][] = [
   ["zapisano", "Zapisano."],
@@ -21,6 +22,8 @@ const error = Astro.url.searchParams.get("error");
 
 let taxonomy: TaxonomyDTO | null = null;
 let profile: MyProfileDTO | null = null;
+// Null when the lookup fails: the section then says so instead of claiming no one saw the number.
+let reveals: NumberRevealDTO[] | null = null;
 let loadError: string | null = null;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
@@ -32,6 +35,7 @@ if (!supabase) {
   } catch {
     loadError = "Nie udało się wczytać profilu. Odśwież stronę.";
   }
+  reveals = await getMyNumberReveals(supabase).catch(() => null);
 }
 ---
 
@@ -110,6 +114,8 @@ if (!supabase) {
       Wstrzymać dostępność możesz, gdy profil jest kompletny: ma lokalizację i co najmniej jedną umiejętność.
     </p>
   )}
+
+  {profile && <NumberReveals reveals={reveals} />}
 
   {Astro.locals.user && <DeleteAccount />}
 </PageShell>
