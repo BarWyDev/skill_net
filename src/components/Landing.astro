@@ -1,6 +1,7 @@
 ---
 import SiteHeader from "@/components/SiteHeader.astro";
 import { cn } from "@/lib/utils";
+import { BUTTON, TEXT_LINK } from "@/lib/site-styles";
 
 const { user } = Astro.locals;
 
@@ -25,10 +26,6 @@ const POINTS = [
     body: "W kryzysie koordynator gminy znajduje najbliższe osoby z potrzebnymi umiejętnościami i prosi je o pomoc.",
   },
 ];
-
-// At least 44 px tall, so every link and button is easy to tap on a phone (QA-001).
-const NAV_LINK = "inline-flex min-h-11 items-center text-ash underline-offset-4 hover:text-chalk hover:underline";
-const BUTTON = "inline-flex min-h-12 items-center justify-center px-6 font-bold";
 ---
 
 <div class="site landing min-h-screen">
@@ -66,7 +63,7 @@ const BUTTON = "inline-flex min-h-12 items-center justify-center px-6 font-bold"
               <a href="/auth/signup" class:list={cn(BUTTON, "btn-secondary")}>
                 Załóż konto
               </a>
-              <a href="/auth/signin" class:list={cn(NAV_LINK, "text-chalk font-bold underline")}>
+              <a href="/auth/signin" class:list={TEXT_LINK}>
                 Zaloguj się
               </a>
             </>

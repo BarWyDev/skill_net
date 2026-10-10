@@ -1,25 +1,21 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import AuthHomeLink from "@/components/auth/AuthHomeLink.astro";
+import AuthShell from "@/components/auth/AuthShell.astro";
 import SignUpForm from "@/components/auth/SignUpForm";
+import { TEXT_LINK } from "@/lib/site-styles";
 
 const error = Astro.url.searchParams.get("error");
 ---
 
-<Layout title="Załóż konto — SkillNet">
-  <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
-    <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
-      <AuthHomeLink />
-      <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
-        Załóż konto
-      </h1>
-      <SignUpForm serverError={error} client:load />
-      <p class="mt-4 text-center text-sm text-blue-100/60">
-        Masz już konto?{" "}
-        <a href="/auth/signin" class="inline-flex min-h-11 items-center text-purple-300 hover:underline">
-          Zaloguj się
-        </a>
-      </p>
-    </div>
-  </div>
-</Layout>
+<AuthShell title="Załóż konto — SkillNet" heading="Załóż konto">
+  <SignUpForm serverError={error} client:load />
+  <p class="text-ash mt-10">
+    Masz już konto?{" "}
+    <a href="/auth/signin" class:list={TEXT_LINK}>
+      Zaloguj się
+    </a>
+  </p>
+  <p slot="aside">
+    Z kontem dodasz swoje umiejętności i przybliżoną lokalizację, żeby koordynator gminy mógł Cię znaleźć. Swoje dane
+    zmienisz albo usuniesz w profilu.
+  </p>
+</AuthShell>

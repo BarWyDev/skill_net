@@ -1,6 +1,7 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import AuthHomeLink from "@/components/auth/AuthHomeLink.astro";
+import AuthShell from "@/components/auth/AuthShell.astro";
+import { cn } from "@/lib/utils";
+import { BUTTON, TEXT_LINK } from "@/lib/site-styles";
 
 const isAutoConfirmed = import.meta.env.DEV;
 // After a resend. The copy is the same for every address, so it never says whether one is registered.
@@ -8,54 +9,46 @@ const isResend = Astro.url.searchParams.has("ponownie");
 // With confirmations off, sign-up returns a session: the new resident is already signed in (QA-016).
 const signedIn = Astro.locals.user !== null;
 
+// `primary`: the link is the next step, so it gets the CTA style; otherwise it is a way back.
 const content = isResend
   ? {
-      emoji: "📧",
       heading: "Sprawdź skrzynkę e-mail",
       description:
-        "Jeśli konto z tym adresem czeka na potwierdzenie, wysłaliśmy na nie nowy link. Wiadomość może dotrzeć po kilku minutach — sprawdź też folder ze spamem.",
+        "Jeśli konto z tym adresem czeka na potwierdzenie, wysłaliśmy na nie nowy link. Wiadomość może dotrzeć po kilku minutach. Sprawdź też folder ze spamem.",
       linkText: "Wróć do logowania",
+      primary: false,
     }
   : signedIn
     ? {
-        emoji: "✅",
         heading: "Konto założone",
         description:
           "Twoje konto jest gotowe. Możesz od razu uzupełnić profil: dodaj umiejętności i przybliżoną lokalizację, żeby koordynator mógł Cię znaleźć.",
         linkText: "Uzupełnij profil",
         href: "/profil",
+        primary: true,
       }
     : isAutoConfirmed
       ? {
-          emoji: "✅",
           heading: "Konto założone",
           description: "Twoje konto jest gotowe. Możesz się teraz zalogować.",
           linkText: "Przejdź do logowania",
+          primary: true,
         }
       : {
-          emoji: "📧",
           heading: "Sprawdź skrzynkę e-mail",
           description:
             "Wysłaliśmy link potwierdzający na Twój adres e-mail. Kliknij go, aby aktywować konto. Jeśli wiadomość nie dotarła, sprawdź folder ze spamem.",
           linkText: "Wróć do logowania",
+          primary: false,
         };
 ---
 
-<Layout title={`${content.heading} — SkillNet`}>
-  <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
-    <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-8 text-center text-white backdrop-blur-xl">
-      <AuthHomeLink />
-      <div class="mb-4 text-5xl">{content.emoji}</div>
-      <h1 class="mb-3 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
-        {content.heading}
-      </h1>
-      <p class="mb-6 text-blue-100/80">{content.description}</p>
-      <a
-        href={"href" in content ? content.href : "/auth/signin"}
-        class="inline-flex min-h-11 items-center text-sm text-purple-300 hover:underline"
-      >
-        {content.linkText}
-      </a>
-    </div>
-  </div>
-</Layout>
+<AuthShell title={`${content.heading} — SkillNet`} heading={content.heading}>
+  <p class="text-lg leading-relaxed sm:text-xl">{content.description}</p>
+  <a
+    href={"href" in content ? content.href : "/auth/signin"}
+    class:list={cn("mt-8", content.primary ? cn(BUTTON, "btn-primary") : TEXT_LINK)}
+  >
+    {content.linkText}
+  </a>
+</AuthShell>
