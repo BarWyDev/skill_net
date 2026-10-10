@@ -41,7 +41,7 @@ The app is an Astro 7 SSR app (`output: "server"`) deployed to Cloudflare Worker
 - Add shadcn components with `npx shadcn@latest add <name>`.
 - API routes export uppercase `GET` / `POST` handlers.
 - Put services in `src/lib/` (or `src/lib/services/`), shared entity and DTO types in `src/types.ts`, and React hooks in `src/components/hooks/` (that folder doesn't exist yet).
-- Migrations go in `supabase/migrations/YYYYMMDDHHmmss_short_description.sql`. Enable RLS on every new table, with separate policies per operation and per role.
+- Migrations go in `supabase/migrations/YYYYMMDDHHmmss_short_description.sql`. Enable RLS on every new table, with separate policies per operation and per role. New tables start with no privileges for `anon` and `authenticated` (default privileges, security audit F-12): grant exactly what clients need in the same migration, and add those grants to the expected list in `supabase/tests/narrow_table_grants_test.sql`. Never grant TRUNCATE, REFERENCES, TRIGGER or MAINTAIN to them.
 - zod is a direct dependency. Use it for input validation.
 - Never log personal data (names, emails, phone numbers, locations) with `console.*`. Workers Logs and `wrangler tail` capture it. Audit events go to Supabase tables instead.
 
