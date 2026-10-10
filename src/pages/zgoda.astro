@@ -1,7 +1,10 @@
 ---
-import Layout from "@/layouts/Layout.astro";
+import AuthShell from "@/components/auth/AuthShell.astro";
+import StatusLine from "@/components/StatusLine.astro";
 import DeleteAccount from "@/components/profile/DeleteAccount.astro";
 import { CONSENT_LABEL, CONSENT_LINK_TEXT } from "@/lib/consent";
+import { BUTTON, TEXT_LINK } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
 
 // The consent gate (roadmap S-05). The middleware sends every signed-in user whose latest consent is
 // not the current version here, redirects anonymous visitors to sign-in, and sends users who are not
@@ -12,55 +15,38 @@ Astro.response.headers.set("Cache-Control", "private, no-store");
 const error = Astro.url.searchParams.get("error");
 ---
 
-<Layout title="Zgoda na przetwarzanie danych — SkillNet">
-  <div class="bg-cosmic min-h-screen w-full">
-    <div class="mx-auto max-w-2xl p-4 sm:p-8">
-      <main class="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
-        <h1 class="mb-4 text-2xl font-bold">Potrzebujemy Twojej zgody</h1>
+<AuthShell title="Zgoda na przetwarzanie danych — SkillNet" heading="Potrzebujemy Twojej zgody">
+  {error && (
+    <StatusLine tone="error" role="alert" class="mb-8 font-bold">
+      {error}
+    </StatusLine>
+  )}
 
-        {error && (
-          <p role="alert" class="mb-4 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
-            {error}
-          </p>
-        )}
+  <p class="leading-relaxed">
+    Aby dalej korzystać z SkillNet, potwierdź zgodę na przetwarzanie danych. Bez niej nie uwzględniamy Cię w kryzysach
+    ani na mapie. Możesz też wylogować się albo usunąć konto.
+  </p>
 
-        <p class="mb-4 text-blue-100/80">
-          Aby dalej korzystać z SkillNet, potwierdź zgodę na przetwarzanie danych. Bez niej nie uwzględniamy Cię w
-          kryzysach ani na mapie. Możesz też wylogować się albo usunąć konto.
-        </p>
+  <form method="post" action="/api/zgoda" class="mt-8">
+    <label for="consent" class="flex min-h-11 cursor-pointer items-start gap-4 py-2.5 text-[0.9375rem] leading-relaxed">
+      <input id="consent" name="consent" type="checkbox" required class="check mt-0.5" />
+      <span>
+        {CONSENT_LABEL}{" "}
+        <a href="/prywatnosc" target="_blank" rel="noopener" class="text-chalk font-bold underline underline-offset-4">
+          {CONSENT_LINK_TEXT}
+        </a>
+      </span>
+    </label>
+    <button type="submit" class:list={cn(BUTTON, "btn-primary mt-6 w-full cursor-pointer sm:w-auto")}>
+      Akceptuję i przechodzę dalej
+    </button>
+  </form>
 
-        <form method="post" action="/api/zgoda" class="space-y-4">
-          <label for="consent" class="flex items-start gap-2 text-sm text-blue-100/80">
-            <input
-              id="consent"
-              name="consent"
-              type="checkbox"
-              required
-              class="mt-1 size-4 shrink-0 accent-purple-500"
-            />
-            <span>
-              {CONSENT_LABEL}{" "}
-              <a href="/prywatnosc" target="_blank" rel="noopener" class="text-purple-300 hover:underline">
-                {CONSENT_LINK_TEXT}
-              </a>
-            </span>
-          </label>
-          <button
-            type="submit"
-            class="h-12 w-full rounded-lg bg-purple-600 px-6 text-sm font-medium text-white transition-colors hover:bg-purple-500 sm:w-auto"
-          >
-            Akceptuję i przechodzę dalej
-          </button>
-        </form>
+  <form method="post" action="/api/auth/signout" class="mt-6">
+    <button type="submit" class:list={cn(TEXT_LINK, "cursor-pointer")}>
+      Wyloguj się
+    </button>
+  </form>
 
-        <form method="post" action="/api/auth/signout" class="mt-6">
-          <button type="submit" class="text-sm text-purple-300 hover:underline">
-            Wyloguj się
-          </button>
-        </form>
-
-        <DeleteAccount returnTo="/zgoda" />
-      </main>
-    </div>
-  </div>
-</Layout>
+  <DeleteAccount returnTo="/zgoda" />
+</AuthShell>

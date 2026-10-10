@@ -25,9 +25,10 @@ export interface LocationValue {
 
 const POINT_ZOOM = 14;
 
-// A div icon instead of Leaflet's default marker, whose image URLs break under a bundler.
+// A div icon instead of Leaflet's default marker, whose image URLs break under a bundler. Styled by
+// .site-pin in global.css.
 const PIN_ICON = L.divIcon({
-  className: "rounded-full border-2 border-white bg-purple-600 shadow-lg",
+  className: "site-pin",
   iconSize: [22, 22],
   iconAnchor: [11, 11],
 });
@@ -64,7 +65,9 @@ export function locationProblem(value: LocationValue): string | null {
 function Recenter({ target }: { target: ViewTarget | null }) {
   const map = useMap();
   useEffect(() => {
-    if (target) map.setView([target.lat, target.lng], target.zoom);
+    if (!target) return;
+    const animate = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    map.setView([target.lat, target.lng], target.zoom, { animate });
   }, [map, target]);
   return null;
 }
@@ -154,13 +157,14 @@ export function LocationPicker({ value, initial, onChange, hint = PRIVACY_HINT }
   // The stored postcode is never read back, so a postcode location loads with an empty field.
   const storedFromPostcode = lookup === "idle" && value.source === "postcode" && !value.postcode.trim();
   const message = storedFromPostcode ? "Ustawiono z kodu pocztowego" : LOOKUP_MESSAGES[lookup];
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const pinOutside =
     value.source === "pin" && value.lat !== null && value.lng !== null && !isInPoland(value.lat, value.lng);
 
   return (
-    <div className="space-y-3">
+    <div>
       <div>
-        <label htmlFor="postcode" className="mb-1 block text-sm text-blue-100">
+        <label htmlFor="postcode" className="mb-2 block font-bold">
           Kod pocztowy
         </label>
         <input
@@ -180,28 +184,30 @@ export function LocationPicker({ value, initial, onChange, hint = PRIVACY_HINT }
           }}
           aria-invalid={lookup === "invalid"}
           aria-describedby="postcode-status"
-          className="h-11 w-full rounded-lg border border-white/20 bg-white/10 px-3 text-white placeholder:text-white/40 focus:border-purple-400 focus:outline-none sm:w-40"
+          className="field h-12 w-40 px-3 text-lg tabular-nums"
         />
         <p
           id="postcode-status"
           role="status"
           className={cn(
-            "mt-1 min-h-5 text-sm",
-            lookup === "loading" || storedFromPostcode ? "text-blue-100/70" : "text-red-300",
+            "mt-2 min-h-6 text-[0.9375rem]",
+            lookup === "loading" || storedFromPostcode ? "text-ash" : "text-alarm",
           )}
         >
           {message}
         </p>
       </div>
 
-      <div>
-        <p className="mb-1 text-sm text-blue-100">…albo kliknij mapę lub przeciągnij znacznik</p>
+      <div className="mt-4">
+        <p className="mb-2 font-bold">Albo kliknij mapę lub przeciągnij znacznik</p>
         <MapContainer
           center={[initialView.lat, initialView.lng]}
           zoom={initialView.zoom}
-          className="h-72 w-full rounded-xl"
+          className="site-map border-seam h-80 w-full border"
           scrollWheelZoom={false}
           zoomControl={false}
+          zoomAnimation={!reduceMotion}
+          fadeAnimation={!reduceMotion}
           minZoom={5}
           maxBounds={POLAND_MAX_BOUNDS}
           maxBoundsViscosity={1}
@@ -224,12 +230,12 @@ export function LocationPicker({ value, initial, onChange, hint = PRIVACY_HINT }
             />
           )}
         </MapContainer>
-        <p id="pin-status" role="status" className="mt-1 min-h-5 text-sm text-red-300">
+        <p id="pin-status" role="status" className="text-alarm mt-2 min-h-6 text-[0.9375rem]">
           {pinOutside && `${OUTSIDE_POLAND_ERROR} Przesuń znacznik.`}
         </p>
       </div>
 
-      <p className="text-sm text-blue-100/70">{hint}</p>
+      <p className="text-ash mt-1 leading-relaxed">{hint}</p>
 
       <input type="hidden" name="location_source" value={value.source ?? ""} />
       <input type="hidden" name="lat" value={value.lat ?? ""} />

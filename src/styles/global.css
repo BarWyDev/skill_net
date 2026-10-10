@@ -182,9 +182,18 @@
 .site .btn-secondary:hover {
   background: var(--color-seam);
 }
+/* Destructive: an alarm outline, so it never reads as the signal-filled primary action. */
+.site .btn-danger {
+  box-shadow: inset 0 0 0 2px var(--color-alarm);
+  color: var(--color-alarm);
+}
+.site .btn-danger:hover {
+  background: rgb(255 155 122 / 0.12);
+}
 /* The edge is an inset shadow, so states only swap --field-edge. The second shadow paints over the
-   browser's autofill background, which would otherwise turn the field pale on graphite. */
-.site .field {
+   browser's autofill background, which would otherwise turn the field pale on graphite. Not scoped to
+   .site: the coordinator's crisis form, still on the old shell, shares LocationPicker. */
+.field {
   --field-edge: var(--color-ash);
   --field-fill: transparent;
   background: transparent;
@@ -194,24 +203,24 @@
   color: var(--color-chalk);
   caret-color: var(--color-chalk);
 }
-.site .field:hover {
+.field:hover {
   --field-edge: var(--color-chalk);
 }
-.site .field:focus {
+.field:focus {
   --field-edge: var(--color-signal);
 }
-.site .field[aria-invalid="true"] {
+.field[aria-invalid="true"] {
   --field-edge: var(--color-alarm);
 }
-.site .field::placeholder {
+.field::placeholder {
   color: var(--color-ash);
   opacity: 0.7;
 }
-.site .field:autofill {
+.field:autofill {
   --field-fill: var(--color-graphite);
   -webkit-text-fill-color: var(--color-chalk);
 }
-.site .field:-webkit-autofill {
+.field:-webkit-autofill {
   --field-fill: var(--color-graphite);
   -webkit-text-fill-color: var(--color-chalk);
 }
@@ -237,8 +246,32 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%231e2024' stroke-width='2.5'%3E%3Cpath d='M3 8.5 6.5 12 13 4.5'/%3E%3C/svg%3E");
   box-shadow: none;
 }
+/* The round counterpart of .check: a signal dot in a signal ring. */
+.site .radio {
+  appearance: none;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--color-ash);
+  cursor: pointer;
+}
+.site .radio:hover {
+  box-shadow: inset 0 0 0 2px var(--color-chalk);
+}
+.site .radio[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 2px var(--color-alarm);
+}
+.site .radio:checked {
+  box-shadow:
+    inset 0 0 0 2px var(--color-signal),
+    inset 0 0 0 6px var(--color-graphite),
+    inset 0 0 0 12px var(--color-signal);
+}
 @media (forced-colors: active) {
-  .site .check {
+  .site .check,
+  .site .radio {
     appearance: auto;
   }
 }
@@ -249,41 +282,48 @@ html:has(.site) body {
   color-scheme: dark;
 }
 
-/* Public density map: OSM tiles dark-toned to sit on graphite; cells and controls stay untouched. */
-.density-map.leaflet-container {
+/* Site maps (density map, location picker): OSM tiles dark-toned to sit on graphite; cells, pins and
+   controls stay untouched. */
+.site-map.leaflet-container {
   background: var(--color-graphite);
   font-family: var(--font-body);
 }
-.density-map.leaflet-container .leaflet-tile-pane {
+.site-map.leaflet-container .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(0.85) saturate(0.35);
 }
-.density-map.leaflet-container .leaflet-bar {
+.site-map.leaflet-container .leaflet-bar {
   border: 1px solid var(--color-seam);
   border-radius: 0;
   box-shadow: none;
 }
-.density-map.leaflet-container .leaflet-bar a,
-.density-map.leaflet-container .leaflet-bar a:first-child,
-.density-map.leaflet-container .leaflet-bar a:last-child {
+.site-map.leaflet-container .leaflet-bar a,
+.site-map.leaflet-container .leaflet-bar a:first-child,
+.site-map.leaflet-container .leaflet-bar a:last-child {
   background: var(--color-graphite);
   color: var(--color-chalk);
   border-color: var(--color-seam);
   border-radius: 0;
 }
-.density-map.leaflet-container .leaflet-bar a:hover {
+.site-map.leaflet-container .leaflet-bar a:hover {
   background: var(--color-seam);
 }
-.density-map.leaflet-container .leaflet-bar a.leaflet-disabled {
+.site-map.leaflet-container .leaflet-bar a.leaflet-disabled {
   background: var(--color-graphite);
   color: #6b6e75;
 }
-.density-map.leaflet-container .leaflet-control-attribution {
+.site-map.leaflet-container .leaflet-control-attribution {
   background: rgb(30 32 36 / 0.88);
   color: var(--color-ash);
   font-size: 0.8125rem;
   padding: 2px 8px;
 }
-.density-map.leaflet-container .leaflet-control-attribution a {
+.site-map.leaflet-container .leaflet-control-attribution a {
   color: var(--color-chalk);
   text-decoration: underline;
+}
+/* The location pin: one signal cell of the map grid, edged so it reads on any tile. */
+.leaflet-marker-icon.site-pin {
+  background: var(--color-signal);
+  border: 3px solid var(--color-graphite);
+  outline: 2px solid var(--color-chalk);
 }

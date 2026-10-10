@@ -1,5 +1,3 @@
-import { cn } from "@/lib/utils";
-
 interface Props {
   value: string;
   invalid: boolean;
@@ -8,8 +6,8 @@ interface Props {
 
 export function PhoneField({ value, invalid, onChange }: Props) {
   return (
-    <div className="space-y-2">
-      <label htmlFor="phone" className="block text-sm text-blue-100">
+    <div>
+      <label htmlFor="phone" className="mb-2 block font-bold">
         Numer telefonu komórkowego
       </label>
       <input
@@ -25,12 +23,9 @@ export function PhoneField({ value, invalid, onChange }: Props) {
         onChange={(e) => {
           onChange(e.target.value);
         }}
-        className={cn(
-          "h-12 w-full rounded-lg border border-white/20 bg-white/10 px-3 text-white placeholder:text-blue-100/40",
-          invalid && "border-red-400/70",
-        )}
+        className="field h-12 w-full max-w-xs px-3 text-lg tabular-nums"
       />
-      <ul id="phone-help" className="list-disc space-y-1 pl-5 text-sm text-blue-100/70">
+      <ul id="phone-help" className="text-ash mt-3 list-[square] space-y-1 pl-5 leading-relaxed">
         <li>Numer widzisz tylko Ty.</li>
         <li>
           W przyszłych wersjach koordynator zobaczy go w trybie kryzysowym dopiero po tym, jak potwierdzisz gotowość do
