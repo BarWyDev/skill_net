@@ -5,7 +5,7 @@ import Layout from "@/layouts/Layout.astro";
 const accountDeleted = Astro.url.searchParams.has("konto-usuniete");
 ---
 
-<Layout footer="graphite">
+<Layout>
   <Landing>
     {accountDeleted && (
       <p role="status" class="border-seam mt-6 border max-w-2xl px-4 py-3">

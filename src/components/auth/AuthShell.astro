@@ -15,7 +15,7 @@ const { title, heading } = Astro.props;
 const hasAside = Astro.slots.has("aside");
 ---
 
-<Layout title={title} footer="graphite">
+<Layout title={title}>
   <div class="site min-h-screen">
     <div class="mx-auto max-w-6xl px-4 sm:px-8">
       <SiteHeader />
