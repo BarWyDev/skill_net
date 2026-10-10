@@ -6,11 +6,13 @@ import { BUTTON } from "@/lib/site-styles";
 interface SubmitButtonProps {
   pendingText: string;
   children: ReactNode;
+  /** For a native form POST, which `useFormStatus` does not track: set once the submit goes ahead. */
+  pending?: boolean;
 }
 
 // The landing's primary CTA. The spinner is the only motion on the auth pages.
-export function SubmitButton({ pendingText, children }: SubmitButtonProps) {
-  const { pending } = useFormStatus();
+export function SubmitButton({ pendingText, children, pending: submitting = false }: SubmitButtonProps) {
+  const pending = useFormStatus().pending || submitting;
 
   return (
     <button

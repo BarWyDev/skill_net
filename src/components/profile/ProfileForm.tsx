@@ -4,6 +4,8 @@ import { AvailabilityGrid } from "@/components/profile/AvailabilityGrid";
 import { LocationPicker, locationProblem, type LocationValue } from "@/components/profile/LocationPicker";
 import { PhoneField } from "@/components/profile/PhoneField";
 import { SkillsPicker, type SelectedSkills } from "@/components/profile/SkillsPicker";
+import { FieldError } from "@/components/auth/FieldError";
+import { SubmitButton } from "@/components/auth/SubmitButton";
 import { formatPhone, normalisePhone, PHONE_ERROR } from "@/lib/phone";
 import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
 import type { MyProfileDTO, SkillLevel, TaxonomyDTO } from "@/types";
@@ -31,6 +33,18 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
   const [clientError, setClientError] = useState<string | null>(null);
   const [showMissingLevels, setShowMissingLevels] = useState(false);
   const [focusSkill, setFocusSkill] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Back/forward restores this page from the bfcache with the spinner still on.
+  useEffect(() => {
+    const reset = (e: PageTransitionEvent) => {
+      if (e.persisted) setSubmitting(false);
+    };
+    window.addEventListener("pageshow", reset);
+    return () => {
+      window.removeEventListener("pageshow", reset);
+    };
+  }, []);
 
   // In taxonomy order, so the first one is the topmost on the page.
   const missingLevels = taxonomy.skills.filter((s) => s.hasLevel && s.slug in selected && selected[s.slug] === null);
@@ -45,10 +59,11 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
     setFocusSkill(null);
   }, [focusSkill]);
 
-  // The "Zapisano." or `?error=` banner above describes the last save, not the edits since (QA-019).
+  // The "Zapisano." or `?error=` notice above describes the last save, not the edits since (QA-019).
+  // It is hidden rather than removed, so the form below does not jump under the pointer.
   function dismissPageNotices() {
     document.querySelectorAll("[data-page-notice]").forEach((el) => {
-      el.remove();
+      el.classList.add("invisible");
     });
   }
 
@@ -100,82 +115,85 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
     }
     setPhoneInvalid(false);
     setClientError(null);
+    setSubmitting(true);
   }
 
   return (
-    <form
-      method="POST"
-      action="/api/profile"
-      className="space-y-8"
-      onSubmit={handleSubmit}
-      onChange={dismissPageNotices}
-      noValidate
-    >
-      <section aria-labelledby="skills-heading" className="space-y-3">
-        <h2 id="skills-heading" className="text-lg font-semibold text-white">
-          Umiejętności i sprzęt
-        </h2>
-        <p className="text-sm text-blue-100/70">
-          Zaznacz, co umiesz lub co masz. Przy umiejętnościach wybierz swój poziom.
-        </p>
-        <SkillsPicker
-          categories={taxonomy.categories}
-          skills={taxonomy.skills}
-          selected={selected}
-          showMissingLevels={showMissingLevels}
-          onToggle={handleToggle}
-          onLevel={handleLevel}
-        />
-      </section>
+    <form method="POST" action="/api/profile" onSubmit={handleSubmit} onChange={dismissPageNotices} noValidate>
+      <div className="divide-seam mt-14 divide-y [&>section]:py-10 [&>section:first-child]:pt-0 [&>section:last-child]:pb-12">
+        <section aria-labelledby="skills-heading">
+          <SectionHeading
+            id="skills-heading"
+            help="Zaznacz, co umiesz lub co masz. Przy umiejętnościach wybierz poziom."
+          >
+            Umiejętności i sprzęt
+          </SectionHeading>
+          <SkillsPicker
+            categories={taxonomy.categories}
+            skills={taxonomy.skills}
+            selected={selected}
+            showMissingLevels={showMissingLevels}
+            onToggle={handleToggle}
+            onLevel={handleLevel}
+          />
+        </section>
 
-      <section aria-labelledby="location-heading" className="space-y-3">
-        <h2 id="location-heading" className="text-lg font-semibold text-white">
-          Przybliżona lokalizacja
-        </h2>
-        <LocationPicker value={location} initial={initialLocation} onChange={setLocation} />
-      </section>
+        <section aria-labelledby="location-heading">
+          <SectionHeading id="location-heading" help="Wpisz kod pocztowy albo zaznacz miejsce na mapie.">
+            Przybliżona lokalizacja
+          </SectionHeading>
+          <LocationPicker value={location} initial={initialLocation} onChange={setLocation} />
+        </section>
 
-      <section aria-labelledby="phone-heading" className="space-y-3">
-        <h2 id="phone-heading" className="text-lg font-semibold text-white">
-          Telefon (opcjonalnie)
-        </h2>
-        <PhoneField
-          value={phone}
-          invalid={phoneInvalid}
-          onChange={(value) => {
-            setPhone(value);
-            setPhoneInvalid(false);
-          }}
-        />
-      </section>
+        <section aria-labelledby="phone-heading">
+          <SectionHeading id="phone-heading" help="Opcjonalnie.">
+            Telefon
+          </SectionHeading>
+          <PhoneField
+            value={phone}
+            invalid={phoneInvalid}
+            onChange={(value) => {
+              setPhone(value);
+              setPhoneInvalid(false);
+            }}
+          />
+        </section>
 
-      <section aria-labelledby="availability-heading" className="space-y-3">
-        <h2 id="availability-heading" className="text-lg font-semibold text-white">
-          Dostępność (informacyjnie)
-        </h2>
-        <p className="text-sm text-blue-100/70">
-          Zaznacz, kiedy zwykle możesz pomóc. To tylko informacja dla koordynatora — nikogo nie wyklucza z listy.
-        </p>
-        <AvailabilityGrid initial={profile.availabilitySlots} />
-      </section>
+        <section aria-labelledby="availability-heading">
+          <SectionHeading
+            id="availability-heading"
+            help="Zaznacz, kiedy zwykle możesz pomóc. To tylko informacja dla koordynatora — nikogo nie wyklucza z listy."
+          >
+            Dostępność
+          </SectionHeading>
+          <AvailabilityGrid initial={profile.availabilitySlots} />
+        </section>
+      </div>
 
       {Object.entries(selected).map(([slug, level]) => (
         <input key={slug} type="hidden" name="skill" value={level === null ? slug : `${slug}:${level}`} />
       ))}
 
-      <div className="space-y-2">
-        {clientError && (
-          <p role="alert" className="rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
-            {clientError}
-          </p>
-        )}
-        <button
-          type="submit"
-          className="h-12 w-full rounded-lg bg-purple-600 px-6 font-medium text-white transition-colors hover:bg-purple-500 sm:w-auto"
-        >
+      {/* The error sits under the button, so nothing above it moves when it appears. */}
+      <div className="mt-2">
+        <SubmitButton pending={submitting} pendingText="Zapisywanie…">
           Zapisz profil
-        </button>
+        </SubmitButton>
+        <div role="alert" className="min-h-8 font-bold">
+          {clientError && <FieldError id="profile-form-error">{clientError}</FieldError>}
+        </div>
       </div>
     </form>
+  );
+}
+
+function SectionHeading({ id, help, children }: { id: string; help: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-6">
+      <h2 id={id} className="font-display text-[2rem] leading-none">
+        {children}
+      </h2>
+      <p className="text-ash mt-3 leading-relaxed">{help}</p>
+    </div>
   );
 }

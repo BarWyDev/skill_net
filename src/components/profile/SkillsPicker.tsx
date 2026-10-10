@@ -1,3 +1,4 @@
+import { FieldError } from "@/components/auth/FieldError";
 import { cn } from "@/lib/utils";
 import type { SkillCategoryDTO, SkillDTO, SkillLevel } from "@/types";
 
@@ -20,46 +21,46 @@ interface Props {
   onLevel: (slug: string, level: SkillLevel) => void;
 }
 
+// A quiet toggle list: each category is a fieldset, each skill a square checkbox that fills with the
+// signal accent. A checked skill with levels opens its level radios on a full-width row underneath.
 export function SkillsPicker({ categories, skills, selected, showMissingLevels, onToggle, onLevel }: Props) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {categories.map((category) => (
-        <fieldset key={category.slug} className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <legend className="px-1 text-sm font-semibold text-blue-100">{category.name}</legend>
-          <ul className="space-y-3">
+        <fieldset key={category.slug} className="min-w-0">
+          <legend className="mb-2 font-bold">{category.name}</legend>
+          <ul className="grid gap-x-6 sm:grid-cols-2">
             {skills
               .filter((skill) => skill.categorySlug === category.slug)
               .map((skill) => {
                 const checked = skill.slug in selected;
                 const level = selected[skill.slug] ?? null;
                 const missingLevel = showMissingLevels && checked && skill.hasLevel && level === null;
+                const withLevels = checked && skill.hasLevel;
                 return (
-                  <li key={skill.slug}>
-                    <label className="flex min-h-11 cursor-pointer items-center gap-3 py-1">
+                  <li key={skill.slug} className={cn(withLevels && "sm:col-span-2")}>
+                    <label className="flex min-h-11 cursor-pointer items-center gap-4 py-1">
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={(e) => {
                           onToggle(skill.slug, e.target.checked);
                         }}
-                        className="size-5 shrink-0 accent-purple-500"
+                        className="check"
                       />
-                      <span className="text-white">{skill.name}</span>
+                      <span className={cn(checked ? "text-chalk" : "text-ash")}>{skill.name}</span>
                     </label>
 
-                    {checked && skill.hasLevel && (
+                    {withLevels && (
                       <fieldset
                         id={`level-${skill.slug}`}
                         aria-describedby={missingLevel ? `level-${skill.slug}-error` : undefined}
-                        className={cn(
-                          "mt-1 ml-8 rounded-lg border p-2",
-                          missingLevel ? "border-red-400/70 bg-red-500/10" : "border-white/10",
-                        )}
+                        className={cn("mb-3 ml-3 border-l-2 pl-7", missingLevel ? "border-alarm" : "border-seam")}
                       >
-                        <legend className="px-1 text-xs text-blue-100/70">Poziom: {skill.name}</legend>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        <legend className="sr-only">Poziom: {skill.name}</legend>
+                        <div className="flex flex-wrap gap-x-6">
                           {LEVELS.map((value) => (
-                            <label key={value} className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
+                            <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3">
                               <input
                                 type="radio"
                                 name={`level-${skill.slug}`}
@@ -68,17 +69,13 @@ export function SkillsPicker({ categories, skills, selected, showMissingLevels, 
                                 onChange={() => {
                                   onLevel(skill.slug, value);
                                 }}
-                                className="size-4 accent-purple-500"
+                                className="radio"
                               />
-                              <span className="text-blue-50">{LEVEL_LABELS[value]}</span>
+                              <span className="text-[0.9375rem]">{LEVEL_LABELS[value]}</span>
                             </label>
                           ))}
                         </div>
-                        {missingLevel && (
-                          <p id={`level-${skill.slug}-error`} className="mt-1 text-xs text-red-300">
-                            Wybierz poziom.
-                          </p>
-                        )}
+                        {missingLevel && <FieldError id={`level-${skill.slug}-error`}>Wybierz poziom.</FieldError>}
                       </fieldset>
                     )}
                   </li>
