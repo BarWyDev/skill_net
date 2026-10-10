@@ -1,8 +1,8 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import AuthHomeLink from "@/components/auth/AuthHomeLink.astro";
+import AuthShell from "@/components/auth/AuthShell.astro";
 import SignInForm from "@/components/auth/SignInForm";
 import { RETURN_PARAM, safeReturnPath } from "@/lib/return-path";
+import { TEXT_LINK } from "@/lib/site-styles";
 
 const error = Astro.url.searchParams.get("error");
 const unconfirmed = Astro.url.searchParams.has("niepotwierdzony");
@@ -10,25 +10,17 @@ const unconfirmed = Astro.url.searchParams.has("niepotwierdzony");
 const returnTo = safeReturnPath(Astro.url.searchParams.get(RETURN_PARAM));
 ---
 
-<Layout title="Zaloguj się — SkillNet">
-  <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
-    <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
-      <AuthHomeLink />
-      <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
-        Zaloguj się
-      </h1>
-      {returnTo && !error && (
-        <p role="status" class="mb-4 rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm text-blue-100">
-          Ta strona jest dostępna po zalogowaniu. Zaloguj się, a od razu na nią wrócisz.
-        </p>
-      )}
-      <SignInForm serverError={error} unconfirmed={unconfirmed} returnTo={returnTo} client:load />
-      <p class="mt-4 text-center text-sm text-blue-100/60">
-        Nie masz konta?{" "}
-        <a href="/auth/signup" class="inline-flex min-h-11 items-center text-purple-300 hover:underline">
-          Załóż konto
-        </a>
-      </p>
-    </div>
-  </div>
-</Layout>
+<AuthShell title="Zaloguj się — SkillNet" heading="Zaloguj się">
+  {returnTo && !error && (
+    <p role="status" class="border-seam mb-8 border px-4 py-3 leading-relaxed">
+      Ta strona jest dostępna po zalogowaniu. Zaloguj się, a od razu na nią wrócisz.
+    </p>
+  )}
+  <SignInForm serverError={error} unconfirmed={unconfirmed} returnTo={returnTo} client:load />
+  <p class="text-ash mt-10">
+    Nie masz konta?{" "}
+    <a href="/auth/signup" class:list={TEXT_LINK}>
+      Załóż konto
+    </a>
+  </p>
+</AuthShell>

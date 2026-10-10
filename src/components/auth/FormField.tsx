@@ -1,9 +1,6 @@
 import type { ReactNode } from "react";
-import { CircleAlert } from "lucide-react";
+import { FieldError } from "@/components/auth/FieldError";
 import { cn } from "@/lib/utils";
-
-const inputBase =
-  "h-11 w-full rounded-lg bg-white/10 border px-3 pl-10 text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-colors";
 
 interface FormFieldProps {
   id: string;
@@ -15,8 +12,8 @@ interface FormFieldProps {
   placeholder?: string;
   autoComplete?: string;
   error?: string;
-  hint?: ReactNode;
-  icon: ReactNode;
+  /** Quiet help under the field, replaced by the error when there is one. */
+  hint?: string;
   endContent?: ReactNode;
 }
 
@@ -31,16 +28,18 @@ export function FormField({
   autoComplete,
   error,
   hint,
-  icon,
   endContent,
 }: FormFieldProps) {
+  const errorId = `${id}-error`;
+  const hintId = `${id}-hint`;
+  const describedBy = error ? errorId : hint ? hintId : undefined;
+
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-sm text-blue-100/80">
+      <label htmlFor={id} className="mb-2 block font-bold">
         {label}
       </label>
       <div className="relative">
-        <span className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-white/40">{icon}</span>
         <input
           id={id}
           name={name ?? id}
@@ -51,21 +50,20 @@ export function FormField({
           }}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className={cn(
-            inputBase,
-            endContent && "pr-12",
-            error ? "border-red-400/60 focus:ring-red-400" : "border-white/20 focus:ring-purple-400",
-          )}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          className={cn("field h-12 w-full px-3 text-lg", endContent && "pr-12")}
         />
         {endContent}
       </div>
       {error ? (
-        <p className="mt-1 flex items-center gap-1 text-xs text-red-300">
-          <CircleAlert className="size-3" />
-          {error}
-        </p>
+        <FieldError id={errorId}>{error}</FieldError>
       ) : (
-        hint
+        hint && (
+          <p id={hintId} className="text-ash mt-2 text-[0.9375rem]">
+            {hint}
+          </p>
+        )
       )}
     </div>
   );

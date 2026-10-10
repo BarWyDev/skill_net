@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Mail, Lock, LogIn, Send } from "lucide-react";
 import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
 import { RETURN_PARAM } from "@/lib/return-path";
+import { TEXT_LINK } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
 
 // Carries the address across the sign-in redirect, so a failed sign-in keeps it in the field and
 // the resend block can use it, without it ever going into the URL. Tab-scoped, and removed by the
@@ -71,7 +72,7 @@ export default function SignInForm({ serverError, unconfirmed = false, returnTo 
 
   return (
     <>
-      <form method="POST" action="/api/auth/signin" className="space-y-4" onSubmit={handleSubmit} noValidate>
+      <form method="POST" action="/api/auth/signin" className="space-y-6" onSubmit={handleSubmit} noValidate>
         {returnTo && <input type="hidden" name={RETURN_PARAM} value={returnTo} />}
         <FormField
           id="email"
@@ -85,7 +86,6 @@ export default function SignInForm({ serverError, unconfirmed = false, returnTo 
           }}
           placeholder="ty@przyklad.pl"
           error={errors.email}
-          icon={<Mail className="size-4" />}
         />
 
         <FormField
@@ -100,7 +100,6 @@ export default function SignInForm({ serverError, unconfirmed = false, returnTo 
           placeholder="Twoje hasło"
           autoComplete="current-password"
           error={errors.password}
-          icon={<Lock className="size-4" />}
           endContent={
             <PasswordToggle
               visible={showPassword}
@@ -111,27 +110,26 @@ export default function SignInForm({ serverError, unconfirmed = false, returnTo 
           }
         />
 
-        <ServerError message={serverError} />
-
-        <SubmitButton pendingText="Logowanie..." icon={<LogIn className="size-4" />}>
-          Zaloguj się
-        </SubmitButton>
+        <div className="space-y-4 pt-2">
+          <ServerError message={serverError} />
+          <SubmitButton pendingText="Logowanie...">Zaloguj się</SubmitButton>
+        </div>
       </form>
 
       {unconfirmed && (
-        <form
-          method="POST"
-          action="/api/auth/resend"
-          className="mt-4 space-y-2 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-blue-100/80"
-        >
-          <p>Link nie dotarł albo wygasł? Wyślemy nowy na adres podany powyżej.</p>
+        <form method="POST" action="/api/auth/resend" className="mt-10">
+          <p className="text-ash max-w-[36ch] leading-relaxed">
+            Link nie dotarł albo wygasł? Wyślemy nowy na adres podany powyżej.
+          </p>
           <input type="hidden" name="email" value={email} />
           <button
             type="submit"
             disabled={!email.trim()}
-            className="flex min-h-11 items-center gap-2 text-purple-300 hover:underline disabled:opacity-50 disabled:hover:no-underline"
+            className={cn(
+              TEXT_LINK,
+              "disabled:text-ash mt-1 cursor-pointer disabled:cursor-not-allowed disabled:no-underline",
+            )}
           >
-            <Send className="size-4" />
             Wyślij link ponownie
           </button>
         </form>
