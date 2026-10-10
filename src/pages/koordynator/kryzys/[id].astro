@@ -11,6 +11,7 @@ import { formatDistanceKm, formatPeople } from "@/lib/crisis-format";
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import type { CrisisDTO, CrisisMatchDTO } from "@/types";
+import { takeFlashError } from "@/lib/flash";
 
 // The middleware gates this route (coordinators only) and sends Cache-Control: private, no-store.
 // The list is a snapshot from activation: no identity, coordinates or score reach this page.
@@ -21,7 +22,8 @@ import type { CrisisDTO, CrisisMatchDTO } from "@/types";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const id = Astro.params.id ?? "";
-const error = Astro.url.searchParams.get("error");
+// Left by the endpoint that redirected here; never read from the URL (security audit F-06).
+const error = takeFlashError(Astro);
 
 let crisis: CrisisDTO | null = null;
 let matches: CrisisMatchDTO[] = [];

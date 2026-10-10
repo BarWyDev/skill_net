@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
+import { redirectWithError } from "@/lib/flash";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -12,7 +13,7 @@ export const POST: APIRoute = async (context) => {
   const email = typeof raw === "string" ? raw.trim() : "";
 
   if (!EMAIL_PATTERN.test(email)) {
-    return context.redirect(`/auth/link-wygasl?error=${encodeURIComponent("Podaj poprawny adres e-mail.")}`);
+    return redirectWithError(context, "/auth/link-wygasl", "Podaj poprawny adres e-mail.");
   }
 
   const supabase = createClient(context.request.headers, context.cookies);
