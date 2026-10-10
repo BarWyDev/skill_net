@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- SkillNet mark: a 3 x 3 patch of the 2 km map grid with one square highlighted.
+       Drawn on a 16 px grid so it stays crisp at 16, 32 and 48 px.
+       Source for scripts/generate-brand-assets.mjs, which exports the PNG and ICO icons. -->
+  <rect width="16" height="16" rx="2" fill="#1e2024"/>
+  <g fill="#5a5e67">
+    <rect x="1" y="1" width="4" height="4"/>
+    <rect x="6" y="1" width="4" height="4"/>
+    <rect x="1" y="6" width="4" height="4"/>
+    <rect x="11" y="6" width="4" height="4"/>
+    <rect x="1" y="11" width="4" height="4"/>
+    <rect x="6" y="11" width="4" height="4"/>
+    <rect x="11" y="11" width="4" height="4"/>
+    <rect x="6" y="6" width="4" height="4"/>
+  </g>
+  <rect x="11" y="1" width="4" height="4" fill="#f2c230"/>
+</svg>
