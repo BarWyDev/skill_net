@@ -115,6 +115,24 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Site palette (landing and map): graphite and chalk with one hi-vis accent. */
+@theme {
+  --color-graphite: #1e2024;
+  --color-chalk: #ece9e2;
+  --color-ash: #a3a6ad;
+  --color-seam: #3a3d44;
+  --color-signal: #f2c230;
+  --color-signal-hover: #f7d564;
+  /* Errors on graphite; 7.9:1 contrast. */
+  --color-alarm: #ff9b7a;
+  --font-body: "Atkinson Hyperlegible Next", ui-sans-serif, sans-serif;
+}
+
+@utility font-display {
+  font-family: "Big Shoulders Display", ui-sans-serif, sans-serif;
+  font-weight: 800;
+}
+
 @utility bg-cosmic {
   background-image: linear-gradient(to bottom, #0a0e1a, #0f1529, #0a0e1a);
 }
@@ -134,4 +152,89 @@
   height: 44px;
   line-height: 44px;
   font-size: 22px;
+}
+
+/* The page shell shared by the landing and the map (SiteHeader, graphite footer). */
+.site {
+  background: var(--color-graphite);
+  color: var(--color-chalk);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+}
+.site :where(a, button, input, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-signal);
+  outline-offset: 3px;
+}
+.site .btn-primary {
+  background: var(--color-signal);
+  color: var(--color-graphite);
+}
+.site .btn-primary:hover {
+  background: var(--color-signal-hover);
+}
+.site .btn-secondary {
+  box-shadow: inset 0 0 0 2px var(--color-chalk);
+}
+.site .btn-secondary:hover {
+  background: var(--color-seam);
+}
+.site .field {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--color-ash);
+  color: var(--color-chalk);
+}
+.site .field:hover {
+  box-shadow: inset 0 0 0 2px var(--color-chalk);
+}
+.site .field::placeholder {
+  color: var(--color-ash);
+  opacity: 0.7;
+}
+.site .field[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 2px var(--color-alarm);
+}
+/* Overscroll (rubber-band) reveals the document behind the page; paint it graphite too. */
+html:has(.site),
+html:has(.site) body {
+  background: var(--color-graphite);
+  color-scheme: dark;
+}
+
+/* Public density map: OSM tiles dark-toned to sit on graphite; cells and controls stay untouched. */
+.density-map.leaflet-container {
+  background: var(--color-graphite);
+  font-family: var(--font-body);
+}
+.density-map.leaflet-container .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(0.85) saturate(0.35);
+}
+.density-map.leaflet-container .leaflet-bar {
+  border: 1px solid var(--color-seam);
+  border-radius: 0;
+  box-shadow: none;
+}
+.density-map.leaflet-container .leaflet-bar a,
+.density-map.leaflet-container .leaflet-bar a:first-child,
+.density-map.leaflet-container .leaflet-bar a:last-child {
+  background: var(--color-graphite);
+  color: var(--color-chalk);
+  border-color: var(--color-seam);
+  border-radius: 0;
+}
+.density-map.leaflet-container .leaflet-bar a:hover {
+  background: var(--color-seam);
+}
+.density-map.leaflet-container .leaflet-bar a.leaflet-disabled {
+  background: var(--color-graphite);
+  color: #6b6e75;
+}
+.density-map.leaflet-container .leaflet-control-attribution {
+  background: rgb(30 32 36 / 0.88);
+  color: var(--color-ash);
+  font-size: 0.8125rem;
+  padding: 2px 8px;
+}
+.density-map.leaflet-container .leaflet-control-attribution a {
+  color: var(--color-chalk);
+  text-decoration: underline;
 }

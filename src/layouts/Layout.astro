@@ -8,7 +8,7 @@ import { SIGNUP_EMAIL_STORAGE_KEY } from "@/components/auth/SignUpForm";
 interface Props {
   title?: string;
   description?: string;
-  /** "graphite" matches the landing page; every other page keeps the dark footer. */
+  /** "graphite" matches the site shell (landing, map); every other page keeps the dark footer. */
   footer?: "graphite" | "dark";
 }
 
@@ -67,7 +67,7 @@ const staleEmailKeys = [
       class:list={[
         "pb-6 text-sm",
         footer === "dark" && "bg-[#0a0e1a] px-4 text-center text-blue-100/60",
-        footer === "graphite" && "bg-[#1e2024] font-['Atkinson_Hyperlegible_Next',sans-serif] text-[#a3a6ad]",
+        footer === "graphite" && "bg-graphite font-body text-ash",
       ]}
     >
       <div class:list={[footer === "graphite" && "mx-auto max-w-6xl px-4 sm:px-8"]}>
@@ -77,7 +77,7 @@ const staleEmailKeys = [
             "inline-flex min-h-11 items-center",
             footer === "dark" && "text-purple-300 transition-colors hover:text-purple-100 hover:underline",
             footer === "graphite" &&
-              "underline underline-offset-4 hover:text-[#ece9e2] focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#f2c230]",
+              "hover:text-chalk focus-visible:outline-signal underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-offset-3",
           ]}
         >
           Prywatność i przetwarzanie danych
