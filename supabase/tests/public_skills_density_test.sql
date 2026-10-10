@@ -109,15 +109,18 @@ insert into res select 'all', * from public.get_skills_density();
 insert into res select 'medyczne', * from public.get_skills_density('medyczne');
 insert into res select 'techniczne', * from public.get_skills_density('techniczne');
 
-select is(
-  (select count(*) from public.profiles),
-  0::bigint,
-  'anon_no_rows: anon still sees no profiles'
+-- anon holds no privilege on resident tables (narrow table grants), so a read is refused outright.
+select throws_ok(
+  $$ select count(*) from public.profiles $$,
+  '42501',
+  null::text,
+  'anon_no_rows: anon still cannot read profiles'
 );
-select is(
-  (select count(*) from public.profile_skills),
-  0::bigint,
-  'anon_no_rows: anon still sees no profile_skills'
+select throws_ok(
+  $$ select count(*) from public.profile_skills $$,
+  '42501',
+  null::text,
+  'anon_no_rows: anon still cannot read profile_skills'
 );
 
 select throws_ok(
