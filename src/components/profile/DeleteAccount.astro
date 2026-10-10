@@ -1,7 +1,7 @@
 ---
 // "Usuń konto": a plain form POST, so it works without JS. Errors come back through the `?error=` alert
 // at the top of the page named by `returnTo` (/profil or /zgoda).
-import { BUTTON } from "@/lib/site-styles";
+import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -14,7 +14,7 @@ const { returnTo = "/profil" } = Astro.props;
 <!-- Destructive, so it sits last and furthest from "Zapisz", in the alarm tone: a heading and an
      outline button, never a filled red panel. -->
 <section aria-labelledby="delete-account-title" class="border-seam mt-24 border-t pt-10 sm:mt-32">
-  <h2 id="delete-account-title" class="font-display text-alarm text-[2rem] leading-none">
+  <h2 id="delete-account-title" class:list={cn(SECTION_TITLE, "text-alarm")}>
     Usuń konto
   </h2>
   <p id="delete-account-consequence" class="mt-4 leading-relaxed">

@@ -4,7 +4,7 @@
 // for the list pages; running text inside it still sets its own measure (max-w-[64ch] or less).
 import Layout from "@/layouts/Layout.astro";
 import SiteHeader from "@/components/SiteHeader.astro";
-import { NAV_LINK } from "@/lib/site-styles";
+import { NAV_LINK, PAGE_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 
 interface Crumb {
@@ -25,7 +25,7 @@ interface Props {
 const { title, heading, crumbs = [], crumbLabel, wide = false } = Astro.props;
 ---
 
-<Layout title={title} footer="graphite">
+<Layout title={title}>
   <div class="site min-h-screen">
     <div class="mx-auto max-w-6xl px-4 sm:px-8">
       <SiteHeader />
@@ -51,7 +51,7 @@ const { title, heading, crumbs = [], crumbLabel, wide = false } = Astro.props;
       )}
 
       <main class:list={cn("pb-20 lg:pb-28", crumbs.length > 0 ? "pt-6 sm:pt-8" : "pt-12 sm:pt-20")}>
-        <h1 class="font-display text-[clamp(2.75rem,10vw,6.5rem)] leading-[0.9] break-words">{heading}</h1>
+        <h1 class:list={PAGE_TITLE}>{heading}</h1>
         <div class:list={cn("mt-8 sm:mt-10", wide ? "max-w-[60rem]" : "max-w-[42rem]")}>
           <slot />
         </div>

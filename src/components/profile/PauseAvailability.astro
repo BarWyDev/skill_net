@@ -3,7 +3,7 @@
 // server (Warsaw calendar), never from the browser clock. Errors come back through the `?error=`
 // alert at the top of /profil.
 import { pauseDateBounds } from "@/lib/pause";
-import { BUTTON } from "@/lib/site-styles";
+import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -19,7 +19,7 @@ const indefinite = paused && !pausedUntil;
 ---
 
 <section aria-labelledby="pause-availability-title" class="border-seam mt-16 border-t pt-10">
-  <h2 id="pause-availability-title" class="font-display text-[2rem] leading-none">
+  <h2 id="pause-availability-title" class:list={SECTION_TITLE}>
     {paused ? "Zmień wstrzymanie dostępności" : "Wstrzymaj dostępność"}
   </h2>
   <p id="pause-availability-help" class="text-ash mt-4 leading-relaxed">

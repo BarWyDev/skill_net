@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 /* Self-hosted through Fontsource. The per-weight files declare unicode-range, so a browser only
    downloads a font (and the latin-ext subset for Polish diacritics) when a page uses it. */
 @import "@fontsource/big-shoulders-display/800";
@@ -28,53 +27,6 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @theme inline {
@@ -100,22 +52,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Site palette (landing and map): graphite and chalk with one hi-vis accent. */
+/* Site palette: graphite and chalk with one hi-vis accent. */
 @theme {
   --color-graphite: #1e2024;
   --color-chalk: #ece9e2;
@@ -131,10 +70,6 @@
 @utility font-display {
   font-family: "Big Shoulders Display", ui-sans-serif, sans-serif;
   font-weight: 800;
-}
-
-@utility bg-cosmic {
-  background-image: linear-gradient(to bottom, #0a0e1a, #0f1529, #0a0e1a);
 }
 
 @layer base {
@@ -154,7 +89,7 @@
   font-size: 22px;
 }
 
-/* The page shell shared by the landing and the map (SiteHeader, graphite footer). */
+/* The page shell shared by every page (SiteHeader, graphite footer). */
 .site {
   background: var(--color-graphite);
   color: var(--color-chalk);
@@ -191,8 +126,7 @@
   background: rgb(255 155 122 / 0.12);
 }
 /* The edge is an inset shadow, so states only swap --field-edge. The second shadow paints over the
-   browser's autofill background, which would otherwise turn the field pale on graphite. Not scoped to
-   .site: the coordinator's crisis form, still on the old shell, shares LocationPicker. */
+   browser's autofill background, which would otherwise turn the field pale on graphite. */
 .field {
   --field-edge: var(--color-ash);
   --field-fill: transparent;
@@ -212,9 +146,10 @@
 .field[aria-invalid="true"] {
   --field-edge: var(--color-alarm);
 }
+/* Full ash: 6.7:1 on graphite (at 0.7 opacity it fell to 4.0:1). */
 .field::placeholder {
   color: var(--color-ash);
-  opacity: 0.7;
+  opacity: 1;
 }
 .field:autofill {
   --field-fill: var(--color-graphite);
@@ -303,6 +238,8 @@ html:has(.site) body {
   color: var(--color-chalk);
   border-color: var(--color-seam);
   border-radius: 0;
+  /* Leaflet sets Lucida Console on + and −. */
+  font-family: var(--font-body);
 }
 .site-map.leaflet-container .leaflet-bar a:hover {
   background: var(--color-seam);
