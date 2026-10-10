@@ -102,13 +102,37 @@ Severity: **A** broken or inconsistent, **B** visible deviation, **C** polish. S
 - **Keyboard-only operation:** checked as "focus lands and shows an outline" on every control and by reading the code (native `dialog` with focus moved to "Anuluj", radios and checkboxes kept native). A full manual tab-through per page was not done.
 - **The `/koordynator` activation form on the shared dev server (port 4321):** it didn't hydrate there because that server's Vite cache served a 404 for `zod.js`. On the 4330 dev server (same working tree) it works: `30-koordynator-formularz-*.jpg`. This is an environment issue, not a product bug.
 - **The Astro dev toolbar** (a small pill of icons) appears at the viewport's bottom edge in full-page dev screenshots, e.g. `32b-kryzys-lista-1280.jpg`. It is dev-only.
-- **Smoke test:** not run. It creates accounts and needs email confirmation off; the redirect targets it asserts were not touched (D).
+- **Smoke test:** run after the fixes against a fresh local dev server (`astro-dev-audit`, port 4340) and local Supabase: all steps pass.
 - **Populated lists** were captured on a test crisis activated for the audit (Kraków, 5 km), then ended. Phone numbers are masked as `+48 [ukryte]` in the screenshots.
 
 ## 5. Verdict
 
-**Mostly consistent:** every resident, auth and coordinator page shares the landing's shell, palette, type and status language. Only `/404`, `/prywatnosc`, the default footer and the config banner still carry the old or the shadcn look. The three changes with the best payoff: move `/404` and `/prywatnosc` onto `PageShell` (findings 1–2), collapse the footer to the graphite one and restyle `Banner` (findings 3–4), and fix the placeholder contrast (finding 5).
+**Mostly consistent before the fixes, consistent after them:** every resident, auth and coordinator page shares the landing's shell, palette, type and status language. Only `/404`, `/prywatnosc`, the default footer and the config banner still carry the old or the shadcn look. The three changes with the best payoff: move `/404` and `/prywatnosc` onto `PageShell` (findings 1–2), collapse the footer to the graphite one and restyle `Banner` (findings 3–4), and fix the placeholder contrast (finding 5).
 
 ## 6. Fix status
 
-Filled in after the fix pass.
+Fixes are on branch `chore/design-audit-fixes`, one commit per group. The matrix in section 2 shows the state before the fixes. After-fix screenshots of the changed pages are in [`docs/design-audit/po-poprawkach/`](design-audit/po-poprawkach/).
+
+| #   | Severity | Status         | What changed                                                                                                                                                               |
+| --- | -------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | A        | fixed          | `/404` renders through `PageShell` (`po-poprawkach/05-404-*.jpg`)                                                                                                          |
+| 2   | A        | fixed          | `/prywatnosc` renders through `PageShell`, wording unchanged, the draft note as an attention `StatusLine` (`po-poprawkach/04-prywatnosc-*.jpg`)                            |
+| 3   | A        | fixed          | `Layout` has one graphite footer and no `footer` prop                                                                                                                      |
+| 4   | A        | fixed (static) | `Banner` drawn on graphite with a coloured bottom edge. Not seen at runtime: configuration is present locally                                                              |
+| 5   | B        | fixed          | Placeholder opacity 1: ash on graphite, 6.69:1. The post-fix sweep finds no AA failures except the exempt disabled button (finding 17)                                     |
+| 6   | B        | fixed          | `/profil` uses `PageShell`                                                                                                                                                 |
+| 7   | B        | fixed          | `PAGE_TITLE` and `SECTION_TITLE` in `site-styles.ts`, used in every shell and section heading                                                                              |
+| 8   | B        | fixed          | `FieldError` takes `role`; the teams and contacts forms use it (`po-poprawkach/41-kontakty-blad-*.jpg`)                                                                    |
+| 9   | B        | partly fixed   | The account-deleted notice is a done `StatusLine` (`po-poprawkach/02-*.jpg`). The sign-in "return" notice stays: an info tone needs a design decision                      |
+| 10  | C        | fixed          | Coordinator titles end with `— SkillNet`                                                                                                                                   |
+| 11  | C        | fixed          | Leaflet zoom buttons inherit the body face; the sweep finds no third typeface                                                                                              |
+| 12  | C        | skipped        | Restyling or deleting the unused shadcn `Button` is a kit decision                                                                                                         |
+| 13  | C        | fixed          | Removed `Topbar.astro`, `bg-cosmic`, `tw-animate-css` (import and package), the sidebar, chart and `.dark` tokens. Updated stale comments and `docs/post-redesign-todo.md` |
+| 14  | C        | fixed          | `INLINE_LINK` constant; `TEXT_LINK` builds on it                                                                                                                           |
+| 15  | C        | fixed          | "Profil niekompletny. Dodaj lokalizację…"                                                                                                                                  |
+| 16  | C        | skipped        | Tested data format, to revisit with the copy review                                                                                                                        |
+| 17  | C        | not needed     | Disabled control, exempt                                                                                                                                                   |
+
+After the fixes: `npm run lint`, `npx astro check`, `npm run build`, `npm run test:unit` (37/37) and `npm run smoke` pass. The a11y sweep, re-run on every state at 375 and 1280 px, shows one `h1` per page, no heading skips, every page with `header`, `nav`, `main` and `footer`, focus outlines on all controls, no target under 44 px and no horizontal scroll. The consent-gate exempt list in `src/lib/consent.ts` still covers every icon and OG path used by `Layout.astro`.
+
+Left for a redesign or a decision, not a fix: an info tone for neutral notices (finding 9), the fate of the shadcn kit (finding 12), and the crisis title format (finding 16).
