@@ -15,6 +15,8 @@
 --   * about 70% have a phone. Every number is `+48000` plus 6 digits: Polish numbering never
 --     assigns the `0` prefix, so a seed number can never reach a real person, and
 --     `save_my_profile` and S-07 verification both reject it;
+--   * accounts are 30 days old with a confirmed email, so the density map counts them (it skips
+--     accounts younger than 14 days or unconfirmed, see the density k-anonymity migration);
 --   * no coordinator is created: grant the role to your own local account (see README).
 
 select setseed(0.42);
@@ -30,7 +32,7 @@ from generate_series(1, 500) as i;
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
-  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at, email_confirmed_at,
   confirmation_token, recovery_token, email_change_token_new, email_change
 )
 select
@@ -42,8 +44,9 @@ select
   '',
   '{"provider":"email","providers":["email"]}',
   '{"consent_version":"2026-10-06"}',
-  now(),
-  now(),
+  now() - interval '30 days',
+  now() - interval '30 days',
+  now() - interval '30 days',
   '', '', '', ''
 from seed_residents
 on conflict (id) do nothing;

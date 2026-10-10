@@ -1,5 +1,6 @@
 -- Public skills-density guarantees: anon reads squares but never resident rows, only `cell` and
--- `band` leave the database, squares under 5 distinct residents are hidden, the band edges,
+-- `band` leave the database, squares under 5 distinct residents (10 in a category view) are
+-- hidden, the band edges,
 -- distinct-person counting per category, the fixed 2 km grid, eligibility, the category filter
 -- and the square geometry.
 -- Run with `npm run test:db`. Everything is rolled back at the end.
@@ -50,13 +51,13 @@ union all select 4, 0, array['elektryk'] from generate_series(1, 9)
 union all select 6, 0, array['elektryk'] from generate_series(1, 10)
 union all select 8, 0, array['elektryk'] from generate_series(1, 24)
 union all select 10, 0, array['elektryk'] from generate_series(1, 25)
--- Distinct residents: 4 + 1 with three medical skills is 5 people in medyczne.
-union all select 12, 0, array['lekarz'] from generate_series(1, 4)
+-- Distinct residents: 9 + 1 with three medical skills is 10 people in medyczne (k = 10 there).
+union all select 12, 0, array['lekarz'] from generate_series(1, 9)
 union all select 12, 0, array['lekarz', 'pielegniarka', 'psycholog']
--- 4 residents with 2 medical skills each: 8 skill rows, 4 people.
-union all select 14, 0, array['lekarz', 'pielegniarka'] from generate_series(1, 4)
--- Category filter: 5 people with techniczne skills only.
-union all select 16, 0, array['elektryk', 'informatyk'] from generate_series(1, 5)
+-- 9 residents with 2 medical skills each: 18 skill rows, 9 people.
+union all select 14, 0, array['lekarz', 'pielegniarka'] from generate_series(1, 9)
+-- Category filter: 10 people with techniczne skills only.
+union all select 16, 0, array['elektryk', 'informatyk'] from generate_series(1, 10)
 -- Neighbouring squares with 3 each must not merge into 6.
 union all select 20, 0, array['elektryk'] from generate_series(1, 3)
 union all select 21, 0, array['elektryk'] from generate_series(1, 3);
@@ -68,6 +69,14 @@ insert into people (sq, located, skills) values (0, false, array['elektryk']);
 
 insert into auth.users (id, email)
 select user_id, user_id || '@test.local' from people;
+
+-- The map counts only accounts at least 14 days old with a confirmed email, and blurs counts with
+-- noise (density k-anonymity migration). Age and confirm the fixtures; no noise, so counts are exact.
+update auth.users
+set created_at = least(created_at, now() - interval '30 days'),
+    email_confirmed_at = coalesce(email_confirmed_at, now() - interval '30 days');
+update public.skills_density_config set noise_amplitude = 0;
+
 
 -- Fixture residents consented at sign-up (S-05), so a complete profile stays matchable.
 insert into public.consent_events (user_id, version, source)
@@ -168,8 +177,8 @@ select is(
 
 select is(
   (select count(*) from res where cat = 'all'),
-  7::bigint,
-  'all_squares: exactly the 7 squares with 5 or more residents are returned'
+  8::bigint,
+  'all_squares: exactly the 8 squares with 5 or more residents are returned'
 );
 
 -- ---------------------------------------------------------------------------
@@ -194,12 +203,12 @@ select is(pg_temp.band_of('all', 21), null::smallint, 'grid: neighbouring square
 -- Distinct residents and the category filter
 -- ---------------------------------------------------------------------------
 
-select is(pg_temp.band_of('medyczne', 12), 1::smallint, 'distinct: 4 + 1 resident with 3 medical skills is 5 people');
-select is(pg_temp.band_of('all', 12), 1::smallint, 'distinct: the same square counts 5 people in all skills');
-select is(pg_temp.band_of('medyczne', 14), null::smallint, 'distinct: 4 residents with 8 medical skill rows stay hidden');
-select is(pg_temp.band_of('all', 14), null::smallint, 'distinct: 4 residents with 8 skill rows stay hidden in all skills');
-select is(pg_temp.band_of('all', 16), 1::smallint, 'category: techniczne-only square appears in all skills');
-select is(pg_temp.band_of('techniczne', 16), 1::smallint, 'category: techniczne-only square appears in techniczne');
+select is(pg_temp.band_of('medyczne', 12), 2::smallint, 'distinct: 9 + 1 resident with 3 medical skills is 10 people');
+select is(pg_temp.band_of('all', 12), 2::smallint, 'distinct: the same square counts 10 people in all skills');
+select is(pg_temp.band_of('medyczne', 14), null::smallint, 'distinct: 9 residents with 18 medical skill rows stay under the category k of 10');
+select is(pg_temp.band_of('all', 14), 1::smallint, 'category_k: the same 9 people show in all skills, where k is 5');
+select is(pg_temp.band_of('all', 16), 2::smallint, 'category: techniczne-only square appears in all skills');
+select is(pg_temp.band_of('techniczne', 16), 2::smallint, 'category: techniczne-only square appears in techniczne');
 select is(pg_temp.band_of('medyczne', 16), null::smallint, 'category: techniczne-only square is absent from medyczne');
 select is(
   (select count(*) from res r where r.cat = 'medyczne'

@@ -138,7 +138,7 @@ export function DensityMap({ categories, start }: Props) {
         : cells.cells.length === 0
           ? // Rare skills will always look like this, so say why rather than "nobody" (QA-008).
             category
-            ? "W żadnym kwadracie nie ma jeszcze 5 osób z umiejętnościami z tej grupy. Mniejsze skupiska ukrywamy dla prywatności."
+            ? "W żadnym kwadracie nie ma jeszcze 10 osób z umiejętnościami z tej grupy. Mniejsze skupiska ukrywamy dla prywatności."
             : "W żadnym kwadracie nie ma jeszcze 5 osób. Mniejsze skupiska ukrywamy dla prywatności."
           : null;
   // At the whole-Poland zoom the 2 km cells are too small to see (QA-006).

@@ -1,5 +1,5 @@
--- Skills-density snapshot guarantees (security audit F-08): calls within the hour read the stored
--- snapshot instead of scanning residents, a stale snapshot is refreshed by the next call, each
+-- Skills-density snapshot guarantees (security audit F-08): calls on the same day read the stored
+-- snapshot instead of scanning residents, a snapshot from a previous day is refreshed by the next call, each
 -- category refreshes on its own, and clients cannot reach the snapshot or the refresh directly.
 -- Run with `npm run test:db`. Everything is rolled back at the end.
 
@@ -38,11 +38,18 @@ insert into public.profile_skills (user_id, skill_slug, level)
 select ('88888888-0000-0000-0000-' || lpad(i::text, 12, '0'))::uuid, 'elektryk', 2
 from generate_series(1, 6) as i;
 
+-- The map counts only accounts at least 14 days old with a confirmed email, and blurs counts with
+-- noise (density k-anonymity migration). Age and confirm the fixtures; no noise, so counts are exact.
+update auth.users
+set created_at = least(created_at, now() - interval '30 days'),
+    email_confirmed_at = coalesce(email_confirmed_at, now() - interval '30 days');
+update public.skills_density_config set noise_amplitude = 0;
+
 create temp table calls (label text, n bigint, band smallint);
 grant select, insert on calls to anon;
 
 -- ---------------------------------------------------------------------------
--- First call computes, later calls read the snapshot (as anon)
+-- First call computes, later calls on the same day read the snapshot (as anon)
 -- ---------------------------------------------------------------------------
 
 set local role anon;
@@ -92,21 +99,26 @@ from generate_series(7, 10) as i;
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 
-insert into calls select 'within_hour', count(*), max(band) from public.get_skills_density();
+insert into calls select 'same_day', count(*), max(band) from public.get_skills_density();
 
 reset role;
 
 select is(
-  (select band from calls where label = 'within_hour'),
+  (select band from calls where label = 'same_day'),
   1::smallint,
-  'within_hour: a call within the hour reads the snapshot, not the residents'
+  'same_day: a later call on the same day reads the snapshot, not the residents'
 );
 
 -- ---------------------------------------------------------------------------
--- A stale snapshot is refreshed by the next call
+-- A snapshot from a previous day is refreshed by the next call
 -- ---------------------------------------------------------------------------
 
-update public.skills_density_refreshes set refreshed_at = now() - interval '61 minutes' where category = '';
+update auth.users
+set created_at = least(created_at, now() - interval '30 days'),
+    email_confirmed_at = coalesce(email_confirmed_at, now() - interval '30 days');
+
+-- Computed on the previous Warsaw calendar day: stale since the refresh is daily.
+update public.skills_density_refreshes set refreshed_at = now() - interval '1 day' where category = '';
 
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
@@ -127,7 +139,7 @@ reset role;
 select is(
   (select band from calls where label = 'stale'),
   2::smallint,
-  'stale: a snapshot older than an hour is recomputed by the next call'
+  'stale: a snapshot from a previous day is recomputed by the next call'
 );
 select is(
   (select refreshed_at from public.skills_density_refreshes where category = ''),
