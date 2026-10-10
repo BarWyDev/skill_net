@@ -1,0 +1,33 @@
+---
+// A person's skills as one line of text, comma-separated. Priority skills for the crisis type are bold
+// chalk, supporting ones ash, and the tier is spelled out for screen readers.
+import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
+import { cn } from "@/lib/utils";
+import type { CrisisSkillTier, SkillLevel } from "@/types";
+
+interface Props {
+  skills: { slug: string; name: string; tier?: CrisisSkillTier; level: SkillLevel | null }[];
+  class?: string;
+}
+
+const { skills, class: className } = Astro.props;
+---
+
+<ul class:list={cn("leading-relaxed", className)}>
+  {skills.map((s, i) => (
+    <li class:list={cn("inline", s.tier === "priority" ? "text-chalk font-bold" : s.tier && "text-ash")}>
+      {s.name}
+      {s.level !== null && <span class="text-ash font-normal"> ({LEVEL_LABELS[s.level].toLowerCase()})</span>}
+      {s.tier && (
+        <span class="sr-only">
+          {s.tier === "priority" ? " (umiejętność priorytetowa)" : " (umiejętność wspierająca)"}
+        </span>
+      )}
+      {i < skills.length - 1 && (
+        <span aria-hidden="true" class="text-ash font-normal">
+          ,{" "}
+        </span>
+      )}
+    </li>
+  ))}
+</ul>

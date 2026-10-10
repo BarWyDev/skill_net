@@ -1,0 +1,25 @@
+---
+// The inline form of StatusLine, for a status inside a list row: the grid-motif square, then a short
+// text. The text always names the status, so the square and its colour only reinforce it.
+import { CircleAlert } from "lucide-react";
+import { STATUS_SQUARE, STATUS_TEXT, type StatusTone } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  tone: StatusTone;
+  class?: string;
+}
+
+const { tone, class: className } = Astro.props;
+---
+
+<span class:list={cn("inline-flex items-baseline gap-2", STATUS_TEXT[tone], className)}>
+  {tone === "error" ? (
+    <CircleAlert aria-hidden="true" className="size-3.5 shrink-0 self-center" />
+  ) : (
+    <span aria-hidden="true" class:list={["size-3 shrink-0 self-center", STATUS_SQUARE[tone]]}></span>
+  )}
+  <span>
+    <slot />
+  </span>
+</span>
