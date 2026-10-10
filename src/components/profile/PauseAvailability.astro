@@ -1,7 +1,7 @@
 ---
 // "Wstrzymaj dostępność": a plain form POST, so it works without JS. The date bounds come from the
-// server (Warsaw calendar), never from the browser clock. Errors come back through the `?error=`
-// alert at the top of /profil.
+// server (Warsaw calendar), never from the browser clock. Errors come back as a one-shot
+// alert at the top of /profil (src/lib/flash.ts).
 import { pauseDateBounds } from "@/lib/pause";
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
