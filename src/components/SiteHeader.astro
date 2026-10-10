@@ -1,0 +1,49 @@
+---
+// The header of the graphite pages (landing, map). Other pages still use Topbar.
+import { cn } from "@/lib/utils";
+
+const { user, isCoordinator } = Astro.locals;
+const path = Astro.url.pathname;
+
+// At least 44 px tall, so every link and button is easy to tap on a phone (QA-001).
+const NAV_LINK = "inline-flex min-h-11 items-center text-ash underline-offset-4 hover:text-chalk hover:underline";
+// The current page reads as chalk with a signal underline.
+const CURRENT = "text-chalk underline decoration-signal decoration-2";
+
+const navLink = (href: string) => ({
+  href,
+  class: cn(NAV_LINK, path === href && CURRENT),
+  "aria-current": path === href ? ("page" as const) : undefined,
+});
+---
+
+<header class="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 py-3">
+  {path === "/" ? (
+    <p class="font-display text-[1.75rem] leading-none">SkillNet</p>
+  ) : (
+    <a href="/" class="font-display inline-flex min-h-11 items-center text-[1.75rem] leading-none">
+      SkillNet
+    </a>
+  )}
+  <nav aria-label="Główna" class="flex flex-wrap items-center gap-x-5 text-[0.9375rem]">
+    {user ? (
+      <>
+        <span class="text-ash max-w-full truncate">{user.email}</span>
+        {isCoordinator && <a {...navLink("/koordynator")}>Koordynator</a>}
+        <a {...navLink("/mapa")}>Mapa</a>
+        <a {...navLink("/profil")}>Mój profil</a>
+        <form method="POST" action="/api/auth/signout">
+          <button type="submit" class:list={cn(NAV_LINK, "cursor-pointer")}>
+            Wyloguj
+          </button>
+        </form>
+      </>
+    ) : (
+      <>
+        <a {...navLink("/mapa")}>Mapa</a>
+        <a {...navLink("/auth/signin")}>Zaloguj się</a>
+        <a {...navLink("/auth/signup")}>Załóż konto</a>
+      </>
+    )}
+  </nav>
+</header>
