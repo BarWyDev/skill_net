@@ -3,7 +3,8 @@ import type React from "react";
 import { LocationPicker, locationProblem, type LocationValue } from "@/components/profile/LocationPicker";
 import { BUTTON } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
-import { DEFAULT_RADIUS, RADIUS_PRESETS, REASON_MAX, REASON_MIN } from "@/lib/validation/crisis";
+import { normaliseReason, REASON_MAX, REASON_MIN, reasonProblem } from "@/lib/reason";
+import { DEFAULT_RADIUS, RADIUS_PRESETS } from "@/lib/validation/crisis";
 import type { CrisisTypeDTO, RadiusKm } from "@/types";
 
 interface Props {
@@ -23,8 +24,8 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
   // A pin abroad is refused here too (QA-024), so the form keeps the type and the pin.
   const locationReady =
     location.source !== null && location.lat !== null && location.lng !== null && locationProblem(location) === null;
-  const reasonLength = reason.trim().length;
-  const reasonReady = reasonLength >= REASON_MIN && reasonLength <= REASON_MAX;
+  const reasonError = reasonProblem(normaliseReason(reason));
+  const reasonReady = reasonError === null;
   const ready = crisisType !== "" && locationReady && reasonReady;
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
@@ -129,8 +130,8 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
             placeholder="np. pożar budynku przy ul. Długiej, potrzebni ratownicy"
           />
           <p id="reason-hint" className="text-ash mt-2 text-[0.9375rem]">
-            Od {REASON_MIN} do {REASON_MAX} znaków. Powód zapisujemy razem z kryzysem i Twoim kontem. Jeden koordynator
-            może aktywować najwyżej 3 kryzysy na godzinę.
+            Od {REASON_MIN} do {REASON_MAX} znaków, co najmniej dwa słowa. Powód zapisujemy razem z kryzysem i Twoim
+            kontem. Jeden koordynator może aktywować najwyżej 3 kryzysy na godzinę.
           </p>
         </div>
       </div>
@@ -138,11 +139,7 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
       {/* Consequential, so the one primary action stands apart from the fields, under a hairline. The
           hint keeps its line when empty, so nothing moves when it goes. */}
       <div className="border-seam mt-12 border-t pt-8">
-        <p className="text-ash mb-4 min-h-7">
-          {!locationReady
-            ? "Wskaż epicentrum, aby aktywować."
-            : !reasonReady && `Podaj powód (co najmniej ${REASON_MIN} znaków), aby aktywować.`}
-        </p>
+        <p className="text-ash mb-4 min-h-7">{!locationReady ? "Wskaż epicentrum, aby aktywować." : reasonError}</p>
         <button
           type="submit"
           disabled={!ready || submitting}
