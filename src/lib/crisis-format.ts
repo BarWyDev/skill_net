@@ -1,5 +1,7 @@
 // Display formatting shared by the coordinator panel and the crisis page (Polish locale).
 
+import type { StatusTone } from "./site-styles";
+
 const DATE_TIME = new Intl.DateTimeFormat("pl-PL", {
   dateStyle: "short",
   timeStyle: "short",
@@ -54,18 +56,11 @@ export function formatActiveFor(activatedAtIso: string, now: Date = new Date()):
   return `aktywny od ${days} ${days === 1 ? "dnia" : "dni"}`;
 }
 
-/** The badge for a resident's declared availability at the time of viewing. */
-export function availabilityBadge(availableNow: boolean | null): { label: string; className: string } {
-  if (availableNow === true) {
-    return {
-      label: "Deklaruje dostępność teraz",
-      className: "border-emerald-300/60 bg-emerald-500/25 text-emerald-50",
-    };
-  }
-  if (availableNow === false) {
-    return { label: "Teraz poza deklarowaną dostępnością", className: "border-white/25 bg-white/10 text-blue-100" };
-  }
-  return { label: "Nie podano", className: "border-white/10 bg-transparent text-blue-100/60" };
+/** A resident's declared availability at the time of viewing, as a status from the shared vocabulary. */
+export function availabilityStatus(availableNow: boolean | null): { label: string; tone: StatusTone } {
+  if (availableNow === true) return { label: "Deklaruje dostępność teraz", tone: "done" };
+  if (availableNow === false) return { label: "Teraz poza deklarowaną dostępnością", tone: "neutral" };
+  return { label: "Dostępności nie podano", tone: "neutral" };
 }
 
 /** True once a crisis has been active for more than 24 hours: it may have been forgotten. */

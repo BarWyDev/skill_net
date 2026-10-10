@@ -1,0 +1,61 @@
+---
+// The shell of the coordinator pages and /brak-dostepu: the landing's header and footer, an optional
+// breadcrumb, a display h1 and one left edge shared with the header. `wide` widens the content column
+// for the list pages; running text inside it still sets its own measure (max-w-[64ch] or less).
+import Layout from "@/layouts/Layout.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import { NAV_LINK } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
+
+interface Crumb {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  title: string;
+  heading: string;
+  /** The pages above this one, outermost first. The current page closes the trail by itself. */
+  crumbs?: Crumb[];
+  /** The current page's name in the trail, when it differs from the heading. */
+  crumbLabel?: string;
+  wide?: boolean;
+}
+
+const { title, heading, crumbs = [], crumbLabel, wide = false } = Astro.props;
+---
+
+<Layout title={title} footer="graphite">
+  <div class="site min-h-screen">
+    <div class="mx-auto max-w-6xl px-4 sm:px-8">
+      <SiteHeader />
+
+      {crumbs.length > 0 && (
+        <nav aria-label="Ścieżka" class="mt-6 text-[0.9375rem] sm:mt-10">
+          <ol class="flex flex-wrap items-center gap-x-3">
+            {crumbs.map((crumb) => (
+              <li class="flex items-center gap-x-3">
+                <a href={crumb.href} class:list={NAV_LINK}>
+                  {crumb.label}
+                </a>
+                <span aria-hidden="true" class="text-seam">
+                  /
+                </span>
+              </li>
+            ))}
+            <li aria-current="page" class="text-chalk inline-flex min-h-11 items-center">
+              {crumbLabel ?? heading}
+            </li>
+          </ol>
+        </nav>
+      )}
+
+      <main class:list={cn("pb-20 lg:pb-28", crumbs.length > 0 ? "pt-6 sm:pt-8" : "pt-12 sm:pt-20")}>
+        <h1 class="font-display text-[clamp(2.75rem,10vw,6.5rem)] leading-[0.9] break-words">{heading}</h1>
+        <div class:list={cn("mt-8 sm:mt-10", wide ? "max-w-[60rem]" : "max-w-[42rem]")}>
+          <slot />
+        </div>
+      </main>
+    </div>
+  </div>
+</Layout>

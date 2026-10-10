@@ -1,9 +1,13 @@
 ---
 import { formatCrisisTitle, formatPeople, matchedWord } from "@/lib/crisis-format";
+import { BUTTON } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
 import type { CrisisDTO } from "@/types";
 
 // "Zakończ kryzys" with a native confirmation dialog. With JS the button opens the dialog;
-// without JS it submits the same form directly. "Anuluj" closes the dialog natively.
+// without JS it submits the same form directly. "Anuluj" closes the dialog natively, and so does Esc.
+// showModal() makes the rest of the page inert, so focus stays in the dialog; it starts on "Anuluj",
+// the safe choice, and goes back to the opener on close.
 
 interface Props {
   crisis: CrisisDTO;
@@ -17,7 +21,7 @@ const formId = "end-crisis-form";
   type="submit"
   form={formId}
   data-end-crisis-open
-  class="inline-flex min-h-11 items-center rounded-lg border border-red-400/60 bg-red-600/30 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600/50"
+  class:list={cn(BUTTON, "btn-danger w-full cursor-pointer sm:w-auto")}
 >
   Zakończ kryzys
 </button>
@@ -25,35 +29,49 @@ const formId = "end-crisis-form";
 <dialog
   data-end-crisis-dialog
   aria-labelledby="end-crisis-title"
-  class="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-white/15 bg-slate-900 p-0 text-white backdrop:bg-black/60"
+  aria-describedby="end-crisis-consequence"
+  class="end-crisis-dialog bg-graphite text-chalk border-seam m-auto w-[calc(100%-2rem)] max-w-lg border p-0"
 >
-  <form id={formId} method="post" action={`/api/koordynator/kryzysy/${crisis.id}/zakoncz`} class="p-4 sm:p-6">
-    <h2 id="end-crisis-title" class="mb-3 text-lg font-semibold">
+  <form id={formId} method="post" action={`/api/koordynator/kryzysy/${crisis.id}/zakoncz`} class="p-6 sm:p-8">
+    <h2 id="end-crisis-title" class="font-display text-[2rem] leading-none">
       Zakończyć kryzys?
     </h2>
-    <p class="mb-3 text-sm text-blue-100/80">
-      {formatCrisisTitle(crisis)} · {formatPeople(crisis.matchCount)} {matchedWord(crisis.matchCount)}
+    <p class="text-ash mt-4 leading-relaxed">
+      {`${formatCrisisTitle(crisis)}, ${formatPeople(crisis.matchCount)} ${matchedWord(crisis.matchCount)}`}
     </p>
-    <p class="mb-5 rounded-lg border border-red-400/50 bg-red-500/15 p-3 text-sm text-red-100">
+    <p id="end-crisis-consequence" class="mt-3 leading-relaxed font-bold">
       Lista dopasowanych osób zostanie trwale usunięta. Tej operacji nie można cofnąć.
     </p>
-    <div class="flex flex-wrap justify-end gap-2">
+    <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
       <button
         type="submit"
         formmethod="dialog"
-        class="inline-flex min-h-11 items-center rounded-lg border border-white/20 px-4 py-2 text-sm text-blue-100 hover:bg-white/10"
+        data-end-crisis-cancel
+        class:list={cn(BUTTON, "btn-secondary cursor-pointer")}
       >
         Anuluj
       </button>
-      <button
-        type="submit"
-        class="inline-flex min-h-11 items-center rounded-lg border border-red-400/60 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
-      >
+      <button type="submit" class:list={cn(BUTTON, "btn-danger cursor-pointer")}>
         Zakończ kryzys
       </button>
     </div>
   </form>
 </dialog>
+
+<style>
+  .end-crisis-dialog::backdrop {
+    background: rgb(0 0 0 / 0.7);
+  }
+  /* The one motion on the page: the dialog fades in when it opens. */
+  @media (prefers-reduced-motion: no-preference) {
+    .end-crisis-dialog {
+      transition: opacity 150ms ease-out;
+      @starting-style {
+        opacity: 0;
+      }
+    }
+  }
+</style>
 
 <script>
   const opener = document.querySelector<HTMLButtonElement>("[data-end-crisis-open]");
@@ -62,6 +80,11 @@ const formId = "end-crisis-form";
     opener.addEventListener("click", (event) => {
       event.preventDefault();
       dialog.showModal();
+      // Start on the safe choice, so Enter or Space never ends the crisis by accident.
+      dialog.querySelector<HTMLButtonElement>("[data-end-crisis-cancel]")?.focus();
+    });
+    dialog.addEventListener("close", () => {
+      opener.focus();
     });
   }
 </script>
