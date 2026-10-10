@@ -16,6 +16,11 @@ select plan(27);
 -- Isolate the fixtures from the local demo seed.
 delete from public.profiles;
 
+-- The map reads a snapshot (skills density snapshot migration). Drop any snapshot the demo seed or
+-- a dev server left, so the first call below computes it from these fixtures.
+delete from public.skills_density_cells;
+delete from public.skills_density_refreshes;
+
 -- The 2 km square (EPSG:2180) that contains central Kraków. Fixture square k sits at
 -- (base_x + k * 2000, base_y): even k are spaced apart, 20 and 21 are neighbours.
 create temp table base as
