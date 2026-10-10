@@ -175,6 +175,7 @@ export type Database = {
           id: string
           match_count: number
           radius_m: number
+          reason: string | null
           status: string
           visible_match_count: number | null
         }
@@ -189,6 +190,7 @@ export type Database = {
           id?: string
           match_count?: number
           radius_m: number
+          reason?: string | null
           status?: string
         }
         Update: {
@@ -202,6 +204,7 @@ export type Database = {
           id?: string
           match_count?: number
           radius_m?: number
+          reason?: string | null
           status?: string
         }
         Relationships: [
@@ -211,6 +214,41 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "crisis_types"
             referencedColumns: ["slug"]
+          },
+        ]
+      }
+      crisis_list_views: {
+        Row: {
+          crisis_id: string
+          id: number
+          list: string
+          returned_count: number
+          viewed_at: string
+          viewed_by: string
+        }
+        Insert: {
+          crisis_id: string
+          id?: never
+          list: string
+          returned_count: number
+          viewed_at?: string
+          viewed_by: string
+        }
+        Update: {
+          crisis_id?: string
+          id?: never
+          list?: string
+          returned_count?: number
+          viewed_at?: string
+          viewed_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crisis_list_views_crisis_id_fkey"
+            columns: ["crisis_id"]
+            isOneToOne: false
+            referencedRelation: "crises"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -605,6 +643,7 @@ export type Database = {
           p_location_source: string
           p_postcode: string
           p_radius_km: number
+          p_reason?: string
         }
         Returns: string
       }
