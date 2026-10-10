@@ -15,6 +15,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
   adapter: cloudflare(),
+  devToolbar: { enabled: false },
   env: {
     schema: {
       SUPABASE_URL: envField.string({ context: "server", access: "secret", optional: true }),

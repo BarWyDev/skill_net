@@ -8,11 +8,14 @@ import { SIGNUP_EMAIL_STORAGE_KEY } from "@/components/auth/SignUpForm";
 interface Props {
   title?: string;
   description?: string;
+  /** "graphite" matches the landing page; every other page keeps the dark footer. */
+  footer?: "graphite" | "dark";
 }
 
 const {
   title = "SkillNet",
   description = "Lokalny katalog umiejętności na czas kryzysu i na co dzień: sąsiedzi, którzy mogą pomóc w okolicy.",
+  footer = "dark",
 } = Astro.props;
 // Each auth form reads (and then removes) its saved address itself; every other page drops it.
 const staleEmailKeys = [
@@ -59,14 +62,27 @@ const staleEmailKeys = [
       </Banner>
     ))}
     <slot />
-    <!-- Every page links the data-processing notice (QA-002). The colour continues bg-cosmic. -->
-    <footer class="bg-[#0a0e1a] px-4 pb-6 text-center text-sm text-blue-100/60">
-      <a
-        href="/prywatnosc"
-        class="inline-flex min-h-11 items-center text-purple-300 transition-colors hover:text-purple-100 hover:underline"
-      >
-        Prywatność i przetwarzanie danych
-      </a>
+    <!-- Every page links the data-processing notice (QA-002). The dark colour continues bg-cosmic. -->
+    <footer
+      class:list={[
+        "pb-6 text-sm",
+        footer === "dark" && "bg-[#0a0e1a] px-4 text-center text-blue-100/60",
+        footer === "graphite" && "bg-[#1e2024] font-['Atkinson_Hyperlegible_Next',sans-serif] text-[#a3a6ad]",
+      ]}
+    >
+      <div class:list={[footer === "graphite" && "mx-auto max-w-6xl px-4 sm:px-8"]}>
+        <a
+          href="/prywatnosc"
+          class:list={[
+            "inline-flex min-h-11 items-center",
+            footer === "dark" && "text-purple-300 transition-colors hover:text-purple-100 hover:underline",
+            footer === "graphite" &&
+              "underline underline-offset-4 hover:text-[#ece9e2] focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#f2c230]",
+          ]}
+        >
+          Prywatność i przetwarzanie danych
+        </a>
+      </div>
     </footer>
   </body>
 </html>
