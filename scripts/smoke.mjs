@@ -407,7 +407,33 @@ const writeSteps = [
   ],
 ];
 
-const steps = READONLY ? readonlySteps : [...readonlySteps, ...writeSteps];
+// HTTPS only (security audit F-10). Local servers have no TLS and stay on plain HTTP, so these run
+// only against an HTTPS BASE_URL, i.e. production: right after a deploy, with SMOKE_READONLY=1.
+const httpsSteps = BASE_URL.startsWith("https://")
+  ? [
+      [
+        "https responses carry HSTS",
+        () => request("/"),
+        { status: 200, header: ["strict-transport-security", "max-age=63072000; includeSubDomains"] },
+      ],
+      [
+        "plain http redirects to https",
+        async () => {
+          const response = await fetch(`${BASE_URL.replace(/^https:/, "http:")}/mapa?x=1`, { redirect: "manual" });
+          return {
+            status: response.status,
+            location: response.headers.get("location") ?? "",
+            cacheControl: "",
+            headers: response.headers,
+            body: await response.text(),
+          };
+        },
+        { status: 308, location: `${BASE_URL}/mapa?x=1`, exact: true },
+      ],
+    ]
+  : [];
+
+const steps = READONLY ? [...readonlySteps, ...httpsSteps] : [...readonlySteps, ...httpsSteps, ...writeSteps];
 
 let failed = 0;
 for (const [name, run, expected] of steps) {
