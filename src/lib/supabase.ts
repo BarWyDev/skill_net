@@ -21,4 +21,24 @@ export function createClient(requestHeaders: Headers, cookies: AstroCookies) {
   });
 }
 
+/**
+ * A client for public data that never reads or writes cookies, so a response built with it carries
+ * no session and may be cached publicly. Calls run as anon.
+ */
+export function createPublicClient() {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return null;
+  }
+  return createServerClient<Database>(SUPABASE_URL, SUPABASE_KEY, {
+    cookies: {
+      getAll() {
+        return [];
+      },
+      setAll() {
+        // No session to store.
+      },
+    },
+  });
+}
+
 export type SupabaseClient = NonNullable<ReturnType<typeof createClient>>;

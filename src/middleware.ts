@@ -6,6 +6,10 @@ import { latestConsentVersion } from "@/lib/services/consent";
 import { CURRENT_CONSENT_VERSION, isConsentGateExempt } from "@/lib/consent";
 import { RETURN_PARAM } from "@/lib/return-path";
 
+// Public data that never depends on who asks. The auth lookup is skipped, so no session cookie can
+// reach these responses and they may be cached publicly (context/foundation/lessons.md).
+const PUBLIC_DATA_ROUTES = ["/api/mapa"];
+
 const PROTECTED_ROUTES = ["/dashboard", "/profil", "/koordynator", "/api/koordynator", "/zgoda", "/api/zgoda"];
 // Signed-in users without the coordinator role get a 403 here.
 const COORDINATOR_ROUTES = ["/koordynator", "/api/koordynator"];
@@ -37,10 +41,15 @@ function withSecurityHeaders(response: Response): Response {
 export const onRequest = defineMiddleware(async (context, next) => withSecurityHeaders(await route(context, next)));
 
 async function route(context: APIContext, next: MiddlewareNext): Promise<Response> {
-  const supabase = createClient(context.request.headers, context.cookies);
   context.locals.user = null;
   context.locals.isCoordinator = false;
   context.locals.needsConsent = false;
+
+  if (PUBLIC_DATA_ROUTES.includes(context.url.pathname)) {
+    return next();
+  }
+
+  const supabase = createClient(context.request.headers, context.cookies);
 
   if (supabase) {
     const {

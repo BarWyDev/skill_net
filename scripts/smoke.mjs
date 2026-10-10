@@ -133,12 +133,18 @@ const readonlySteps = [
     () => request("/api/kody-pocztowe", { method: "POST", rawBody: '{"postcode":', contentType: "application/json" }),
     { status: 400 },
   ],
-  // The density map is public: banded cells only, never a count or an id, and never cached as `public`.
+  // The density map is public: banded cells only, never a count or an id. The page runs the auth
+  // middleware, so it is never cached as `public`; the data endpoint skips it and is (F-03).
   ["density map page renders", () => request("/mapa"), { status: 200, cacheControlIncludes: "private" }],
+  [
+    "density map data is publicly cacheable",
+    () => request("/api/mapa"),
+    { status: 200, header: ["cache-control", "public, max-age=3600"] },
+  ],
   [
     "density map serves banded cells",
     () => request("/api/mapa"),
-    { status: 200, bodyExcludes: "user_id", cacheControlIncludes: "private" },
+    { status: 200, bodyExcludes: "user_id", cacheControlIncludes: "public" },
   ],
   ["density map hides counts", () => request("/api/mapa"), { status: 200, bodyExcludes: '"count"' }],
   ["density map filters by category", () => request("/api/mapa?kategoria=medyczne"), { status: 200 }],
@@ -191,6 +197,12 @@ const writeSteps = [
     { status: 302, location: "/profil", exact: true },
   ],
   ["profil renders for signed-in user", () => request("/profil"), { status: 200 }],
+  // A signed-in visitor's session never reaches the publicly cached map data (lessons.md).
+  [
+    "density map data sets no cookie when signed in",
+    () => request("/api/mapa"),
+    { status: 200, header: ["set-cookie", null] },
+  ],
   // The account consented at sign-up, so the gate lets it through and /zgoda has nothing to ask.
   ["zgoda sends consented user home", () => request("/zgoda"), { status: 302, location: "/", exact: true }],
   [
