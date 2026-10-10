@@ -78,6 +78,8 @@ export interface ActivateCrisisInput {
   lat: number | null;
   lng: number | null;
   radiusKm: RadiusKm;
+  /** Why the crisis is activated, trimmed. Stored with the crisis (security audit F-02). */
+  reason: string;
 }
 
 export interface CrisisDTO {
