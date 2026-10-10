@@ -205,9 +205,9 @@ select throws_ok(
 );
 select throws_ok(
   $$ insert into public.profile_contacts (user_id, phone) values ('aaaaaaaa-0000-0000-0000-000000000001', '600000001') $$,
-  '23514',
-  null::text,
-  'phone_format_check: the table rejects a number without +48 and 9 digits'
+  'P0001',
+  'invalid_phone',
+  'phone_format_check: a client cannot store a number without +48 and 9 digits (direct write rules)'
 );
 
 reset role;
