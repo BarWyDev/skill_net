@@ -60,7 +60,7 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
     setFocusSkill(null);
   }, [focusSkill]);
 
-  // The "Zapisano." or `?error=` notice above describes the last save, not the edits since (QA-019).
+  // The "Zapisano." or error notice above describes the last save, not the edits since (QA-019).
   // It is hidden rather than removed, so the form below does not jump under the pointer.
   function dismissPageNotices() {
     document.querySelectorAll("[data-page-notice]").forEach((el) => {

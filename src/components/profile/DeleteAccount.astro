@@ -1,6 +1,6 @@
 ---
-// "Usuń konto": a plain form POST, so it works without JS. Errors come back through the `?error=` alert
-// at the top of the page named by `returnTo` (/profil or /zgoda).
+// "Usuń konto": a plain form POST, so it works without JS. Errors come back as a one-shot alert
+// (src/lib/flash.ts) at the top of the page named by `returnTo` (/profil or /zgoda).
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 
