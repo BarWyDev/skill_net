@@ -26,5 +26,9 @@ export function safeReturnPath(raw: unknown): string | null {
   if (url.origin !== base) return null;
   // Never back to the auth pages or an endpoint: that would loop or POST-only 404.
   if (url.pathname.startsWith("/auth/") || url.pathname.startsWith("/api/")) return null;
-  return `${url.pathname}${url.search}`;
+  const path = `${url.pathname}${url.search}`;
+  // Parsing resolves dot segments, so `/.//host` or `/a/..//host` comes out as `//host`: check the
+  // result as well as the input (security audit F-01).
+  if (path.startsWith("//") || path.includes("\\")) return null;
+  return path;
 }
