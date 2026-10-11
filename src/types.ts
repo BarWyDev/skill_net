@@ -22,6 +22,13 @@ export interface ProfileSkillDTO {
   level: SkillLevel | null;
 }
 
+/** One break-glass reveal of the caller's number: never the coordinator or their reason. */
+export interface NumberRevealDTO {
+  revealedAt: string;
+  crisisType: string;
+  epicentrePostcode: string | null;
+}
+
 /** The caller's profile. The postcode is never stored, so it is never returned. */
 export interface MyProfileDTO {
   locationSource: LocationSource | null;
