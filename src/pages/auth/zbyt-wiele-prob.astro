@@ -1,0 +1,20 @@
+---
+// Where the auth throttle sends a visitor over a limit (security audit F-09, src/lib/auth-throttle.ts).
+import AuthShell from "@/components/auth/AuthShell.astro";
+import { TEXT_LINK } from "@/lib/site-styles";
+
+Astro.response.status = 429;
+Astro.response.headers.set("Retry-After", "60");
+Astro.response.headers.set("Cache-Control", "private, no-store");
+---
+
+<AuthShell title="Zbyt wiele prób — SkillNet" heading="Zbyt wiele prób">
+  <p class="text-lg leading-relaxed sm:text-xl">
+    Z tego adresu albo dla tego konta było w ostatniej minucie zbyt wiele prób. Odczekaj minutę i spróbuj ponownie.
+  </p>
+  <p class="text-ash mt-10">
+    <a href="/auth/signin" class:list={TEXT_LINK}>
+      Wróć do logowania
+    </a>
+  </p>
+</AuthShell>
