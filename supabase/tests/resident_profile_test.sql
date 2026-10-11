@@ -156,15 +156,18 @@ select is(
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 
-select is(
-  (select count(*) from public.profiles),
-  0::bigint,
-  'rls_anon_denied: anon sees no profiles'
+-- anon holds no privilege on resident tables (narrow table grants), so a read is refused outright.
+select throws_ok(
+  $$ select count(*) from public.profiles $$,
+  '42501',
+  null::text,
+  'rls_anon_denied: anon cannot read profiles'
 );
-select is(
-  (select count(*) from public.profile_skills),
-  0::bigint,
-  'rls_anon_denied: anon sees no profile_skills'
+select throws_ok(
+  $$ select count(*) from public.profile_skills $$,
+  '42501',
+  null::text,
+  'rls_anon_denied: anon cannot read profile_skills'
 );
 select is(
   (select count(*) from public.lookup_postcode('00-950')),
