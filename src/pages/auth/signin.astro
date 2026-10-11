@@ -3,8 +3,10 @@ import AuthShell from "@/components/auth/AuthShell.astro";
 import SignInForm from "@/components/auth/SignInForm";
 import { RETURN_PARAM, safeReturnPath } from "@/lib/return-path";
 import { TEXT_LINK } from "@/lib/site-styles";
+import { takeFlashError } from "@/lib/flash";
 
-const error = Astro.url.searchParams.get("error");
+// Left by the endpoint that redirected here; never read from the URL (security audit F-06).
+const error = takeFlashError(Astro);
 const unconfirmed = Astro.url.searchParams.has("niepotwierdzony");
 // Set by the middleware when a signed-out visitor opens a protected page.
 const returnTo = safeReturnPath(Astro.url.searchParams.get(RETURN_PARAM));
