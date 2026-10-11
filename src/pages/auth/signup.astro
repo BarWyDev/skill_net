@@ -2,8 +2,10 @@
 import AuthShell from "@/components/auth/AuthShell.astro";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { TEXT_LINK } from "@/lib/site-styles";
+import { takeFlashError } from "@/lib/flash";
 
-const error = Astro.url.searchParams.get("error");
+// Left by the endpoint that redirected here; never read from the URL (security audit F-06).
+const error = takeFlashError(Astro);
 ---
 
 <AuthShell title="Załóż konto — SkillNet" heading="Załóż konto">
