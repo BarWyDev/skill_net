@@ -2,8 +2,7 @@ import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
 import { saveMyProfile } from "@/lib/services/profile";
 import { parseProfileForm } from "@/lib/validation/profile";
-
-const errorRedirect = (message: string) => `/profil?error=${encodeURIComponent(message)}`;
+import { redirectWithError } from "@/lib/flash";
 
 export const POST: APIRoute = async (context) => {
   if (!context.locals.user) {
@@ -12,17 +11,17 @@ export const POST: APIRoute = async (context) => {
 
   const supabase = createClient(context.request.headers, context.cookies);
   if (!supabase) {
-    return context.redirect(errorRedirect("Supabase nie jest skonfigurowany."));
+    return redirectWithError(context, "/profil", "Supabase nie jest skonfigurowany.");
   }
 
   const parsed = parseProfileForm(await context.request.formData());
   if (!parsed.success) {
-    return context.redirect(errorRedirect(parsed.message));
+    return redirectWithError(context, "/profil", parsed.message);
   }
 
   const result = await saveMyProfile(supabase, parsed.data);
   if (!result.ok) {
-    return context.redirect(errorRedirect(result.message));
+    return redirectWithError(context, "/profil", result.message);
   }
 
   return context.redirect("/profil?zapisano=1");

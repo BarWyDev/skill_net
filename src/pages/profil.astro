@@ -11,6 +11,7 @@ import { getMyNumberReveals, getMyProfile, getTaxonomy } from "@/lib/services/pr
 import { BUTTON } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import type { MyProfileDTO, NumberRevealDTO, TaxonomyDTO } from "@/types";
+import { takeFlashError } from "@/lib/flash";
 
 const SUCCESS_MESSAGES: [param: string, message: string][] = [
   ["zapisano", "Zapisano."],
@@ -18,7 +19,8 @@ const SUCCESS_MESSAGES: [param: string, message: string][] = [
   ["wznowiono", "Dostępność wznowiona."],
 ];
 const success = SUCCESS_MESSAGES.find(([param]) => Astro.url.searchParams.has(param))?.[1] ?? null;
-const error = Astro.url.searchParams.get("error");
+// Left by the endpoint that redirected here; never read from the URL (security audit F-06).
+const error = takeFlashError(Astro);
 
 let taxonomy: TaxonomyDTO | null = null;
 let profile: MyProfileDTO | null = null;

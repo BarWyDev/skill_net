@@ -1,6 +1,6 @@
 // Polish messages for Supabase auth error codes (roadmap S-05). Endpoints pass the result back
-// as `?error=`; the raw English `error.message` never reaches the page. Relative imports only,
-// so `node:test` can load it.
+// through the flash cookie (src/lib/flash.ts); the raw English `error.message` never reaches the
+// page. Relative imports only, so `node:test` can load it.
 
 const MESSAGES: Record<string, string> = {
   invalid_credentials: "Nieprawidłowy e-mail lub hasło.",

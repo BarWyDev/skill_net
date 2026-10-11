@@ -192,6 +192,10 @@ select ok(
 create temp table crisis_ids (id uuid);
 grant select, insert on crisis_ids to authenticated;
 
+-- The map reads an hourly snapshot (skills density snapshot migration): mark it stale, so the read
+-- below is computed from these fixtures.
+delete from public.skills_density_refreshes;
+
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
