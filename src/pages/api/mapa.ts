@@ -1,10 +1,12 @@
 import type { APIRoute } from "astro";
-import { createClient } from "@/lib/supabase";
+import { createPublicClient } from "@/lib/supabase";
 import { getSkillsDensity } from "@/lib/services/density-map";
 
-// Public on purpose: the response holds only banded 2 km cells. The category is not personal data,
-// so it may travel in the URL. `private`, never `public`: the auth middleware may set session cookies.
-const CACHED = { "Cache-Control": "private, max-age=300" };
+// Public on purpose: the response holds only banded 2 km cells, from a snapshot recomputed once a
+// day (security audit F-03). The category is not personal data, so it may travel in the URL.
+// `public` is safe here only because the middleware skips the auth lookup for this path and the
+// client below never touches cookies, so no session cookie can ride on a cached response.
+const CACHED = { "Cache-Control": "public, max-age=3600" };
 const NO_STORE = { "Cache-Control": "no-store" };
 
 const CATEGORY_PATTERN = /^[a-z-]{1,40}$/;
@@ -18,7 +20,7 @@ export const GET: APIRoute = async (context) => {
     return Response.json({ error: BAD_CATEGORY }, { status: 400, headers: NO_STORE });
   }
 
-  const supabase = createClient(context.request.headers, context.cookies);
+  const supabase = createPublicClient();
   if (!supabase) {
     return Response.json({ error: "Supabase nie jest skonfigurowany." }, { status: 503, headers: NO_STORE });
   }
