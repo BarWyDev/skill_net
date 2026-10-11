@@ -15,6 +15,16 @@ const coordinate = (min: number, max: number) =>
     .transform(Number)
     .refine((n) => Number.isFinite(n) && n >= min && n <= max, "Nieprawidłowa lokalizacja epicentrum.");
 
+export const REASON_MIN = 10;
+export const REASON_MAX = 500;
+
+// The same bounds and messages as activate_crisis and reveal_crisis_contacts, which check them again.
+const reasonSchema = z
+  .string()
+  .trim()
+  .min(REASON_MIN, `Podaj powód (co najmniej ${REASON_MIN} znaków).`)
+  .max(REASON_MAX, `Powód może mieć najwyżej ${REASON_MAX} znaków.`);
+
 const common = {
   // Whether the type exists is checked by the RPC, the single source of truth.
   crisis_type: z.string().regex(/^[a-z0-9-]+$/, "Wybierz rodzaj kryzysu."),
@@ -22,6 +32,7 @@ const common = {
     .string()
     .transform(Number)
     .refine((n): n is RadiusKm => (RADIUS_PRESETS as number[]).includes(n), "Wybierz promień z listy."),
+  reason: reasonSchema,
 };
 
 const crisisFormSchema = z.discriminatedUnion(
@@ -49,22 +60,12 @@ const crisisFormSchema = z.discriminatedUnion(
   { error: LOCATION_REQUIRED },
 );
 
-export const REASON_MIN = 10;
-export const REASON_MAX = 500;
-
-// The same bounds and messages as reveal_crisis_contacts, which checks them again.
-const revealReasonSchema = z
-  .string()
-  .trim()
-  .min(REASON_MIN, `Podaj powód (co najmniej ${REASON_MIN} znaków).`)
-  .max(REASON_MAX, `Powód może mieć najwyżej ${REASON_MAX} znaków.`);
-
 /** Parses the break-glass reason from the reveal form. Messages are Polish and safe to show. */
 export function parseRevealReason(
   form: FormData,
 ): { success: true; data: string } | { success: false; message: string } {
   const value = form.get("reason");
-  const result = revealReasonSchema.safeParse(typeof value === "string" ? value : "");
+  const result = reasonSchema.safeParse(typeof value === "string" ? value : "");
   return result.success
     ? { success: true, data: result.data }
     : { success: false, message: result.error.issues[0]?.message ?? "Podaj powód." };
@@ -109,6 +110,7 @@ export function parseCrisisForm(form: FormData): CrisisParseResult {
   const result = crisisFormSchema.safeParse({
     crisis_type: text("crisis_type"),
     radius_km: text("radius_km"),
+    reason: text("reason"),
     location_source: text("location_source"),
     postcode: text("postcode"),
     lat: text("lat"),
@@ -120,7 +122,7 @@ export function parseCrisisForm(form: FormData): CrisisParseResult {
   }
 
   const parsed = result.data;
-  const base = { crisisType: parsed.crisis_type, radiusKm: parsed.radius_km };
+  const base = { crisisType: parsed.crisis_type, radiusKm: parsed.radius_km, reason: parsed.reason };
   return parsed.location_source === "postcode"
     ? { success: true, data: { ...base, locationSource: "postcode", postcode: parsed.postcode, lat: null, lng: null } }
     : { success: true, data: { ...base, locationSource: "pin", postcode: null, lat: parsed.lat, lng: parsed.lng } };

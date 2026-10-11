@@ -22,7 +22,7 @@ export const MATCHES_PAGE_SIZE = 200;
 
 const GENERIC_ACTIVATE_ERROR = "Nie udało się aktywować trybu kryzysowego. Spróbuj ponownie.";
 
-// Messages raised by activate_crisis in the crisis matching migration.
+// Messages raised by activate_crisis in the crisis matching and activation audit migrations.
 const DB_ERROR_MESSAGES: Record<string, string> = {
   not_coordinator: "Tylko koordynator może aktywować tryb kryzysowy.",
   unknown_crisis_type: "Wybierz rodzaj kryzysu z listy.",
@@ -30,6 +30,10 @@ const DB_ERROR_MESSAGES: Record<string, string> = {
   unknown_postcode: "Nie znamy tego kodu pocztowego — zaznacz epicentrum na mapie.",
   outside_poland: "Epicentrum musi być w Polsce.",
   location_required: "Wskaż epicentrum: wpisz kod pocztowy albo zaznacz punkt na mapie.",
+  reason_required: "Podaj powód (co najmniej 10 znaków).",
+  reason_too_long: "Powód może mieć najwyżej 500 znaków.",
+  activation_rate_limited:
+    "Limit aktywacji: najwyżej 3 kryzysy na godzinę na jednego koordynatora, licząc też zakończone. Spróbuj później albo poproś o aktywację innego koordynatora.",
 };
 
 export function activateErrorMessage(error: { message?: string }): string {
@@ -55,6 +59,7 @@ export async function activateCrisis(
     p_lat: input.lat,
     p_lng: input.lng,
     p_radius_km: input.radiusKm,
+    p_reason: input.reason,
   } as ActivateCrisisArgs;
   const { data, error } = await supabase.rpc("activate_crisis", args);
   return error ? { ok: false, message: activateErrorMessage(error) } : { ok: true, id: data };

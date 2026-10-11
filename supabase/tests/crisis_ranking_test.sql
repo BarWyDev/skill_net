@@ -215,6 +215,12 @@ select lives_ok(
   'unknown_type_radius_postcode_raise: a known postcode activates'
 );
 
+-- The edge pair would be this coordinator's 3rd and 4th activation within the hour. Age the
+-- first two out of the rolling-hour throttle, which crisis_activation_audit_test covers.
+reset role;
+update public.crises set activated_at = activated_at - interval '2 hours';
+set local role authenticated;
+
 -- radius_inclusive_and_excludes_outside: two activations 1 m inside and 1 m outside 1 km.
 select lives_ok(
   $$
@@ -418,7 +424,7 @@ reset role;
 -- ---------------------------------------------------------------------------
 
 select ok(
-  not has_function_privilege('anon', 'public.activate_crisis(text, text, text, double precision, double precision, integer)', 'execute')
+  not has_function_privilege('anon', 'public.activate_crisis(text, text, text, double precision, double precision, integer, text)', 'execute')
   and not has_function_privilege('anon', 'public.get_crisis_matches(uuid, integer)', 'execute')
   and not has_table_privilege('anon', 'public.crises', 'select')
   and not has_table_privilege('anon', 'public.crisis_matches', 'select')
