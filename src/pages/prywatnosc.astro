@@ -61,7 +61,26 @@ const [year, month, day] = CURRENT_CONSENT_VERSION.split("-");
       </ul>
       <p class="mt-3">
         Twój numer telefonu widzisz tylko Ty. Koordynator może go zobaczyć wyłącznie w trakcie aktywnego kryzysu, po
-        podaniu powodu; każde takie odsłonięcie jest zapisywane.
+        podaniu powodu; każde takie odsłonięcie jest zapisywane, a ich listę widzisz w zakładce „Mój profil”.
+      </p>
+    </section>
+
+    <section>
+      <h2 class:list={SECTION_TITLE}>Komu przekazujemy dane</h2>
+      <p>Korzystamy z usług firm, które przetwarzają dane w naszym imieniu:</p>
+      <ul class="mt-3">
+        <li>Supabase — baza danych i logowanie; przechowuje wszystkie dane konta wymienione wyżej;</li>
+        <li>
+          Cloudflare — serwery, na których działa serwis; przy każdej wizycie przetwarza adres IP i treść zapytań;
+        </li>
+        <li>
+          OpenStreetMap Foundation — podkłady map. Przeglądarka pobiera je bezpośrednio z serwerów OpenStreetMap, które
+          widzą Twój adres IP i oglądany fragment mapy, na profilu: okolicę zapisanej lokalizacji.
+        </li>
+      </ul>
+      <p class="mt-3">
+        W trakcie kryzysu Twoje dane widzi też koordynator rady, w zakresie opisanym wyżej. Nie sprzedajemy danych i nie
+        przekazujemy ich nikomu innemu.
       </p>
     </section>
 
@@ -80,16 +99,21 @@ const [year, month, day] = CURRENT_CONSENT_VERSION.split("-");
         natychmiastowe: kasujemy adres e-mail, lokalizację, umiejętności, dostępność i numer telefonu.
       </p>
       <p class="mt-3">
-        Zostają jedynie zapisy kontrolne, które zawierają sam identyfikator konta, bez e-maila i innych danych: kiedy
-        wyrażono zgodę, kto odsłonił czyje numery w trakcie kryzysu i kto prowadził kryzys. Po usunięciu konta ten
-        identyfikator nie wskazuje już nikogo w systemie.
+        Zostają zapisy kontrolne. Zawierają identyfikator konta, ale nie e-mail ani dane profilu: kiedy wyrażono zgodę,
+        kto prowadził kryzys i czyje numery odsłonił koordynator. Przy odsłonięciu zapisujemy też czas, kryzys z jego
+        obszarem (okolicę kodu pocztowego) i powód podany przez koordynatora. Powód to tekst wpisany przez koordynatora,
+        więc może zawierać dodatkowe informacje. Po usunięciu konta identyfikator nie wskazuje już nikogo w systemie.
+        Okres przechowywania zapisów kontrolnych ustalimy przed uruchomieniem pilotażu.
       </p>
     </section>
 
     <section>
       <h2 class:list={SECTION_TITLE}>Twoje prawa</h2>
       <ul>
-        <li>dostęp do swoich danych i ich poprawianie — w zakładce „Mój profil”;</li>
+        <li>
+          dostęp do swoich danych i ich poprawianie — w zakładce „Mój profil”, gdzie widzisz też, kiedy i w jakim
+          kryzysie odsłonięto Twój numer;
+        </li>
         <li>
           wycofanie zgody w dowolnym momencie przez usunięcie konta; wycofanie zgody nie wpływa na zgodność z prawem
           przetwarzania sprzed jej wycofania;
