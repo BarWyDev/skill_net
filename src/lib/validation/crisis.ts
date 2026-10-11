@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
+import { normaliseReason, REASON_REQUIRED_MESSAGE, reasonProblem } from "@/lib/reason";
 import type { ActivateCrisisInput, RadiusKm } from "@/types";
 
 export const RADIUS_PRESETS: RadiusKm[] = [1, 2, 5, 10, 20];
@@ -15,15 +16,17 @@ const coordinate = (min: number, max: number) =>
     .transform(Number)
     .refine((n) => Number.isFinite(n) && n >= min && n <= max, "Nieprawidłowa lokalizacja epicentrum.");
 
-export const REASON_MIN = 10;
-export const REASON_MAX = 500;
+export { REASON_MAX, REASON_MIN } from "@/lib/reason";
 
-// The same bounds and messages as activate_crisis and reveal_crisis_contacts, which check them again.
+// The rule of check_reason, which activate_crisis and reveal_crisis_contacts apply again. The parsed
+// value is the normalised reason, as the database stores it.
 const reasonSchema = z
   .string()
-  .trim()
-  .min(REASON_MIN, `Podaj powód (co najmniej ${REASON_MIN} znaków).`)
-  .max(REASON_MAX, `Powód może mieć najwyżej ${REASON_MAX} znaków.`);
+  .transform(normaliseReason)
+  .superRefine((reason, ctx) => {
+    const problem = reasonProblem(reason);
+    if (problem) ctx.addIssue({ code: "custom", message: problem });
+  });
 
 const common = {
   // Whether the type exists is checked by the RPC, the single source of truth.
@@ -68,7 +71,7 @@ export function parseRevealReason(
   const result = reasonSchema.safeParse(typeof value === "string" ? value : "");
   return result.success
     ? { success: true, data: result.data }
-    : { success: false, message: result.error.issues[0]?.message ?? "Podaj powód." };
+    : { success: false, message: result.error.issues[0]?.message ?? REASON_REQUIRED_MESSAGE };
 }
 
 export const TEAM_COUNT_MIN = 1;
