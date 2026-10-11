@@ -1,10 +1,13 @@
 import type { APIContext, MiddlewareNext } from "astro";
 import { defineMiddleware } from "astro:middleware";
+import { env } from "cloudflare:workers";
+import { authThrottled, THROTTLED_PAGE } from "@/lib/auth-throttle";
 import { createClient } from "@/lib/supabase";
 import { isCoordinator } from "@/lib/services/roles";
 import { latestConsentVersion } from "@/lib/services/consent";
 import { CURRENT_CONSENT_VERSION, isConsentGateExempt } from "@/lib/consent";
 import { RETURN_PARAM } from "@/lib/return-path";
+import { HSTS_HEADER, httpsRedirect, sendsHsts } from "@/lib/https";
 
 // Public data that never depends on who asks. The auth lookup is skipped, so no session cookie can
 // reach these responses and they may be cached publicly (context/foundation/lessons.md).
@@ -26,21 +29,40 @@ const SECURITY_HEADERS: [name: string, value: string][] = [
   ["Referrer-Policy", "strict-origin-when-cross-origin"],
 ];
 
-function withSecurityHeaders(response: Response): Response {
+function withSecurityHeaders(response: Response, url: URL): Response {
+  const headers = sendsHsts(url) ? [...SECURITY_HEADERS, HSTS_HEADER] : SECURITY_HEADERS;
   try {
-    for (const [name, value] of SECURITY_HEADERS) response.headers.set(name, value);
+    for (const [name, value] of headers) response.headers.set(name, value);
     return response;
   } catch {
     // Some responses (e.g. from Response.redirect) have immutable headers: copy them first.
     const copy = new Response(response.body, response);
-    for (const [name, value] of SECURITY_HEADERS) copy.headers.set(name, value);
+    for (const [name, value] of headers) copy.headers.set(name, value);
     return copy;
   }
 }
 
-export const onRequest = defineMiddleware(async (context, next) => withSecurityHeaders(await route(context, next)));
+export const onRequest = defineMiddleware(async (context, next) => {
+  // First, so a plain-HTTP request never reaches Supabase or gets a cookie (security audit F-10).
+  // 308 keeps the method and body of a form POST.
+  const secure = httpsRedirect(context.url);
+  if (secure) {
+    return withSecurityHeaders(new Response(null, { status: 308, headers: { Location: secure } }), context.url);
+  }
+  return withSecurityHeaders(await route(context, next), context.url);
+});
 
 async function route(context: APIContext, next: MiddlewareNext): Promise<Response> {
+  // Before any Supabase call, so a throttled request costs Supabase nothing.
+  if (
+    await authThrottled(context.request, context.url.pathname, {
+      ip: env.AUTH_IP_LIMITER,
+      account: env.AUTH_ACCOUNT_LIMITER,
+    })
+  ) {
+    return context.redirect(THROTTLED_PAGE, 303);
+  }
+
   context.locals.user = null;
   context.locals.isCoordinator = false;
   context.locals.needsConsent = false;

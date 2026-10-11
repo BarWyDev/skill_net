@@ -1,0 +1,40 @@
+---
+// "Kto widział mój numer" (security audit F-11): every break-glass reveal of the resident's own
+// number. Never the coordinator or their reason, which the RPC does not return.
+import { formatActivatedAt } from "@/lib/crisis-format";
+import { SECTION_TITLE } from "@/lib/site-styles";
+import type { NumberRevealDTO } from "@/types";
+
+interface Props {
+  /** Null when the lookup failed. */
+  reveals: NumberRevealDTO[] | null;
+}
+
+const { reveals } = Astro.props;
+---
+
+<section aria-labelledby="number-reveals-title" class="border-seam mt-16 border-t pt-10">
+  <h2 id="number-reveals-title" class:list={SECTION_TITLE}>
+    Kto widział mój numer
+  </h2>
+  <p class="text-ash mt-4 leading-relaxed">
+    Koordynator może zobaczyć Twój numer tylko w trwającym kryzysie i po podaniu powodu. Każde takie odsłonięcie jest
+    zapisywane i widzisz je tutaj.
+  </p>
+  {reveals === null ? (
+    <p class="mt-6">Nie udało się wczytać listy. Odśwież stronę.</p>
+  ) : reveals.length === 0 ? (
+    <p class="mt-6">Nikt jeszcze nie odsłonił Twojego numeru.</p>
+  ) : (
+    <ul class="mt-6 space-y-3">
+      {reveals.map((reveal) => (
+        <li class="border-seam border-l-2 pl-4">
+          <span class="font-bold tabular-nums">{formatActivatedAt(reveal.revealedAt)}</span>
+          <span class="text-ash"> · </span>
+          {reveal.crisisType}
+          {reveal.epicentrePostcode && <span class="text-ash">, okolice {reveal.epicentrePostcode}</span>}
+        </li>
+      ))}
+    </ul>
+  )}
+</section>

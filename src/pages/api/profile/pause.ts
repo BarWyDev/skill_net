@@ -2,8 +2,7 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
 import { pauseMyAvailability } from "@/lib/services/profile";
-
-const errorRedirect = (message: string) => `/profil?error=${encodeURIComponent(message)}`;
+import { redirectWithError } from "@/lib/flash";
 
 // The range (Warsaw today to today + 365) is enforced by the database; only the shape is checked here.
 const pauseFormSchema = z.discriminatedUnion("mode", [
@@ -18,18 +17,18 @@ export const POST: APIRoute = async (context) => {
 
   const supabase = createClient(context.request.headers, context.cookies);
   if (!supabase) {
-    return context.redirect(errorRedirect("Supabase nie jest skonfigurowany."));
+    return redirectWithError(context, "/profil", "Supabase nie jest skonfigurowany.");
   }
 
   const form = await context.request.formData();
   const parsed = pauseFormSchema.safeParse({ mode: form.get("mode"), until: form.get("until") });
   if (!parsed.success) {
-    return context.redirect(errorRedirect("Wybierz datę od dziś do roku naprzód."));
+    return redirectWithError(context, "/profil", "Wybierz datę od dziś do roku naprzód.");
   }
 
   const result = await pauseMyAvailability(supabase, parsed.data.mode === "date" ? parsed.data.until : null);
   if (!result.ok) {
-    return context.redirect(errorRedirect(result.message));
+    return redirectWithError(context, "/profil", result.message);
   }
 
   return context.redirect("/profil?wstrzymano=1");
