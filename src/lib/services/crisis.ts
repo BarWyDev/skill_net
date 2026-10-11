@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Database } from "@/db/database.types";
 import type { SupabaseClient } from "@/lib/supabase";
+import { REASON_REQUIRED_MESSAGE, REASON_TOO_LONG_MESSAGE } from "@/lib/reason";
 import { assembleTeams } from "@/lib/team-assembly";
 import type {
   ActivateCrisisInput,
@@ -30,8 +31,8 @@ const DB_ERROR_MESSAGES: Record<string, string> = {
   unknown_postcode: "Nie znamy tego kodu pocztowego — zaznacz epicentrum na mapie.",
   outside_poland: "Epicentrum musi być w Polsce.",
   location_required: "Wskaż epicentrum: wpisz kod pocztowy albo zaznacz punkt na mapie.",
-  reason_required: "Podaj powód (co najmniej 10 znaków).",
-  reason_too_long: "Powód może mieć najwyżej 500 znaków.",
+  reason_required: REASON_REQUIRED_MESSAGE,
+  reason_too_long: REASON_TOO_LONG_MESSAGE,
   activation_rate_limited:
     "Limit aktywacji: najwyżej 3 kryzysy na godzinę na jednego koordynatora, licząc też zakończone. Spróbuj później albo poproś o aktywację innego koordynatora.",
 };
@@ -203,8 +204,8 @@ const REVEAL_DB_ERRORS: Partial<Record<string, { message: string; status: number
     status: 200,
     ended: true,
   },
-  reason_required: { message: "Podaj powód (co najmniej 10 znaków).", status: 422, field: "reason" },
-  reason_too_long: { message: "Powód może mieć najwyżej 500 znaków.", status: 422, field: "reason" },
+  reason_required: { message: REASON_REQUIRED_MESSAGE, status: 422, field: "reason" },
+  reason_too_long: { message: REASON_TOO_LONG_MESSAGE, status: 422, field: "reason" },
 };
 
 export type RevealResult =
