@@ -137,6 +137,9 @@ select throws_ok(
 -- ---------------------------------------------------------------------------
 
 reset role;
+-- The map reads an hourly snapshot (skills density snapshot migration). Marking it stale makes the
+-- next call recompute it, so each read below reflects the residents at that point.
+delete from public.skills_density_refreshes;
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 
@@ -158,6 +161,7 @@ select lives_ok(
 insert into profile_rows select 'paused', public.get_my_profile();
 
 reset role;
+delete from public.skills_density_refreshes;
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 
