@@ -3,10 +3,12 @@ import AuthShell from "@/components/auth/AuthShell.astro";
 import { ServerError } from "@/components/auth/ServerError";
 import { cn } from "@/lib/utils";
 import { BUTTON, TEXT_LINK } from "@/lib/site-styles";
+import { takeFlashError } from "@/lib/flash";
 
 Astro.response.headers.set("Cache-Control", "private, no-store");
 
-const error = Astro.url.searchParams.get("error");
+// Left by the endpoint that redirected here; never read from the URL (security audit F-06).
+const error = takeFlashError(Astro);
 ---
 
 <AuthShell title="Link wygasł — SkillNet" heading="Link jest nieważny">
