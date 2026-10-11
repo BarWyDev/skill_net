@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { CONSENT_REQUIRED_MESSAGE, CURRENT_CONSENT_VERSION } from "@/lib/consent";
+import { redirectWithError } from "@/lib/flash";
 
 export const POST: APIRoute = async (context) => {
   const form = await context.request.formData();
@@ -10,18 +11,18 @@ export const POST: APIRoute = async (context) => {
 
   // The browser form checks this first; this covers a POST without it (no JS, a script).
   if (typeof email !== "string" || !email.trim() || typeof password !== "string" || !password) {
-    return context.redirect(`/auth/signup?error=${encodeURIComponent("Podaj adres e-mail i hasło.")}`);
+    return redirectWithError(context, "/auth/signup", "Podaj adres e-mail i hasło.");
   }
 
   // Checked before GoTrue is called. The database refuses an email sign-up without a published
   // consent version anyway (`consent_required`), so this check only gives a clear message.
   if (form.get("consent") !== "on") {
-    return context.redirect(`/auth/signup?error=${encodeURIComponent(CONSENT_REQUIRED_MESSAGE)}`);
+    return redirectWithError(context, "/auth/signup", CONSENT_REQUIRED_MESSAGE);
   }
 
   const supabase = createClient(context.request.headers, context.cookies);
   if (!supabase) {
-    return context.redirect(`/auth/signup?error=${encodeURIComponent("Supabase nie jest skonfigurowany.")}`);
+    return redirectWithError(context, "/auth/signup", "Supabase nie jest skonfigurowany.");
   }
   const { error } = await supabase.auth.signUp({
     email,
@@ -30,7 +31,7 @@ export const POST: APIRoute = async (context) => {
   });
 
   if (error) {
-    return context.redirect(`/auth/signup?error=${encodeURIComponent(authErrorMessage(error.code))}`);
+    return redirectWithError(context, "/auth/signup", authErrorMessage(error.code));
   }
 
   return context.redirect("/auth/confirm-email");
