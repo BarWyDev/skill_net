@@ -6,12 +6,18 @@ on:
   pull_request:
     branches: [master]
 
+# Read-only token: no job writes to the repository (security audit F-13).
+permissions:
+  contents: read
+
+# Actions are pinned by commit SHA (security audit F-13); Dependabot (.github/dependabot.yml) proposes
+# updates, with the tag in the comment.
 jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           # 24 strips TypeScript natively, which `npm run test:unit` relies on.
           node-version: 24
@@ -29,14 +35,15 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
         with:
-          version: latest
+          # Pinned, like the actions: `latest` let a new CLI change a run without a commit.
+          version: 2.120.0
       - run: npm ci
       # A runner once had 54322 already bound, so `supabase start` failed before any app code ran.
       # Free the API and DB ports (the only ones the start below publishes) first.
@@ -65,3 +72,14 @@ jobs:
           BASE_URL=http://localhost:4321 npm run smoke
       - if: always()
         run: supabase stop --no-backup
+
+  # Advisories in the dependencies the Worker ships. Not a required check, so a new advisory does not
+  # block an unrelated merge; a red run here means `npm audit fix` (security audit F-13).
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - run: npm audit --omit=dev --audit-level=high
