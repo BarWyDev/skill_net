@@ -7,8 +7,7 @@ import { FieldError } from "@/components/auth/FieldError";
 import { INLINE_LINK, TEXT_LINK } from "@/lib/site-styles";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { CONSENT_LABEL, CONSENT_LINK_TEXT, CONSENT_REQUIRED_MESSAGE } from "@/lib/consent";
-
-const MIN_PASSWORD_LENGTH = 6;
+import { MIN_PASSWORD_LENGTH, passwordProblem } from "@/lib/password";
 
 // Like the sign-in form's key: keeps the address across a failed sign-up without putting it in
 // the URL. Removed by the next page load, here or by Layout.astro on any other page.
@@ -64,8 +63,9 @@ export default function SignUpForm({ serverError }: Props) {
 
     if (!password) {
       next.password = "Podaj hasło";
-    } else if (password.length < MIN_PASSWORD_LENGTH) {
-      next.password = `Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaków`;
+    } else {
+      const problem = passwordProblem(password);
+      if (problem) next.password = problem;
     }
 
     if (!confirmPassword) {
@@ -100,9 +100,11 @@ export default function SignUpForm({ serverError }: Props) {
 
   const missing = MIN_PASSWORD_LENGTH - password.length;
   const passwordHint =
-    !errors.password && password.length > 0 && missing > 0
-      ? `Jeszcze ${missing} ${charactersWord(missing)}`
-      : undefined;
+    errors.password || password.length === 0
+      ? undefined
+      : missing > 0
+        ? `Jeszcze ${missing} ${charactersWord(missing)}`
+        : (passwordProblem(password) ?? undefined);
 
   return (
     <form method="POST" action="/api/auth/signup" className="space-y-6" onSubmit={handleSubmit} noValidate>

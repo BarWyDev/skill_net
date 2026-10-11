@@ -20,6 +20,16 @@ const CRISIS_END_PATH = "/api/koordynator/kryzysy/00000000-0000-0000-0000-000000
 // The break-glass page: the gates must refuse both the reason form (GET) and the reveal (POST).
 const REVEAL_PATH = "/koordynator/kryzys/00000000-0000-0000-0000-000000000000/kontakty";
 const REVEAL_FORM = { reason: "Smoke test: brak potwierdzeń" };
+// The auth throttle (src/lib/auth-throttle.ts) ignores loopback visitors, which is what local workerd
+// reports, so the steps that exercise it claim a documentation address and a fresh email per run.
+const THROTTLE_IP = `192.0.2.${Date.now() % 250}`;
+const THROTTLE_EMAIL = `smoke-throttle-${Date.now()}@example.com`;
+const throttledSignin = () =>
+  request("/api/auth/signin", {
+    method: "POST",
+    form: { email: THROTTLE_EMAIL, password: "Wrong-Passw0rd" },
+    headers: { "cf-connecting-ip": THROTTLE_IP },
+  });
 // The one-shot error notice cookie (src/lib/flash.ts).
 const FLASH_COOKIE = "skillnet_flash";
 const TEAMS_PATH = "/koordynator/kryzys/00000000-0000-0000-0000-000000000000/zespoly";
@@ -39,7 +49,7 @@ function storeCookies(response) {
 }
 
 // `form` sends a urlencoded body, `json` a JSON body, and `rawBody` is sent as is with `contentType`.
-async function request(path, { method = "GET", form, json, rawBody, contentType } = {}) {
+async function request(path, { method = "GET", form, json, rawBody, contentType, headers: extra = {} } = {}) {
   let body;
   let type;
   if (form) {
@@ -59,6 +69,7 @@ async function request(path, { method = "GET", form, json, rawBody, contentType 
       Cookie: cookieHeader(),
       Origin: BASE_URL,
       ...(type ? { "Content-Type": type } : {}),
+      ...extra,
     },
     body,
   });
@@ -164,6 +175,11 @@ const readonlySteps = [
     () => request("/auth/confirm?token_hash=smoke-not-a-token&type=email"),
     { status: 302, location: "/auth/link-wygasl" },
   ],
+  [
+    "throttle page answers 429",
+    () => request("/auth/zbyt-wiele-prob"),
+    { status: 429, bodyIncludes: "Zbyt wiele prób", header: ["retry-after", "60"] },
+  ],
   // F-06: a link cannot put its own text in the alert box.
   [
     "sign-in page ignores error text in the URL",
@@ -189,6 +205,12 @@ const writeSteps = [
   [
     "signup rejects missing consent",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
+    { status: 302, location: "/auth/signup", flash: true },
+  ],
+  // Refused before GoTrue is called, so no account is created.
+  [
+    "signup rejects a weak password",
+    () => request("/api/auth/signup", { method: "POST", form: { email, password: "123456", consent: "on" } }),
     { status: 302, location: "/auth/signup", flash: true },
   ],
   [
@@ -436,6 +458,13 @@ const writeSteps = [
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
     { status: 302, location: "/auth/signin", flash: true },
   ],
+  // Five attempts per account per minute, then the throttle page; the account never exists.
+  ...[1, 2, 3, 4, 5].map((n) => [
+    `throttle allows sign-in attempt ${n}`,
+    throttledSignin,
+    { status: 302, location: "/auth/signin", flash: true },
+  ]),
+  ["throttle stops the 6th attempt", throttledSignin, { status: 303, location: "/auth/zbyt-wiele-prob", exact: true }],
 ];
 
 // HTTPS only (security audit F-10). Local servers have no TLS and stay on plain HTTP, so these run

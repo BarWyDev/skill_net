@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { CONSENT_REQUIRED_MESSAGE, CURRENT_CONSENT_VERSION } from "@/lib/consent";
 import { redirectWithError } from "@/lib/flash";
+import { passwordProblem } from "@/lib/password";
 
 export const POST: APIRoute = async (context) => {
   const form = await context.request.formData();
@@ -12,6 +13,12 @@ export const POST: APIRoute = async (context) => {
   // The browser form checks this first; this covers a POST without it (no JS, a script).
   if (typeof email !== "string" || !email.trim() || typeof password !== "string" || !password) {
     return redirectWithError(context, "/auth/signup", "Podaj adres e-mail i hasło.");
+  }
+
+  // The same rule as the form and the Supabase Auth settings; this covers a POST without the form.
+  const weak = passwordProblem(password);
+  if (weak) {
+    return redirectWithError(context, "/auth/signup", weak);
   }
 
   // Checked before GoTrue is called. The database refuses an email sign-up without a published
