@@ -1,20 +1,54 @@
 # Keeps the SHA-pinned actions and the npm lockfile current (security audit F-13). Each update is a
 # normal PR: CI and the smoke test run on it, and nothing merges by itself.
+# `cooldown`, `open-pull-requests-limit` and `schedule` apply to version updates only. `ignore` also
+# applies to security updates, so a fix that needs a major bump of an ignored package gets no PR:
+# watch the `audit` CI job and the repository's Dependabot alerts for those.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+      day: monday
+      timezone: Europe/Warsaw
+    open-pull-requests-limit: 2
+    cooldown:
+      # GitHub Actions supports only `default-days`, not the per-SemVer keys.
+      default-days: 7
     groups:
+      # Major action updates come as their own PRs.
       actions:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+      day: monday
+      timezone: Europe/Warsaw
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
+      semver-patch-days: 3
     groups:
       # Security fixes arrive as their own PRs; routine minor and patch updates come in one.
       minor-and-patch:
         update-types: ["minor", "patch"]
+    # Framework majors need a planned migration, not a weekly PR.
+    ignore:
+      - dependency-name: astro
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@astrojs/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: react
+        update-types: ["version-update:semver-major"]
+      - dependency-name: react-dom
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: tailwindcss
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@tailwindcss/*"
+        update-types: ["version-update:semver-major"]
