@@ -11,7 +11,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(54);
+select plan(57);
 
 -- ---------------------------------------------------------------------------
 -- Columns and defaults
@@ -343,6 +343,17 @@ select is(
   0,
   'v4: reveal_declined_count is 0 once B allows the reveal'
 );
+select ok(
+  (select role_skills ? 'narzedzia' from public.get_team_candidates(pg_temp.crisis('live'), 'techniczny', 1)
+   where "position" = 1),
+  'v2_live: A is a team candidate again, through the hand-tools role'
+);
+select is(
+  (select count(*) from public.reveal_crisis_contacts(pg_temp.crisis('live'), 'Brak potwierdzeń w nocy')
+   where "position" in (1, 2)),
+  2::bigint,
+  'reveal: A''s and B''s numbers are shown again'
+);
 
 -- ---------------------------------------------------------------------------
 -- reveal_declined_count access
@@ -350,6 +361,30 @@ select is(
 
 reset role;
 update public.profiles set allow_contact_reveal = false where user_id = (select user_id from ids where name = 'B');
+
+-- Also declined, but not counted: A hides their matched skill again, C has no phone, and the
+-- resident at position 5 is paused.
+insert into ids
+select 'E', m.user_id, m.position from public.crisis_matches m
+where m.crisis_id = pg_temp.crisis('live') and m.position = 5;
+update public.profile_skills set use_in_crisis = false
+where user_id = (select user_id from ids where name = 'A') and skill_slug = 'elektryk';
+update public.profiles set allow_contact_reveal = false
+where user_id in (select user_id from ids where name in ('A', 'C', 'E'));
+delete from public.profile_contacts where user_id = (select user_id from ids where name = 'C');
+update public.profiles
+set paused_at = now(), paused_until = (now() at time zone 'Europe/Warsaw')::date + 30
+where user_id = (select user_id from ids where name = 'E');
+
+set local role authenticated;
+select pg_temp.as_user('cccccccc-0000-0000-0000-000000000001');
+select is(
+  (select public.reveal_declined_count(c) from public.crises c where c.id = pg_temp.crisis('live')),
+  1,
+  'reveal_declined_count: only B counts, not a hidden, phoneless or paused resident who declined'
+);
+reset role;
+
 create temp table crisis_rows as select * from public.crises;
 grant select on crisis_rows to authenticated;
 
@@ -375,6 +410,8 @@ reset role;
 
 select ok(
   not has_function_privilege('anon', 'public.reveal_declined_count(public.crises)', 'execute')
+    and not has_function_privilege('anon', 'public.crisis_visible_skills(uuid, jsonb)', 'execute')
+    and not has_function_privilege('anon', 'public.profile_counts_on_map(uuid)', 'execute')
     and not has_function_privilege('authenticated', 'public.crisis_visible_skills(uuid, jsonb)', 'execute')
     and not has_function_privilege('authenticated', 'public.profile_counts_on_map(uuid)', 'execute'),
   'privileges: anon cannot read reveal_declined_count; the helpers are internal'

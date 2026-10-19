@@ -258,7 +258,7 @@ Expose the switches on `/profil`, keep the coordinator's counts honest, update t
 
 ## Migration Notes
 
-Expand only: new columns with defaults, replaced function bodies, one dropped-and-recreated `save_my_profile` that keeps accepting the old named call, a new computed column and a new consent row. Push to production before merging phase 2's code. There is no contract step. S-07 must take its alert audience from `profile_is_matchable` and alert only on skills with `use_in_crisis`; V4 does not affect SMS. Record this contract in S-07's plan.
+Expand only: new columns with defaults, replaced function bodies, one dropped-and-recreated `save_my_profile` that keeps accepting the old named call, a new computed column and a new consent row. Push to production before merging phase 2's code. There is no contract step. Rolling the code back is not V2-safe: code from before this change sends skills without a `crisis` key, and `save_my_profile` stores a missing key as true, so every profile save would turn that resident's hidden skills back on. After this change, roll forward instead of using `wrangler rollback` (review finding F1). S-07 must take its alert audience from `profile_is_matchable` and alert only on skills with `use_in_crisis`; V4 does not affect SMS. Record this contract in S-07's plan.
 
 ## References
 
