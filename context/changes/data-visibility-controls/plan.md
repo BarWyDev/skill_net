@@ -289,16 +289,16 @@ Expand only: new columns with defaults, replaced function bodies, one dropped-an
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm run test:unit`
-- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [x] 2.3 Build passes: `npm run build`
-- [x] 2.4 Smoke passes locally: `npm run smoke`
-- [x] 2.5 DB suites still pass: `npm run test:db`
+- [x] 2.1 Unit tests pass: `npm run test:unit` — a988e11
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check` — a988e11
+- [x] 2.3 Build passes: `npm run build` — a988e11
+- [x] 2.4 Smoke passes locally: `npm run smoke` — a988e11
+- [x] 2.5 DB suites still pass: `npm run test:db` — a988e11
 
 #### Manual
 
-- [x] 2.6 Switches save and reload on `/profil` (375 px and desktop)
-- [x] 2.7 All-hidden banner and sign-in landing on `/`
-- [x] 2.8 Contacts page declined count before and after reveal adds up
-- [x] 2.9 V3 off shows "nie podano" availability to the coordinator
-- [x] 2.10 New consent version asked once; `/prywatnosc` updated
+- [x] 2.6 Switches save and reload on `/profil` (375 px and desktop) — a988e11
+- [x] 2.7 All-hidden banner and sign-in landing on `/` — a988e11
+- [x] 2.8 Contacts page declined count before and after reveal adds up — a988e11
+- [x] 2.9 V3 off shows "nie podano" availability to the coordinator — a988e11
+- [x] 2.10 New consent version asked once; `/prywatnosc` updated — a988e11
