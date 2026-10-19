@@ -78,7 +78,8 @@ if (crisis?.status === "ended") {
   endedMessage = "Ten kryzys został zakończony — kontaktów nie można ujawnić.";
 }
 
-// Declined (V4) is a count only: never who, never a position.
+// Declined (V4) is a count only, never who. The list's "ma telefon" marker and the revealed positions
+// together still give the declined positions (pseudonymous; see the change notes).
 const counts = crisis && contacts ? revealCounts(crisis.matchCount, contacts.length, crisis.revealDeclinedCount) : null;
 const anyUnverified = contacts?.some((c) => !c.phoneVerified) ?? false;
 const crumbs = [
