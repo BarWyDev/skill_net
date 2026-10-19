@@ -283,7 +283,7 @@ Expand only: new columns with defaults, replaced function bodies, one dropped-an
 #### Manual
 
 - [x] 1.5 Hidden-skill round trip in an active crisis checked in Studio — 34c45b0
-- [ ] 1.6 Migration pushed to production and listed as applied
+- [x] 1.6 Migration pushed to production and listed as applied
 
 ### Phase 2: Application
 
