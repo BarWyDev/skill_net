@@ -69,8 +69,8 @@ select ok(
 
 select is(
   (select public.get_my_profile() -> 'skills'),
-  '[{"slug":"agregat-pradotworczy","level":null},{"slug":"elektryk","level":2}]'::jsonb,
-  'get_my_profile: returns the saved skills'
+  '[{"slug":"agregat-pradotworczy","level":null,"crisis":true},{"slug":"elektryk","level":2,"crisis":true}]'::jsonb,
+  'get_my_profile: returns the saved skills, used in crises by default'
 );
 select is(
   (select (public.get_my_profile() ->> 'matchable')::boolean),
