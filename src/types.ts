@@ -20,6 +20,8 @@ export interface SkillDTO {
 export interface ProfileSkillDTO {
   slug: string;
   level: SkillLevel | null;
+  /** V2: the skill takes part in crisis matching. Off, it still counts on the map. */
+  crisis: boolean;
 }
 
 /** One break-glass reveal of the caller's number: never the coordinator or their reason. */
@@ -35,7 +37,7 @@ export interface MyProfileDTO {
   lat: number | null;
   lng: number | null;
   skills: ProfileSkillDTO[];
-  /** Complete and not paused: the resident can appear in a crisis ranking. */
+  /** Complete, not paused and with a skill used in crises: the resident can appear in a crisis ranking. */
   matchable: boolean;
   /** A location and at least one skill, whether paused or not. */
   complete: boolean;
@@ -48,6 +50,12 @@ export interface MyProfileDTO {
   phoneVerified: boolean;
   /** 28-bit mask, see `src/lib/availability.ts`; null = not declared. */
   availabilitySlots: number | null;
+  /** V1: counted on the public density map (from the next daily refresh). */
+  showOnMap: boolean;
+  /** V3: the coordinator sees declared availability in a crisis. */
+  showAvailabilityInCrisis: boolean;
+  /** V4: the coordinator may reveal the number in an emergency (break-glass). */
+  allowContactReveal: boolean;
 }
 
 export interface TaxonomyDTO {
@@ -67,6 +75,10 @@ export interface SaveProfileInput {
   phone: string | null;
   /** Non-zero 28-bit mask; null = not declared. */
   availabilitySlots: number | null;
+  /** The switches V1, V3 and V4; null leaves the stored value unchanged. */
+  showOnMap: boolean | null;
+  showAvailabilityInCrisis: boolean | null;
+  allowContactReveal: boolean | null;
 }
 
 export interface CrisisTypeDTO {
@@ -102,6 +114,11 @@ export interface CrisisDTO {
    * erased residents excluded). For an ended crisis, the frozen count from activation.
    */
   matchCount: number;
+  /**
+   * For an active crisis, how many of those residents have a phone but declined an emergency
+   * reveal (never who). 0 for an ended crisis.
+   */
+  revealDeclinedCount: number;
   status: "active" | "ended";
 }
 

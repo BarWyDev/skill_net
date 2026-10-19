@@ -275,30 +275,30 @@ Expand only: new columns with defaults, replaced function bodies, one dropped-an
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db reset`
-- [x] 1.2 All pgTAP suites pass, including the new one: `npm run test:db`
-- [x] 1.3 Types regenerate with no unexpected diff: `npm run db:types`
-- [x] 1.4 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 1.1 Migration applies cleanly: `npx supabase db reset` — 34c45b0
+- [x] 1.2 All pgTAP suites pass, including the new one: `npm run test:db` — 34c45b0
+- [x] 1.3 Types regenerate with no unexpected diff: `npm run db:types` — 34c45b0
+- [x] 1.4 Lint and type check pass: `npm run lint` and `npx astro check` — 34c45b0
 
 #### Manual
 
-- [x] 1.5 Hidden-skill round trip in an active crisis checked in Studio
+- [x] 1.5 Hidden-skill round trip in an active crisis checked in Studio — 34c45b0
 - [ ] 1.6 Migration pushed to production and listed as applied
 
 ### Phase 2: Application
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm run test:unit`
-- [ ] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
-- [ ] 2.3 Build passes: `npm run build`
-- [ ] 2.4 Smoke passes locally: `npm run smoke`
-- [ ] 2.5 DB suites still pass: `npm run test:db`
+- [x] 2.1 Unit tests pass: `npm run test:unit`
+- [x] 2.2 Lint and type check pass: `npm run lint` and `npx astro check`
+- [x] 2.3 Build passes: `npm run build`
+- [x] 2.4 Smoke passes locally: `npm run smoke`
+- [x] 2.5 DB suites still pass: `npm run test:db`
 
 #### Manual
 
-- [ ] 2.6 Switches save and reload on `/profil` (375 px and desktop)
-- [ ] 2.7 All-hidden banner and sign-in landing on `/`
-- [ ] 2.8 Contacts page declined count before and after reveal adds up
-- [ ] 2.9 V3 off shows "nie podano" availability to the coordinator
-- [ ] 2.10 New consent version asked once; `/prywatnosc` updated
+- [x] 2.6 Switches save and reload on `/profil` (375 px and desktop)
+- [x] 2.7 All-hidden banner and sign-in landing on `/`
+- [x] 2.8 Contacts page declined count before and after reveal adds up
+- [x] 2.9 V3 off shows "nie podano" availability to the coordinator
+- [x] 2.10 New consent version asked once; `/prywatnosc` updated

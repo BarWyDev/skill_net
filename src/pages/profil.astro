@@ -61,6 +61,15 @@ if (!supabase) {
             </button>
           </form>
         </StatusLine>
+      ) : profile.complete && !profile.matchable ? (
+        <StatusLine tone="attention">
+          <p class="font-bold">
+            Żadna z Twoich umiejętności nie jest używana w kryzysach, więc koordynator Cię nie znajdzie.
+          </p>
+          <p class="text-ash mt-1 text-base">
+            Zaznacz „Używaj w kryzysie” przy co najmniej jednej umiejętności, jeśli chcesz pomagać w kryzysach.
+          </p>
+        </StatusLine>
       ) : profile.complete ? (
         <StatusLine tone="done">
           <p class="font-bold">Profil kompletny</p>
