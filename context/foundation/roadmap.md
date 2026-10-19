@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-10-06
+updated: 2026-10-19
 prd_version: 1
 main_goal: market-feedback
 top_blocker: decisions
@@ -52,7 +52,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | done     |
 | S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | done     |
 | S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | done     |
-| S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | blocked  |
+| S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | in-progress |
 | S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | done     |
 | S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done     |
 | S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
@@ -246,9 +246,9 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Parallel with:** S-02, S-03, S-04, S-05, S-07, S-08, S-09, S-10, S-11, S-13, S-14
 - **Blockers:** —
 - **Unknowns:**
-  - Which fields are controllable, per which modes, and does hiding a skill also exclude it from crisis matching? Planning can't start until the visibility matrix is defined. — Owner: user. Block: yes.
+  - ~~Which fields are controllable, per which modes, and does hiding a skill also exclude it from crisis matching?~~ Resolved 2026-10-19: matrix accepted (decisions D1–D8) in `context/changes/data-visibility-controls/visibility-matrix-proposal.md`. Four switches (map contribution, per-skill crisis use, availability shown in crisis, break-glass consent); a hidden skill is excluded from matching.
 - **Risk:** Interacts with matching (S-03), the map (S-11) and the operational list (S-08). An unclear rule here silently breaks the guardrails.
-- **Status:** blocked
+- **Status:** in-progress
 
 ### S-13: Resident pauses their availability
 
@@ -316,7 +316,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-09       | #10   | break-glass-contact-reveal      | Break-glass reveal of matched contacts, audited                 | done                  | Archived 2026-10-04                                 |
 | S-10       | #11   | crisis-team-templates           | Assemble teams from predefined templates                        | done                  | Archived 2026-10-04                                 |
 | S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | done                  | Archived 2026-10-05                                 |
-| S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                    | no                    | Blocked: visibility matrix undefined                |
+| S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                    | yes                   | Matrix accepted 2026-10-19; run `/10x-plan`         |
 | S-13       | #14   | pause-availability              | Pause and resume availability                                   | done                  | Archived 2026-10-06                                 |
 | S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | done                  | Archived 2026-10-04                                 |
 | S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | done                  | Archived 2026-09-27; no issue was created           |
