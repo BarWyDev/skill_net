@@ -51,7 +51,11 @@ const myProfileSchema = z.object({
   lat: z.number().nullable(),
   lng: z.number().nullable(),
   skills: z.array(
-    z.object({ slug: z.string(), level: z.union([z.literal(1), z.literal(2), z.literal(3)]).nullable() }),
+    z.object({
+      slug: z.string(),
+      level: z.union([z.literal(1), z.literal(2), z.literal(3)]).nullable(),
+      crisis: z.boolean(),
+    }),
   ),
   matchable: z.boolean(),
   complete: z.boolean(),
@@ -60,6 +64,9 @@ const myProfileSchema = z.object({
   phone: z.string().nullable(),
   phone_verified: z.boolean(),
   availability_slots: z.number().int().nullable(),
+  show_on_map: z.boolean(),
+  show_availability_in_crisis: z.boolean(),
+  allow_contact_reveal: z.boolean(),
 });
 
 export async function getMyProfile(supabase: SupabaseClient): Promise<MyProfileDTO> {
@@ -79,6 +86,9 @@ export async function getMyProfile(supabase: SupabaseClient): Promise<MyProfileD
     phone: profile.phone,
     phoneVerified: profile.phone_verified,
     availabilitySlots: profile.availability_slots,
+    showOnMap: profile.show_on_map,
+    showAvailabilityInCrisis: profile.show_availability_in_crisis,
+    allowContactReveal: profile.allow_contact_reveal,
   };
 }
 
@@ -94,7 +104,10 @@ export async function getMyNumberReveals(supabase: SupabaseClient): Promise<Numb
   }));
 }
 
-/** Saves the caller's location, whole skill set, phone and availability atomically. Returns a Polish message on failure. */
+/**
+ * Saves the caller's location, whole skill set, phone, availability and visibility switches
+ * atomically. A null switch is left unchanged. Returns a Polish message on failure.
+ */
 export async function saveMyProfile(
   supabase: SupabaseClient,
   input: SaveProfileInput,
@@ -105,9 +118,12 @@ export async function saveMyProfile(
     p_postcode: input.postcode,
     p_lat: input.lat,
     p_lng: input.lng,
-    p_skills: input.skills.map((s) => ({ slug: s.slug, level: s.level })),
+    p_skills: input.skills.map((s) => ({ slug: s.slug, level: s.level, crisis: s.crisis })),
     p_phone: input.phone,
     p_availability_slots: input.availabilitySlots,
+    p_show_on_map: input.showOnMap,
+    p_show_availability_in_crisis: input.showAvailabilityInCrisis,
+    p_allow_contact_reveal: input.allowContactReveal,
   } as SaveMyProfileArgs;
   const { error } = await supabase.rpc("save_my_profile", args);
   return error ? { ok: false, message: saveErrorMessage(error) } : { ok: true };
@@ -143,10 +159,17 @@ export async function resumeMyAvailability(
   return error ? { ok: false, message: GENERIC_RESUME_ERROR } : { ok: true };
 }
 
-/** Whether the user can be matched in a crisis; null when the check itself failed. */
-export async function isProfileMatchable(supabase: SupabaseClient, userId: string): Promise<boolean | null> {
-  const { data, error } = await supabase.rpc("profile_is_matchable", { p_user_id: userId });
-  return error ? null : data;
+/**
+ * Whether the signed-in resident should be sent to /profil: an incomplete or paused profile. Hiding
+ * every skill from crises is a deliberate choice and is not nudged. Null when the check failed.
+ */
+export async function profileNeedsAttention(supabase: SupabaseClient): Promise<boolean | null> {
+  try {
+    const profile = await getMyProfile(supabase);
+    return !profile.complete || profile.paused;
+  } catch {
+    return null;
+  }
 }
 
 /** The coarsened centroid a profile would store for this postcode, or null if unknown. */

@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase";
 import { getCrisis, revealCrisisContacts } from "@/lib/services/crisis";
 import { parseRevealReason, REASON_MAX, REASON_MIN } from "@/lib/validation/crisis";
 import { cn } from "@/lib/utils";
+import { declinedVerb, revealCounts } from "@/lib/visibility";
 import type { CrisisContactDTO, CrisisDTO } from "@/types";
 
 // Break-glass (S-09, FR-012). GET shows the warning and the reason form, never a number. POST calls
@@ -77,7 +78,8 @@ if (crisis?.status === "ended") {
   endedMessage = "Ten kryzys został zakończony — kontaktów nie można ujawnić.";
 }
 
-const withoutPhone = crisis && contacts ? Math.max(0, crisis.matchCount - contacts.length) : 0;
+// Declined (V4) is a count only: never who, never a position.
+const counts = crisis && contacts ? revealCounts(crisis.matchCount, contacts.length, crisis.revealDeclinedCount) : null;
 const anyUnverified = contacts?.some((c) => !c.phoneVerified) ?? false;
 const crumbs = [
   { href: "/koordynator", label: "Panel koordynatora" },
@@ -128,6 +130,12 @@ const heading = !crisis
           tylko wtedy, gdy nie da się ich zawiadomić inaczej.
         </p>
         <p>Ujawnienie zostanie trwale zapisane: Twoje konto, czas, powód i lista osób, których numery zobaczysz.</p>
+        {crisis.revealDeclinedCount > 0 && (
+          <p>
+            {formatPeople(crisis.revealDeclinedCount)} {declinedVerb(crisis.revealDeclinedCount)} na awaryjne
+            odsłonięcie numeru. Ich numerów nie zobaczysz.
+          </p>
+        )}
         <p class="text-ash">
           Numery znikną po opuszczeniu strony. Każde ponowne wyświetlenie to nowe, osobno zapisane ujawnienie.
         </p>
@@ -187,7 +195,11 @@ const heading = !crisis
       )}
 
       {contacts.length === 0 ? (
-        <p class="mt-10 text-lg">Żadna z dopasowanych osób nie podała numeru telefonu.</p>
+        <p class="mt-10 text-lg">
+          {counts && counts.declined > 0
+            ? "Żaden numer nie jest dostępny do odsłonięcia."
+            : "Żadna z dopasowanych osób nie podała numeru telefonu."}
+        </p>
       ) : (
         <ol class="border-seam mt-10 border-b">
           {contacts.map((c) => (
@@ -229,7 +241,9 @@ const heading = !crisis
       )}
 
       <p class="text-ash mt-6 leading-relaxed">
-        Bez numeru telefonu: {formatPeople(withoutPhone)}. Numery znikną po opuszczeniu tej strony.
+        Bez numeru telefonu: {formatPeople(counts?.withoutPhone ?? 0)}.
+        {counts && counts.declined > 0 && <>Bez zgody na awaryjne odsłonięcie: {formatPeople(counts.declined)}.</>}
+        Numery znikną po opuszczeniu tej strony.
       </p>
     </>
   )}

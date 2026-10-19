@@ -90,9 +90,10 @@ export async function endCrisis(
   return error ? { ok: false, message: endErrorMessage(error) } : { ok: true, ended: data };
 }
 
-// `visible_match_count` is a PostgREST computed column (a SQL function over the crises row type).
+// `visible_match_count` and `reveal_declined_count` are PostgREST computed columns (SQL functions
+// over the crises row type).
 const CRISIS_COLUMNS =
-  "id, radius_m, activated_at, ended_at, visible_match_count, status, epicentre_postcode, crisis_types(name_pl)";
+  "id, radius_m, activated_at, ended_at, visible_match_count, reveal_declined_count, status, epicentre_postcode, crisis_types(name_pl)";
 
 interface CrisisRow {
   id: string;
@@ -100,6 +101,7 @@ interface CrisisRow {
   activated_at: string;
   ended_at: string | null;
   visible_match_count: number | null;
+  reveal_declined_count: number | null;
   status: string;
   epicentre_postcode: string | null;
   crisis_types: { name_pl: string } | null;
@@ -114,6 +116,7 @@ function toCrisisDTO(row: CrisisRow): CrisisDTO {
     activatedAt: row.activated_at,
     endedAt: row.ended_at,
     matchCount: row.visible_match_count ?? 0,
+    revealDeclinedCount: row.reveal_declined_count ?? 0,
     status: row.status === "ended" ? "ended" : "active",
   };
 }
