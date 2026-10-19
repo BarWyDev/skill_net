@@ -8,8 +8,10 @@ import { FieldError } from "@/components/auth/FieldError";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { formatPhone, normalisePhone, PHONE_ERROR } from "@/lib/phone";
 import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
+import { SWITCH_OFF, SWITCH_ON } from "@/lib/visibility";
 import type { MyProfileDTO, SkillLevel, TaxonomyDTO } from "@/types";
 import { SECTION_TITLE } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
 
 interface Props {
   taxonomy: TaxonomyDTO;
@@ -20,6 +22,13 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
   const [selected, setSelected] = useState<SelectedSkills>(() =>
     Object.fromEntries(profile.skills.map((s) => [s.slug, s.level])),
   );
+  // Checked skills hidden from crises (V2); a skill unchecked and checked again starts as used.
+  const [crisisOff, setCrisisOff] = useState<ReadonlySet<string>>(
+    () => new Set(profile.skills.filter((s) => !s.crisis).map((s) => s.slug)),
+  );
+  const [showOnMap, setShowOnMap] = useState(profile.showOnMap);
+  const [showAvailability, setShowAvailability] = useState(profile.showAvailabilityInCrisis);
+  const [allowContactReveal, setAllowContactReveal] = useState(profile.allowContactReveal);
   // The postcode is never stored, so the field always starts empty.
   const [initialLocation] = useState<LocationValue>(() => ({
     source: profile.locationSource,
@@ -74,6 +83,16 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
       const { [slug]: _unchecked, ...rest } = prev;
       return rest;
     });
+    if (!checked) handleCrisis(slug, true);
+  }
+
+  function handleCrisis(slug: string, use: boolean) {
+    setCrisisOff((prev) => {
+      const next = new Set(prev);
+      if (use) next.delete(slug);
+      else next.add(slug);
+      return next;
+    });
   }
 
   function handleLevel(slug: string, level: SkillLevel) {
@@ -125,7 +144,7 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
         <section aria-labelledby="skills-heading">
           <SectionHeading
             id="skills-heading"
-            help="Zaznacz, co umiesz lub co masz. Przy umiejętnościach wybierz poziom."
+            help="Zaznacz, co umiesz lub co masz. Przy umiejętnościach wybierz poziom. Odznacz „Używaj w kryzysie”, jeśli koordynator nie ma brać danej umiejętności pod uwagę."
           >
             Umiejętności i sprzęt
           </SectionHeading>
@@ -133,9 +152,11 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
             categories={taxonomy.categories}
             skills={taxonomy.skills}
             selected={selected}
+            crisisOff={crisisOff}
             showMissingLevels={showMissingLevels}
             onToggle={handleToggle}
             onLevel={handleLevel}
+            onCrisis={handleCrisis}
           />
         </section>
 
@@ -169,11 +190,48 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
           </SectionHeading>
           <AvailabilityGrid initial={profile.availabilitySlots} />
         </section>
+
+        <section aria-labelledby="visibility-heading">
+          <SectionHeading
+            id="visibility-heading"
+            help="Zdecyduj, do czego wolno użyć Twoich danych. E-mail i dokładna lokalizacja nie są nikomu pokazywane."
+          >
+            Widoczność danych
+          </SectionHeading>
+          <div className="space-y-5">
+            <VisibilitySwitch
+              name="show_on_map"
+              checked={showOnMap}
+              onChange={setShowOnMap}
+              label="Wliczaj mnie do publicznej mapy umiejętności"
+              help="Mapa pokazuje tylko przedziały liczby osób w kwadratach 2 × 2 km. Zmiana działa od następnego dnia."
+            />
+            <VisibilitySwitch
+              name="show_availability"
+              checked={showAvailability}
+              onChange={setShowAvailability}
+              label="Pokazuj koordynatorowi, kiedy jestem dostępny"
+              help="Wyłączone: w kryzysie koordynator zobaczy „nie podano”. Twoje miejsce na liście się nie zmienia."
+            />
+            <VisibilitySwitch
+              name="allow_contact_reveal"
+              checked={allowContactReveal}
+              onChange={setAllowContactReveal}
+              label="Pozwól koordynatorowi awaryjnie odsłonić mój numer"
+              help="Gdy w kryzysie nie da się zawiadomić ludzi inaczej, koordynator może po podaniu powodu zobaczyć numery. Wyłączone: Twój numer zostanie pominięty."
+            />
+          </div>
+        </section>
       </div>
 
       {Object.entries(selected).map(([slug, level]) => (
         <input key={slug} type="hidden" name="skill" value={level === null ? slug : `${slug}:${level}`} />
       ))}
+      {Object.keys(selected)
+        .filter((slug) => crisisOff.has(slug))
+        .map((slug) => (
+          <input key={slug} type="hidden" name="skill_crisis_off" value={slug} />
+        ))}
 
       {/* The error sits under the button, so nothing above it moves when it appears. */}
       <div className="mt-2">
@@ -195,6 +253,43 @@ function SectionHeading({ id, help, children }: { id: string; help: string; chil
         {children}
       </h2>
       <p className="text-ash mt-3 leading-relaxed">{help}</p>
+    </div>
+  );
+}
+
+// A checkbox whose value always travels as "1" or "0" in a hidden field, so an unchecked box is
+// never mistaken for a field that was not sent (which leaves the stored switch unchanged).
+function VisibilitySwitch({
+  name,
+  checked,
+  onChange,
+  label,
+  help,
+}: {
+  name: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+  help: string;
+}) {
+  return (
+    <div>
+      <label className="flex min-h-11 cursor-pointer items-center gap-4 py-1">
+        <input
+          type="checkbox"
+          checked={checked}
+          aria-describedby={`${name}-help`}
+          onChange={(e) => {
+            onChange(e.target.checked);
+          }}
+          className="check"
+        />
+        <span className={cn(checked ? "text-chalk" : "text-ash")}>{label}</span>
+      </label>
+      <p id={`${name}-help`} className="text-ash border-seam ml-3 border-l-2 pl-7 text-[0.9375rem] leading-relaxed">
+        {help}
+      </p>
+      <input type="hidden" name={name} value={checked ? SWITCH_ON : SWITCH_OFF} />
     </div>
   );
 }

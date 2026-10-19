@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
-import { isProfileMatchable } from "@/lib/services/profile";
+import { profileNeedsAttention } from "@/lib/services/profile";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { RETURN_PARAM, safeReturnPath } from "@/lib/return-path";
 import { redirectWithError } from "@/lib/flash";
@@ -16,7 +16,7 @@ export const POST: APIRoute = async (context) => {
   if (!supabase) {
     return redirectWithError(context, "/auth/signin", "Supabase nie jest skonfigurowany.");
   }
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     // The form shows a resend block for this flag. The address stays in the browser, never in the URL.
@@ -30,8 +30,8 @@ export const POST: APIRoute = async (context) => {
 
   if (returnTo) return context.redirect(returnTo);
 
-  // Nudge residents with an incomplete profile to finish it. A failed check (null) must
-  // never block sign-in, so it falls back to the home page.
-  const matchable = await isProfileMatchable(supabase, data.user.id);
-  return context.redirect(matchable === false ? "/profil" : "/");
+  // Nudge residents with an incomplete or paused profile to the profile page. A failed check (null)
+  // must never block sign-in, so it falls back to the home page.
+  const needsAttention = await profileNeedsAttention(supabase);
+  return context.redirect(needsAttention === true ? "/profil" : "/");
 };

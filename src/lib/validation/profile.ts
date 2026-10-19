@@ -2,6 +2,7 @@ import { z } from "zod";
 import { SLOT_COUNT, slotsToMask } from "@/lib/availability";
 import { normalisePhone, PHONE_ERROR } from "@/lib/phone";
 import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
+import { CRISIS_OFF_UNKNOWN_SKILL, parseSwitch, withCrisisUse } from "@/lib/visibility";
 import type { SaveProfileInput } from "@/types";
 
 export const MAX_SKILLS = 40;
@@ -54,7 +55,29 @@ const availabilitySchema = z
   .max(SLOT_COUNT, "Nieprawidłowa dostępność.")
   .transform((bits) => slotsToMask(bits) || null);
 
-const contactFields = { phone: phoneSchema, availability: availabilitySchema, skill: skillsSchema };
+// "1" or "0"; a missing field is null, which leaves the stored switch unchanged.
+const switchSchema = z
+  .string()
+  .nullable()
+  .transform((value, ctx) => {
+    const parsed = parseSwitch(value);
+    if (parsed === undefined) {
+      ctx.addIssue({ code: "custom", message: "Nieprawidłowe ustawienie widoczności." });
+      return z.NEVER;
+    }
+    return parsed;
+  });
+
+const contactFields = {
+  phone: phoneSchema,
+  availability: availabilitySchema,
+  skill: skillsSchema,
+  // Slugs of submitted skills hidden from crises (V2).
+  skill_crisis_off: z.array(z.string().regex(/^[a-z0-9-]+$/, CRISIS_OFF_UNKNOWN_SKILL)).max(MAX_SKILLS),
+  show_on_map: switchSchema,
+  show_availability: switchSchema,
+  allow_contact_reveal: switchSchema,
+};
 
 const profileFormSchema = z.discriminatedUnion("location_source", [
   z.object({
@@ -91,15 +114,24 @@ export function parseProfileForm(form: FormData): ParseResult {
     const value = form.get(name);
     return typeof value === "string" ? value : "";
   };
+  const optional = (name: string) => {
+    const value = form.get(name);
+    return typeof value === "string" ? value : null;
+  };
+  const all = (name: string) => form.getAll(name).filter((value) => typeof value === "string");
 
   const result = profileFormSchema.safeParse({
     location_source: text("location_source"),
     postcode: text("postcode"),
     lat: text("lat"),
     lng: text("lng"),
-    skill: form.getAll("skill").filter((value) => typeof value === "string"),
+    skill: all("skill"),
+    skill_crisis_off: all("skill_crisis_off"),
     phone: text("phone"),
-    availability: form.getAll("availability").filter((value) => typeof value === "string"),
+    availability: all("availability"),
+    show_on_map: optional("show_on_map"),
+    show_availability: optional("show_availability"),
+    allow_contact_reveal: optional("allow_contact_reveal"),
   });
 
   if (!result.success) {
@@ -107,7 +139,17 @@ export function parseProfileForm(form: FormData): ParseResult {
   }
 
   const parsed = result.data;
-  const extras = { skills: parsed.skill, phone: parsed.phone, availabilitySlots: parsed.availability };
+  const skills = withCrisisUse(parsed.skill, parsed.skill_crisis_off);
+  if (skills === null) return { success: false, message: CRISIS_OFF_UNKNOWN_SKILL };
+
+  const extras = {
+    skills,
+    phone: parsed.phone,
+    availabilitySlots: parsed.availability,
+    showOnMap: parsed.show_on_map,
+    showAvailabilityInCrisis: parsed.show_availability,
+    allowContactReveal: parsed.allow_contact_reveal,
+  };
   switch (parsed.location_source) {
     case "postcode":
       return {

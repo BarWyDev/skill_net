@@ -254,7 +254,7 @@ reset role;
 select ok(
   not has_table_privilege('anon', 'public.profile_contacts', 'select')
   and not has_table_privilege('anon', 'public.profile_contacts', 'insert')
-  and not has_function_privilege('anon', 'public.save_my_profile(text, text, double precision, double precision, jsonb, text, integer)', 'execute')
+  and not has_function_privilege('anon', 'public.save_my_profile(text, text, double precision, double precision, jsonb, text, integer, boolean, boolean, boolean)', 'execute')
   and not has_column_privilege('authenticated', 'public.profile_contacts', 'phone_verified_at', 'update')
   and not has_column_privilege('authenticated', 'public.profile_contacts', 'phone_verified_at', 'insert'),
   'anon_denied: anon has no access; authenticated cannot write phone_verified_at'
@@ -262,9 +262,9 @@ select ok(
 select ok(
   not exists (
     select 1 from pg_proc
-    where proname = 'save_my_profile' and pronamespace = 'public'::regnamespace and pronargs <> 7
+    where proname = 'save_my_profile' and pronamespace = 'public'::regnamespace and pronargs <> 10
   ),
-  'old_signature_dropped: only the 7-argument save_my_profile exists'
+  'old_signature_dropped: only the 10-argument save_my_profile exists (data visibility controls)'
 );
 
 set local role anon;
