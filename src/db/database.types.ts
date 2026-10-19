@@ -176,6 +176,7 @@ export type Database = {
           match_count: number
           radius_m: number
           reason: string | null
+          reveal_declined_count: number | null
           status: string
           visible_match_count: number | null
         }
@@ -411,16 +412,19 @@ export type Database = {
         Row: {
           level: number | null
           skill_slug: string
+          use_in_crisis: boolean
           user_id: string
         }
         Insert: {
           level?: number | null
           skill_slug: string
+          use_in_crisis?: boolean
           user_id: string
         }
         Update: {
           level?: number | null
           skill_slug?: string
+          use_in_crisis?: boolean
           user_id?: string
         }
         Relationships: [
@@ -442,6 +446,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          allow_contact_reveal: boolean
           availability_slots: number | null
           created_at: string
           location: unknown
@@ -449,10 +454,13 @@ export type Database = {
           paused_at: string | null
           paused_until: string | null
           postcode: string | null
+          show_availability_in_crisis: boolean
+          show_on_map: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
+          allow_contact_reveal?: boolean
           availability_slots?: number | null
           created_at?: string
           location?: unknown
@@ -460,10 +468,13 @@ export type Database = {
           paused_at?: string | null
           paused_until?: string | null
           postcode?: string | null
+          show_availability_in_crisis?: boolean
+          show_on_map?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
+          allow_contact_reveal?: boolean
           availability_slots?: number | null
           created_at?: string
           location?: unknown
@@ -471,6 +482,8 @@ export type Database = {
           paused_at?: string | null
           paused_until?: string | null
           postcode?: string | null
+          show_availability_in_crisis?: boolean
+          show_on_map?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -729,6 +742,12 @@ export type Database = {
           rank: number
         }[]
       }
+      reveal_declined_count: {
+        Args: { "": Database["public"]["Tables"]["crises"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.reveal_declined_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
       revoke_coordinator: {
         Args: { p_email: string; p_note: string }
         Returns: undefined
@@ -739,12 +758,15 @@ export type Database = {
       }
       save_my_profile: {
         Args: {
+          p_allow_contact_reveal?: boolean
           p_availability_slots: number
           p_lat: number
           p_lng: number
           p_location_source: string
           p_phone: string
           p_postcode: string
+          p_show_availability_in_crisis?: boolean
+          p_show_on_map?: boolean
           p_skills: Json
         }
         Returns: undefined
