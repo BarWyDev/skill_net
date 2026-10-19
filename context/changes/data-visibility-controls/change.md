@@ -1,7 +1,7 @@
 ---
 change_id: data-visibility-controls
 title: Per-field, per-mode data visibility controls
-status: implementing
+status: implemented
 created: 2026-10-19
 updated: 2026-10-19
 archived_at: null
