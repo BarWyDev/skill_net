@@ -125,7 +125,13 @@ export function parseCrisisForm(form: FormData): CrisisParseResult {
   }
 
   const parsed = result.data;
-  const base = { crisisType: parsed.crisis_type, radiusKm: parsed.radius_km, reason: parsed.reason };
+  const base = {
+    crisisType: parsed.crisis_type,
+    radiusKm: parsed.radius_km,
+    reason: parsed.reason,
+    // An unchecked checkbox sends nothing; anything else than "1" is not an exercise.
+    exercise: text("exercise") === "1",
+  };
   return parsed.location_source === "postcode"
     ? { success: true, data: { ...base, locationSource: "postcode", postcode: parsed.postcode, lat: null, lng: null } }
     : { success: true, data: { ...base, locationSource: "pin", postcode: null, lat: parsed.lat, lng: parsed.lng } };

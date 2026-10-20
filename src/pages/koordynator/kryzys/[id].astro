@@ -5,12 +5,13 @@ import CrisisFacts from "@/components/crisis/CrisisFacts.astro";
 import EndCrisisDialog from "@/components/crisis/EndCrisisDialog.astro";
 import PersonStatus from "@/components/crisis/PersonStatus.astro";
 import SkillList from "@/components/crisis/SkillList.astro";
+import CrisisCoverage from "@/components/crisis/CrisisCoverage.astro";
 import { createClient } from "@/lib/supabase";
-import { getCrisis, getCrisisMatches, MATCHES_PAGE_SIZE } from "@/lib/services/crisis";
+import { getCrisis, getCrisisCoverage, getCrisisMatches, MATCHES_PAGE_SIZE } from "@/lib/services/crisis";
 import { formatDistanceKm, formatPeople } from "@/lib/crisis-format";
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
-import type { CrisisDTO, CrisisMatchDTO } from "@/types";
+import type { CrisisCoverageDTO, CrisisDTO, CrisisMatchDTO } from "@/types";
 import { takeFlashError } from "@/lib/flash";
 
 // The middleware gates this route (coordinators only) and sends Cache-Control: private, no-store.
@@ -27,6 +28,8 @@ const error = takeFlashError(Astro);
 
 let crisis: CrisisDTO | null = null;
 let matches: CrisisMatchDTO[] = [];
+// Null when it failed to load: the list matters more, so a coverage error only hides the section.
+let coverage: CrisisCoverageDTO[] | null = null;
 let loadError: string | null = null;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
@@ -35,7 +38,12 @@ if (!supabase) {
 } else if (UUID_RE.test(id)) {
   try {
     crisis = await getCrisis(supabase, id);
-    if (crisis?.status === "active") matches = await getCrisisMatches(supabase, id);
+    if (crisis?.status === "active") {
+      [matches, coverage] = await Promise.all([
+        getCrisisMatches(supabase, id),
+        getCrisisCoverage(supabase, id).catch(() => null),
+      ]);
+    }
   } catch {
     loadError = "Nie udało się wczytać listy. Odśwież stronę.";
   }
@@ -44,10 +52,11 @@ if (!supabase) {
 if (!crisis && !loadError) Astro.response.status = 404;
 const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - matches.length) : 0;
 const panel = { href: "/koordynator", label: "Panel koordynatora" };
+const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
 ---
 
 <PageShell
-  title={`${crisis ? `Kryzys: ${crisis.typeName}` : "Nie znaleziono kryzysu"} — SkillNet`}
+  title={`${crisis ? `${kind}: ${crisis.typeName}` : "Nie znaleziono kryzysu"} — SkillNet`}
   heading={crisis?.typeName ?? (loadError ? "Kryzys" : "Nie znaleziono kryzysu")}
   crumbs={[panel]}
   wide
@@ -102,19 +111,23 @@ const panel = { href: "/koordynator", label: "Panel koordynatora" };
             Potrzebujesz gotowych składów? Złóż zespoły z szablonu (np. ewakuacyjny) z osób z tej listy.
           </p>
         </li>
-        <li class="grid gap-x-8 gap-y-3 md:grid-cols-[16rem_minmax(0,1fr)] md:items-center">
-          <a
-            href={`/koordynator/kryzys/${crisis.id}/kontakty`}
-            class:list={cn(BUTTON, "btn-secondary w-full md:w-auto")}
-          >
-            Ujawnij kontakty
-          </a>
-          <p class="max-w-[52ch] leading-relaxed">
-            Nikt nie potwierdza? Możesz ujawnić numery wszystkich dopasowanych osób. Każde ujawnienie jest zapisywane
-            razem z Twoim kontem i powodem.
-          </p>
-        </li>
+        {!crisis.isExercise && (
+          <li class="grid gap-x-8 gap-y-3 md:grid-cols-[16rem_minmax(0,1fr)] md:items-center">
+            <a
+              href={`/koordynator/kryzys/${crisis.id}/kontakty`}
+              class:list={cn(BUTTON, "btn-secondary w-full md:w-auto")}
+            >
+              Ujawnij kontakty
+            </a>
+            <p class="max-w-[52ch] leading-relaxed">
+              Nikt nie potwierdza? Możesz ujawnić numery wszystkich dopasowanych osób. Każde ujawnienie jest zapisywane
+              razem z Twoim kontem i powodem.
+            </p>
+          </li>
+        )}
       </ul>
+
+      {coverage && coverage.length > 0 && <CrisisCoverage coverage={coverage} class="mt-16 sm:mt-20" />}
 
       <section aria-labelledby="matches-heading" class="mt-16 sm:mt-20">
         <h2 id="matches-heading" class:list={SECTION_TITLE}>

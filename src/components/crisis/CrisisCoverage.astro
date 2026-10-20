@@ -1,0 +1,72 @@
+---
+// Skill coverage of an active crisis: a one-line verdict on the priority skills, then every skill of the
+// crisis type's matrix with how many people on the list have it. A skill nobody has is marked with the
+// attention square and says so in words, so colour is never the only signal.
+import StatusLine from "@/components/StatusLine.astro";
+import StatusMark from "@/components/StatusMark.astro";
+import { joinNames, summariseCoverage } from "@/lib/crisis-coverage";
+import { formatPeople } from "@/lib/crisis-format";
+import { SECTION_TITLE } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
+import type { CrisisCoverageDTO } from "@/types";
+
+interface Props {
+  coverage: CrisisCoverageDTO[];
+  class?: string;
+}
+
+const { coverage, class: className } = Astro.props;
+const summary = summariseCoverage(coverage);
+const groups = [
+  { title: "Priorytetowe", priority: true, rows: coverage.filter((r) => r.tier === "priority") },
+  { title: "Wspierające", priority: false, rows: coverage.filter((r) => r.tier === "supporting") },
+].filter((g) => g.rows.length > 0);
+---
+
+<section aria-labelledby="coverage-heading" class:list={cn(className)}>
+  <h2 id="coverage-heading" class:list={SECTION_TITLE}>
+    Pokrycie umiejętności
+  </h2>
+
+  {summary.missingPriority.length > 0 ? (
+    <StatusLine tone="attention" class="mt-4 max-w-[64ch] text-lg">
+      <p class="font-bold">W promieniu brakuje: {joinNames(summary.missingPriority)}.</p>
+      <p class="text-ash text-base">
+        Priorytetowe umiejętności na liście: {summary.priorityCovered} z {summary.priorityTotal}. Rozważ większy promień
+        albo pomoc z zewnątrz.
+      </p>
+    </StatusLine>
+  ) : (
+    <StatusLine tone="done" class="mt-4 max-w-[64ch] text-lg font-bold">
+      Każda priorytetowa umiejętność ({summary.priorityTotal}) ma na liście co najmniej jedną osobę.
+    </StatusLine>
+  )}
+
+  <div class="mt-8 grid gap-x-12 gap-y-8 md:grid-cols-2">
+    {groups.map((g) => (
+      <div>
+        <h3 class="text-ash mb-2 text-[0.9375rem]">{g.title}</h3>
+        <ul class="border-seam border-b">
+          {g.rows.map((r) => (
+            <li class="border-seam flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t py-3">
+              <span class:list={cn(g.priority && "font-bold")}>{r.name}</span>
+              {r.people === 0 ? (
+                <StatusMark tone="attention">nikt w promieniu</StatusMark>
+              ) : (
+                <span class="tabular-nums">
+                  {formatPeople(r.people)}
+                  {r.availableNow > 0 && <span class="text-ash">, teraz dostępne: {r.availableNow}</span>}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+
+  <p class="text-ash mt-4 max-w-[64ch] text-[0.9375rem] leading-relaxed">
+    Liczymy osoby z całej listy, nie tylko z pierwszej strony. Jedna osoba może mieć kilka umiejętności. „Teraz
+    dostępne” to osoby, które udostępniają dostępność i deklarują ją na tę godzinę.
+  </p>
+</section>
