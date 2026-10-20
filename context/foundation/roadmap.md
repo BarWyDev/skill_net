@@ -3,8 +3,8 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-10-19
-prd_version: 1
+updated: 2026-10-20
+prd_version: 2
 main_goal: market-feedback
 top_blocker: decisions
 milestone_id: pilot-ready-crisis-matching
@@ -23,9 +23,9 @@ milestone_status: open
 **M-1: Pilot-ready crisis matching** — Status: open
 
 - **Intent:** A council coordinator can run a simulated crisis on real registrations from one area: residents register skills and location, the coordinator activates a crisis, gets a ranked list, alerts go out, and confirmed people land on the operational list, with the privacy guardrails in place for a real pilot.
-- **Source materials:** `context/foundation/prd.md` (v1); crisis-type × skills matrix and team templates from `docs/shape_not.md`, which the PRD cites as the seed spec.
+- **Source materials:** `context/foundation/prd.md` (v2); crisis-type × skills matrix and team templates from `docs/shape_not.md`, which the PRD cites as the seed spec.
 - **Done when:** every S-NN below is `done`.
-- **Scope anchors:** all must-have FRs (FR-001 to FR-012, FR-014, FR-015, FR-017, FR-019) and US-01. The nice-to-have FRs (FR-013, FR-016, FR-018, FR-020) are parked.
+- **Scope anchors:** all must-have FRs (FR-001 to FR-012, FR-014, FR-015, FR-017, FR-019) and US-01, plus the nice-to-have FR-020 (neighbour courses), pulled in on 2026-10-20. The other nice-to-have FRs (FR-013, FR-016, FR-018) are parked.
 
 ## Vision recap
 
@@ -57,16 +57,17 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done     |
 | S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
 | S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm        | S-05                          | FR-001                | ready    |
+| S-17 | neighbour-courses               | resident can offer a free course and signed-in neighbours can sign up for it           | S-01, S-11, S-12              | FR-020                | ready    |
 
 ## Streams
 
 Navigation aid: items grouped by the prerequisite chain they share. The canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks. There are no foundations in this milestone, so streams follow the slice chains.
 
-| Stream | Theme                             | Chain                                               | Note                                                                                                    |
-| ------ | --------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| A      | Crisis matching core              | `S-01` → `S-15` → `S-02` → `S-03` → `S-04` → `S-10` | Reaches the north star as fast as possible; the first thing a coordinator can give feedback on.         |
-| B      | Alert and confirmation loop       | `S-06` → `S-07` → `S-08` → `S-09`                   | Joins Stream A at `S-03`; completes US-01 end to end and carries the riskiest integration (SMS).        |
-| C      | Resident control and everyday use | `S-05` → `S-16` → `S-11` → `S-12` → `S-13` → `S-14` | Joins Stream A at `S-01` (and B at `S-06` for `S-12`); the guardrails a real pilot needs before launch. |
+| Stream | Theme                             | Chain                                                        | Note                                                                                                                                                                  |
+| ------ | --------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A      | Crisis matching core              | `S-01` → `S-15` → `S-02` → `S-03` → `S-04` → `S-10`          | Reaches the north star as fast as possible; the first thing a coordinator can give feedback on.                                                                       |
+| B      | Alert and confirmation loop       | `S-06` → `S-07` → `S-08` → `S-09`                            | Joins Stream A at `S-03`; completes US-01 end to end and carries the riskiest integration (SMS).                                                                      |
+| C      | Resident control and everyday use | `S-05` → `S-16` → `S-11` → `S-12` → `S-13` → `S-14` → `S-17` | Joins Stream A at `S-01` (and B at `S-06` for `S-12`); the guardrails a real pilot needs before launch, then neighbour courses as an everyday reason to open the app. |
 
 ## Baseline
 
@@ -179,7 +180,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Change ID:** crisis-sms-alert-confirmation
 - **PRD refs:** US-01, FR-011
 - **Prerequisites:** S-03, S-06, Workers Paid plan
-- **Parallel with:** S-04, S-05, S-09, S-10, S-11, S-12, S-13, S-14
+- **Parallel with:** S-04, S-05, S-09, S-10, S-11, S-12, S-13, S-14, S-17
 - **Blockers:** Workers Paid upgrade (Free's CPU and subrequest limits silently truncate a fan-out); an SMS provider account, including sender registration.
 - **Unknowns:**
   - Which SMS provider, and is push in v1 or SMS only? Planning the alert path depends on this answer. — Owner: user. Block: yes.
@@ -193,7 +194,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Change ID:** live-operational-list
 - **PRD refs:** US-01, FR-012
 - **Prerequisites:** S-07
-- **Parallel with:** S-04, S-05, S-09, S-10, S-11, S-12, S-13, S-14
+- **Parallel with:** S-04, S-05, S-09, S-10, S-11, S-12, S-13, S-14, S-17
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This completes US-01's acceptance criterion (< 5 minutes from activation to the confirmed list). The list must read the database directly, so a missed update never hides a confirmation.
@@ -294,11 +295,26 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Change ID:** email-delivery
 - **PRD refs:** FR-001 (email verification)
 - **Prerequisites:** S-05
-- **Parallel with:** S-07, S-08, S-12
+- **Parallel with:** S-07, S-08, S-12, S-17
 - **Blockers:** an own domain, verified with an email-sending provider (SPF, DKIM, DMARC). DNS verification is the lead-time item.
 - **Unknowns:**
   - Which email-sending provider (Resend, Postmark, other)? — Owner: user. Block: no.
 - **Risk:** Split out of S-05 on 2026-10-06. S-05's sign-up, consent and confirmation route are live, but Supabase's built-in sender reaches team addresses only (about 2 emails an hour) and refuses template edits on the free plan, so no resident outside the team can confirm an account. Any pilot with real registrations is blocked until this lands.
+- **Status:** ready
+
+### S-17: Resident offers a neighbour course
+
+- **Outcome:** a resident can offer a free course tied to one of their skills (title, description, duration); signed-in residents see the courses offered in their area, with no organiser name or contact and the place only as the 2 km square of the public map, and sign up in the app; the organiser sees how many people signed up and gives them the meeting place and time.
+- **Change ID:** neighbour-courses
+- **PRD refs:** FR-020
+- **Prerequisites:** S-01, S-11, S-12
+- **Parallel with:** S-07, S-08, S-16
+- **Blockers:** —
+- **Unknowns:**
+  - How does the organiser give the meeting place and time to the people who signed up: inside the app, or by email? Email reaches residents outside the team only after S-16. — Owner: user. Block: no; an in-app notice is the default that needs no new vendor.
+  - Does a course in a sparse 2 km square follow the map's minimum-aggregation threshold, given that a listing reveals that someone with skill X lives there? — Owner: user. Block: no; the map's existing threshold is the default.
+  - How do courses and sign-ups interact with the resident's controls: does turning off map contribution (S-12) hide their courses, and what happens to their courses and sign-ups when they pause (S-13) or unregister (S-14)? — Owner: user. Block: no.
+- **Risk:** Added on 2026-10-20 as the only nice-to-have pulled into M-1. It reopens a slice of the everyday exchange cut during shaping, so the privacy narrowing in FR-020 (signed-in only, no organiser identity, 2 km square) is the whole slice. It touches no crisis path, so it never competes with S-16 for the pilot's critical path.
 - **Status:** ready
 
 ## Backlog Handoff
@@ -321,6 +337,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | done                  | Archived 2026-10-04                                 |
 | S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | done                  | Archived 2026-09-27; no issue was created           |
 | S-16       | —     | email-delivery                  | Own sending domain, custom SMTP and Polish confirmation email   | yes                   | Run `/10x-plan email-delivery`; blocks the pilot    |
+| S-17       | —     | neighbour-courses               | Neighbour courses: offer a free course, neighbours sign up      | yes                   | Run `/10x-plan neighbour-courses`; nice-to-have     |
 
 ## Open Roadmap Questions
 
@@ -344,7 +361,6 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **In-product editing of the taxonomy and crisis matrix (FR-018)** — Why parked: nice-to-have; v1 matrix and weights are fixed and change only through a release.
 - **Skill verification (diplomas, certificates)** — Why parked: PRD §Non-Goals; self-declaration and trust.
 - **Payments for services** — Why parked: PRD §Non-Goals; volunteering only.
-- **Neighbour courses (FR-020)** — Why parked: nice-to-have, added to the PRD on 2026-10-20; a resident offers a free course tied to a skill, signed-in residents in the area sign up in the app, and the list shows no organiser identity and only the 2 km square.
 - **Everyday exchange board or wanted-skills list** — Why parked: PRD §Non-Goals; everyday mode in v1 is the aggregated map, plus neighbour courses (FR-020) as nice-to-have.
 
 ## Milestone History
