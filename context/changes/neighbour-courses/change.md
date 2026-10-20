@@ -1,7 +1,7 @@
 ---
 change_id: neighbour-courses
 title: Neighbour courses (FR-020)
-status: implementing
+status: implemented
 created: 2026-10-20
 updated: 2026-10-20
 archived_at: null
