@@ -48,6 +48,7 @@ select set_eq(
        ('consent_events', 'SELECT'),
        ('consent_versions', 'SELECT'),
        ('crises', 'SELECT'),
+       ('crisis_scenarios', 'SELECT'),
        ('crisis_type_skills', 'SELECT'),
        ('crisis_types', 'SELECT'),
        ('postcodes', 'SELECT'),

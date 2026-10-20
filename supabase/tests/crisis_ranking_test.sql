@@ -424,7 +424,7 @@ reset role;
 -- ---------------------------------------------------------------------------
 
 select ok(
-  not has_function_privilege('anon', 'public.activate_crisis(text, text, text, double precision, double precision, integer, text)', 'execute')
+  not has_function_privilege('anon', 'public.activate_crisis(text, text, text, double precision, double precision, integer, text, boolean)', 'execute')
   and not has_function_privilege('anon', 'public.get_crisis_matches(uuid, integer)', 'execute')
   and not has_table_privilege('anon', 'public.crises', 'select')
   and not has_table_privilege('anon', 'public.crisis_matches', 'select')
