@@ -111,3 +111,19 @@ select user_id, '+48000' || lpad(i::text, 6, '0')
 from seed_extras
 where phone_bucket < 7
 on conflict (user_id) do nothing;
+
+-- Ready exercises around the seeded residents (crisis exercises migration). The coordinator panel
+-- starts each with one click, as an exercise: break-glass is refused and no alert is ever sent.
+-- The radii are chosen so the coverage section shows both covered skills and gaps.
+insert into public.crisis_scenarios (slug, name_pl, crisis_type_slug, postcode, radius_km, reason, sort) values
+  ('powodz-podgorze', 'Powódź w Podgórzu', 'powodz', '30-552', 2,
+   'Ćwiczenie: wezbrana Wisła zalewa piwnice i parter budynków w Podgórzu, potrzebna ewakuacja.', 1),
+  ('awaria-pradu-stare-miasto', 'Awaria prądu na Starym Mieście', 'awaria-pradu', '31-001', 2,
+   'Ćwiczenie: rozległa awaria zasilania w centrum, nie działają windy i sygnalizacja świetlna.', 2),
+  ('pozar-nowa-huta', 'Pożar w Nowej Hucie', 'pozar', '31-864', 5,
+   'Ćwiczenie: pożar bloku mieszkalnego w Nowej Hucie, ewakuacja mieszkańców wyższych pięter.', 3),
+  ('wypadek-masowy-krowodrza', 'Wypadek masowy na Krowodrzy', 'wypadek-masowy', '30-079', 1,
+   'Ćwiczenie: zderzenie tramwaju z autobusem na Krowodrzy, wielu poszkodowanych na miejscu.', 4),
+  ('upaly-krakow', 'Fala upałów w Krakowie', 'upaly-mroz', '31-001', 10,
+   'Ćwiczenie: kilkudniowa fala upałów, potrzebne wsparcie dla osób starszych i samotnych.', 5)
+on conflict (slug) do nothing;
