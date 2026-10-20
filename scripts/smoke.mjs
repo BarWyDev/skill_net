@@ -138,6 +138,12 @@ const readonlySteps = [
     { status: 302, location: "/auth/signin" },
   ],
   ["teams page redirects anonymous user", () => request(TEAMS_PATH), { status: 302, location: "/auth/signin" }],
+  ["kursy redirects anonymous user", () => request("/kursy"), { status: 302, location: "/auth/signin" }],
+  [
+    "course sign-up redirects anonymous user",
+    () => request("/api/kursy/zapisz", { method: "POST", form: { id: "00000000-0000-0000-0000-000000000000" } }),
+    { status: 302, location: "/auth/signin" },
+  ],
   // The lookup takes the postcode in a POST body, so it never appears in a request URL.
   [
     "postcode lookup finds known code",

@@ -212,3 +212,74 @@ export interface DensityCellDTO {
   cell: Polygon;
   band: DensityBand;
 }
+
+/** Why a course is hidden from every neighbour, in the order the database checks (S-17). */
+export type CourseHiddenReason =
+  "closed" | "expired" | "paused" | "skill_removed" | "no_location" | "recent_move" | "square_hidden";
+
+/** Whether a resident may view, create and sign up for courses, or the first missing condition. */
+export type CourseEligibility = "ok" | "no_location" | "recent_move" | "too_new" | "unconfirmed" | "no_consent";
+
+/** The caller's course standing: the eligibility and their 3×3 block of 2 km squares. */
+export interface CourseAreaDTO {
+  eligibility: CourseEligibility;
+  /** The day (`YYYY-MM-DD`, Warsaw) a resident who only waits (too_new, recent_move) becomes eligible. */
+  eligibleOn: string | null;
+  /** Null unless eligible. */
+  block: Polygon | null;
+}
+
+/** Parsed course form, ready for `create_course` or `update_course`. Texts are normalised. */
+export interface CourseInput {
+  title: string;
+  description: string;
+  durationMinutes: number;
+  /** Null: no limit. */
+  capacity: number | null;
+  /** Only active sign-ups read it. Null: not given yet. */
+  meetingDetails: string | null;
+}
+
+/** One of the organiser's own courses. Sign-ups are a count, never who. */
+export interface MyCourseDTO extends CourseInput {
+  id: string;
+  skillSlug: string;
+  isOpen: boolean;
+  /** The last visible day (`YYYY-MM-DD`, Warsaw): 90 days after opening or renewal. */
+  expiresOn: string;
+  /** Active (not withdrawn) sign-ups. */
+  signupCount: number;
+  /** Null: visible to eligible neighbours around its square. */
+  hiddenReason: CourseHiddenReason | null;
+}
+
+/** An open course around the viewer (S-17). Never the organiser, level, creation date or meeting details. */
+export interface NearbyCourseDTO {
+  id: string;
+  skillName: string;
+  categoryName: string;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  /** Null: no limit. */
+  placesLeft: number | null;
+  isFull: boolean;
+  /** The viewer has an active sign-up. */
+  signedUp: boolean;
+  /** The course's 2 km square. */
+  cell: Polygon;
+}
+
+/** One of the viewer's active sign-ups, with the organiser's meeting details. */
+export interface MyCourseSignupDTO {
+  id: string;
+  skillName: string;
+  categoryName: string;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  /** Null: the organiser has not given them yet. */
+  meetingDetails: string | null;
+  /** False while the course is hidden from neighbours (closed, expired, paused, …). */
+  available: boolean;
+}

@@ -38,11 +38,16 @@ const [year, month, day] = CURRENT_CONSENT_VERSION.split("-");
         <li>adres e-mail, którego używasz do logowania;</li>
         <li>
           przybliżoną lokalizację: punkt na mapie lub kod pocztowy zamieniamy na środek kwadratu 500 × 500 m i nie
-          zapisujemy ani dokładnego punktu, ani kodu pocztowego;
+          zapisujemy ani dokładnego punktu, ani kodu pocztowego. Zapisujemy też, kiedy ostatnio zmieniła się
+          lokalizacja: kursy w okolicy działają 7 dni po zmianie;
         </li>
         <li>umiejętności, które wskażesz, wraz z ich poziomem;</li>
         <li>dni i godziny, w których możesz pomóc, oraz ewentualną przerwę w dostępności;</li>
         <li>numer telefonu, jeśli zdecydujesz się go podać (nie jest wymagany).</li>
+        <li>
+          kursy sąsiedzkie, jeśli z nich korzystasz: kursy, które prowadzisz (umiejętność, tytuł, opis, czas trwania,
+          liczba miejsc i szczegóły spotkania), oraz kursy, na które się zapisujesz, z czasem zapisu i wypisania.
+        </li>
       </ul>
     </section>
 
@@ -56,13 +61,23 @@ const [year, month, day] = CURRENT_CONSENT_VERSION.split("-");
         <li>pomoc sąsiedzka na co dzień;</li>
         <li>
           publiczna mapa umiejętności, która pokazuje wyłącznie przedziały liczby osób w kwadratach 2 × 2 km, nigdy
-          pojedyncze osoby.
+          pojedyncze osoby;
         </li>
+        <li>kursy sąsiedzkie: bezpłatne kursy, które mieszkańcy prowadzą dla sąsiadów z okolicy.</li>
       </ul>
       <p class="mt-3">
         Twój numer telefonu widzisz tylko Ty. Koordynator może go zobaczyć wyłącznie w trakcie aktywnego kryzysu, po
         podaniu powodu; każde takie odsłonięcie jest zapisywane, a ich listę widzisz w zakładce „Mój profil”. Gdy na
         alert kryzysowy odpowiesz „TAK”, koordynator zobaczy Twój numer, aby się z Tobą skontaktować w tym kryzysie.
+      </p>
+      <p class="mt-3">
+        Kurs, który prowadzisz, widzą zalogowani mieszkańcy z Twojego kwadratu 2 × 2 km i ośmiu kwadratów wokół niego:
+        umiejętność, tytuł, opis, czas trwania, liczbę wolnych miejsc i kwadrat na mapie. Nigdy nie widzą Twojego
+        imienia, adresu e-mail, telefonu, dokładnej lokalizacji ani poziomu umiejętności. Kurs pokazujemy tylko w
+        kwadracie, który jest widoczny na publicznej mapie, czyli tam, gdzie mieszka co najmniej 5 osób. Kurs pokazuje
+        jednak, że w tym kwadracie ktoś ma daną umiejętność, nawet jeśli mapa dla jej kategorii tego kwadratu nie
+        pokazuje. Szczegóły spotkania widzą tylko osoby zapisane na kurs. Ty widzisz, ile osób się zapisało, ale nie
+        kto. Organizator nie wie, kim są osoby zapisane.
       </p>
     </section>
 
@@ -120,7 +135,8 @@ const [year, month, day] = CURRENT_CONSENT_VERSION.split("-");
       <h2 class:list={SECTION_TITLE}>Jak długo przechowujemy dane</h2>
       <p>
         Do czasu usunięcia konta. Konto możesz usunąć w każdej chwili w zakładce „Mój profil”. Usunięcie jest
-        natychmiastowe: kasujemy adres e-mail, lokalizację, umiejętności, dostępność i numer telefonu.
+        natychmiastowe: kasujemy adres e-mail, lokalizację, umiejętności, dostępność, numer telefonu, prowadzone kursy i
+        zapisy na kursy.
       </p>
       <p class="mt-3">
         Zostają zapisy kontrolne. Zawierają identyfikator konta, ale nie e-mail ani dane profilu: kiedy wyrażono zgodę,
