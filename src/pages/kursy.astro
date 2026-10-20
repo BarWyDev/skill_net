@@ -1,0 +1,76 @@
+---
+import PageShell from "@/components/PageShell.astro";
+import StatusLine from "@/components/StatusLine.astro";
+import MyCourses from "@/components/courses/MyCourses.astro";
+import { createClient } from "@/lib/supabase";
+import { getCourseArea, getMyCourses } from "@/lib/services/courses";
+import { getMyProfile, getTaxonomy } from "@/lib/services/profile";
+import type { CourseAreaDTO, MyCourseDTO } from "@/types";
+import { takeFlashError } from "@/lib/flash";
+
+// Per resident and behind the auth middleware: never cached by a shared proxy (lessons.md).
+Astro.response.headers.set("Cache-Control", "private, no-store");
+
+const SUCCESS_MESSAGES: [param: string, message: string][] = [
+  ["utworzono", "Kurs dodany."],
+  ["zapisano", "Zapisano zmiany w kursie."],
+  ["zamknieto", "Zapisy na kurs zamknięte."],
+  ["otwarto", "Kurs znów przyjmuje zapisy."],
+  ["odnowiono", "Kurs odnowiony na 90 dni."],
+  ["usunieto", "Kurs usunięty."],
+];
+const success = SUCCESS_MESSAGES.find(([param]) => Astro.url.searchParams.has(param))?.[1] ?? null;
+// Left by the endpoint that redirected here; never read from the URL (security audit F-06).
+const error = takeFlashError(Astro);
+
+let courses: MyCourseDTO[] | null = null;
+let area: CourseAreaDTO | null = null;
+let skills: { slug: string; name: string }[] = [];
+let skillNames = new Map<string, string>();
+let loadError: string | null = null;
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (!supabase) {
+  loadError = "Supabase nie jest skonfigurowany.";
+} else {
+  try {
+    let taxonomy, profile;
+    [taxonomy, profile, courses, area] = await Promise.all([
+      getTaxonomy(supabase),
+      getMyProfile(supabase),
+      getMyCourses(supabase),
+      getCourseArea(supabase),
+    ]);
+    skillNames = new Map(taxonomy.skills.map((s) => [s.slug, s.name]));
+    skills = profile.skills.map((s) => ({ slug: s.slug, name: skillNames.get(s.slug) ?? s.slug }));
+  } catch {
+    loadError = "Nie udało się wczytać kursów. Odśwież stronę.";
+  }
+}
+---
+
+<!-- PageShell's 42rem column keeps every line under 80 characters. -->
+<PageShell title="Kursy — SkillNet" heading="Kursy">
+  {success && !error && (
+    <StatusLine tone="done" data-page-notice role="status" class="mb-10 font-bold">
+      {success}
+    </StatusLine>
+  )}
+  {error && (
+    <StatusLine tone="error" data-page-notice role="alert" class="mb-10 font-bold">
+      {error}
+    </StatusLine>
+  )}
+  {(success !== null || error !== null) && <script is:inline>
+    // The notice is for this page load only: a refresh must not show it again (QA-017, QA-019).
+    history.replaceState(history.state, "", location.pathname);
+  </script>}
+
+  {loadError && (
+    <StatusLine tone="error" role="alert" class="mb-10 font-bold">
+      {loadError}
+    </StatusLine>
+  )}
+
+  {courses && area && <MyCourses courses={courses} area={area} skills={skills} skillNames={skillNames} />}
+</PageShell>

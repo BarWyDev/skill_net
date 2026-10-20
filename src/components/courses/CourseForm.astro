@@ -1,0 +1,194 @@
+---
+// The new course form and the edit form of one course: a plain form POST, so it works without JS.
+// With JS, the text rule of src/lib/course-text.ts runs before the round trip, so a phone number
+// in the description does not cost the typed text. The endpoint and the database check it again.
+// Errors come back as a one-shot alert at the top of /kursy (src/lib/flash.ts).
+import { COURSE_TEXT_BOUNDS } from "@/lib/course-text";
+import { BUTTON } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
+import { COURSE_CAPACITY_MAX, COURSE_DURATIONS, formatCourseDuration } from "@/lib/validation/courses";
+import type { MyCourseDTO } from "@/types";
+
+type Props =
+  | { mode: "create"; skills: { slug: string; name: string }[] }
+  | { mode: "edit"; course: MyCourseDTO; skillName: string };
+
+const props = Astro.props;
+const course = props.mode === "edit" ? props.course : null;
+// Unique per form: the page holds one create form and one edit form per course.
+const id = (name: string) => `course-${course?.id ?? "new"}-${name}`;
+const DEFAULT_DURATION = 90;
+
+const FIELD = "field block w-full px-3 text-lg";
+const HINT = "text-ash mt-2 text-[0.9375rem] leading-relaxed";
+---
+
+<form
+  method="post"
+  action={props.mode === "create" ? "/api/kursy/utworz" : "/api/kursy/edytuj"}
+  class="space-y-8"
+  data-course-form
+>
+  {course && <input type="hidden" name="id" value={course.id} />}
+
+  {props.mode === "create" ? (
+    <div>
+      <label for={id("skill")} class="mb-2 block font-bold">
+        Umiejętność
+      </label>
+      <select
+        id={id("skill")}
+        name="skill_slug"
+        required
+        class:list={cn(FIELD, "[&>option]:bg-graphite h-12 cursor-pointer scheme-dark sm:w-80")}
+      >
+        <option value="" disabled selected>
+          Wybierz…
+        </option>
+        {props.skills.map((skill) => (
+          <option value={skill.slug}>{skill.name}</option>
+        ))}
+      </select>
+      <p class:list={HINT}>Kurs możesz prowadzić z umiejętności, którą masz w profilu. Później jej nie zmienisz.</p>
+    </div>
+  ) : (
+    <p>
+      <span class="font-bold">Umiejętność:</span>
+      {props.skillName}
+    </p>
+  )}
+
+  <div>
+    <label for={id("title")} class="mb-2 block font-bold">
+      Tytuł
+    </label>
+    <input
+      id={id("title")}
+      name="title"
+      type="text"
+      required
+      minlength={COURSE_TEXT_BOUNDS.title.min}
+      maxlength={COURSE_TEXT_BOUNDS.title.max}
+      autocomplete="off"
+      value={course?.title}
+      aria-describedby={id("title-hint")}
+      class:list={cn(FIELD, "h-12")}
+    />
+    <p id={id("title-hint")} class:list={HINT}>
+      Od {COURSE_TEXT_BOUNDS.title.min} do {COURSE_TEXT_BOUNDS.title.max} znaków, bez telefonu i adresu e-mail.
+    </p>
+  </div>
+
+  <div>
+    <label for={id("description")} class="mb-2 block font-bold">
+      Opis
+    </label>
+    <textarea
+      id={id("description")}
+      name="description"
+      required
+      minlength={COURSE_TEXT_BOUNDS.description.min}
+      maxlength={COURSE_TEXT_BOUNDS.description.max}
+      rows="5"
+      aria-describedby={id("description-hint")}
+      class:list={cn(FIELD, "resize-y py-3 leading-relaxed")}
+    >{course?.description}</textarea>
+    <p id={id("description-hint")} class:list={HINT}>
+      Czego się nauczymy i dla kogo jest kurs. Sąsiedzi nie zobaczą Twojego imienia, więc nie podpisuj się i nie podawaj
+      telefonu ani adresu e-mail.
+    </p>
+  </div>
+
+  <div class="flex flex-wrap gap-x-8 gap-y-8">
+    <div>
+      <label for={id("duration")} class="mb-2 block font-bold">
+        Czas trwania
+      </label>
+      <select
+        id={id("duration")}
+        name="duration_minutes"
+        required
+        class:list={cn(FIELD, "[&>option]:bg-graphite h-12 w-48 cursor-pointer scheme-dark")}
+      >
+        {COURSE_DURATIONS.map((minutes) => (
+          <option value={minutes} selected={(course?.durationMinutes ?? DEFAULT_DURATION) === minutes}>
+            {formatCourseDuration(minutes)}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for={id("capacity")} class="mb-2 block font-bold">
+        Liczba miejsc
+      </label>
+      <input
+        id={id("capacity")}
+        name="capacity"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max={COURSE_CAPACITY_MAX}
+        step="1"
+        value={course?.capacity ?? undefined}
+        aria-describedby={id("capacity-hint")}
+        class:list={cn(FIELD, "h-12 w-32")}
+      />
+      <p id={id("capacity-hint")} class:list={HINT}>
+        Od 1 do {COURSE_CAPACITY_MAX}. Puste: bez limitu.
+      </p>
+    </div>
+  </div>
+
+  <div>
+    <label for={id("meeting")} class="mb-2 block font-bold">
+      Szczegóły spotkania <span class="text-ash font-normal">(opcjonalnie)</span>
+    </label>
+    <textarea
+      id={id("meeting")}
+      name="meeting_details"
+      maxlength={COURSE_TEXT_BOUNDS.meeting.max}
+      rows="3"
+      aria-describedby={id("meeting-hint")}
+      class:list={cn(FIELD, "resize-y py-3 leading-relaxed")}
+    >{course?.meetingDetails}</textarea>
+    <p id={id("meeting-hint")} class:list={HINT}>
+      Miejsce i termin. Widzą je tylko osoby zapisane na kurs. Bez telefonu i adresu e-mail.
+    </p>
+  </div>
+
+  <button type="submit" class:list={cn(BUTTON, "btn-primary w-full cursor-pointer sm:w-auto")}>
+    {props.mode === "create" ? "Dodaj kurs" : "Zapisz zmiany"}
+  </button>
+</form>
+
+<script>
+  import { checkCourseText, type CourseTextField } from "@/lib/course-text";
+
+  const FIELDS: [name: string, field: CourseTextField][] = [
+    ["title", "title"],
+    ["description", "description"],
+    ["meeting_details", "meeting"],
+  ];
+
+  for (const form of document.querySelectorAll<HTMLFormElement>("form[data-course-form]")) {
+    const inputs = FIELDS.flatMap(([name, field]) => {
+      const input = form.elements.namedItem(name);
+      return input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement ? [{ input, field }] : [];
+    });
+    for (const { input } of inputs) {
+      input.addEventListener("input", () => {
+        input.setCustomValidity("");
+      });
+    }
+    form.addEventListener("submit", (event) => {
+      for (const { input, field } of inputs) {
+        const result = checkCourseText(input.value, field);
+        input.setCustomValidity(result.ok ? "" : result.message);
+      }
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        form.reportValidity();
+      }
+    });
+  }
+</script>
