@@ -234,8 +234,8 @@ select ok(
   'privileges_and_shape: no client access to the log'
 );
 select ok(
-  not has_function_privilege('anon', 'public.activate_crisis(text, text, text, double precision, double precision, integer, text)', 'execute')
-  and has_function_privilege('authenticated', 'public.activate_crisis(text, text, text, double precision, double precision, integer, text)', 'execute'),
+  not has_function_privilege('anon', 'public.activate_crisis(text, text, text, double precision, double precision, integer, text, boolean)', 'execute')
+  and has_function_privilege('authenticated', 'public.activate_crisis(text, text, text, double precision, double precision, integer, text, boolean)', 'execute'),
   'privileges_and_shape: only authenticated can execute activate_crisis'
 );
 select is(

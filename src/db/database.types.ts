@@ -173,6 +173,7 @@ export type Database = {
           epicentre: unknown
           epicentre_postcode: string | null
           id: string
+          is_exercise: boolean
           match_count: number
           radius_m: number
           reason: string | null
@@ -189,6 +190,7 @@ export type Database = {
           epicentre: unknown
           epicentre_postcode?: string | null
           id?: string
+          is_exercise?: boolean
           match_count?: number
           radius_m: number
           reason?: string | null
@@ -203,6 +205,7 @@ export type Database = {
           epicentre?: unknown
           epicentre_postcode?: string | null
           id?: string
+          is_exercise?: boolean
           match_count?: number
           radius_m?: number
           reason?: string | null
@@ -295,6 +298,51 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      crisis_scenarios: {
+        Row: {
+          crisis_type_slug: string
+          name_pl: string
+          postcode: string
+          radius_km: number
+          reason: string
+          slug: string
+          sort: number
+        }
+        Insert: {
+          crisis_type_slug: string
+          name_pl: string
+          postcode: string
+          radius_km: number
+          reason: string
+          slug: string
+          sort: number
+        }
+        Update: {
+          crisis_type_slug?: string
+          name_pl?: string
+          postcode?: string
+          radius_km?: number
+          reason?: string
+          slug?: string
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crisis_scenarios_crisis_type_slug_fkey"
+            columns: ["crisis_type_slug"]
+            isOneToOne: false
+            referencedRelation: "crisis_types"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "crisis_scenarios_postcode_fkey"
+            columns: ["postcode"]
+            isOneToOne: false
+            referencedRelation: "postcodes"
+            referencedColumns: ["postcode"]
           },
         ]
       }
@@ -651,6 +699,7 @@ export type Database = {
       activate_crisis: {
         Args: {
           p_crisis_type: string
+          p_exercise?: boolean
           p_lat: number
           p_lng: number
           p_location_source: string
@@ -666,6 +715,15 @@ export type Database = {
       }
       coarsen_point: { Args: { p: unknown }; Returns: unknown }
       end_crisis: { Args: { p_crisis_id: string }; Returns: boolean }
+      get_crisis_coverage: {
+        Args: { p_crisis_id: string }
+        Returns: {
+          available_now: number
+          people: number
+          skill_slug: string
+          tier: string
+        }[]
+      }
       get_crisis_matches: {
         Args: { p_crisis_id: string; p_limit?: number }
         Returns: {
