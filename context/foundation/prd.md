@@ -1,6 +1,6 @@
 ---
 project: "SkillNet"
-version: 1
+version: 2
 status: draft
 created: 2026-09-22
 context_type: greenfield
@@ -93,6 +93,8 @@ The MVP scope covers **both** modes (dual-use: everyday + crisis), even though t
 
 - FR-008: Anonymous visitor and resident can see the aggregated skills-density map for their area, without personal data. Priority: must-have
   > Socrates: Counter-arguments considered: "at low density the map reveals individual locations", "a public map = a public gap map", "looking at a map isn't an everyday reason to update your profile". Resolution: no counter-argument; stands as written.
+- FR-020: Resident can offer a free course tied to one of their skills (title, description, duration), and signed-in residents can see the courses offered in their area and sign up for one in the app. A course shows no personal data about its organiser: no name and no contact, and its place only as the 2 km square of the public map. The organiser sees how many people signed up and gives the meeting place and time to them. Priority: nice-to-have
+  > Socrates: Counter-arguments considered: "a course listing reveals that a person with skill X lives nearby", "it reopens the everyday exchange board cut during shaping" and "courses without contact details can't be organised". Resolution: kept, narrowed: visible to signed-in residents only, no organiser identity or contact on the list, the same 2 km square as the map, sign-up inside the app, and free only (payments stay a non-goal). It gives residents an everyday reason to open the app and keep their skills current (insight 2).
 
 ### Crisis mode
 
@@ -120,7 +122,7 @@ The MVP scope covers **both** modes (dual-use: everyday + crisis), even though t
 - FR-018: Operator can manage the skills taxonomy and the crisis-type × skills matrix from within the product. Priority: nice-to-have
   > Socrates: Counter-arguments considered: "changes break existing profiles" and "a fixed list is enough for a long time". Resolution: no counter-argument; stands as written (nice-to-have).
 
-Note: with FR-013 nice-to-have, the live map is outside the binding MVP. FR-019 is numbered out of document order because it was added during the Socratic round.
+Note: with FR-013 nice-to-have, the live map is outside the binding MVP. FR-019 is numbered out of document order because it was added during the Socratic round. FR-020 (neighbour courses) was added on 2026-10-20, after the MVP slices were built, as nice-to-have.
 
 ## Non-Functional Requirements
 
@@ -146,7 +148,7 @@ Multi-user model with roles. Sign-up and sign-in by login with email/SMS verific
 | Role | How they get it | Capabilities |
 | --- | --- | --- |
 | Anonymous visitor | No login | Sees the public, aggregated skills map without personal data |
-| Resident / volunteer | Sign-up with email/SMS verification | Registers skills, location and availability; controls the visibility of their data; can unregister at any time; sees the aggregated skills map in their area without personal data |
+| Resident / volunteer | Sign-up with email/SMS verification | Registers skills, location and availability; controls the visibility of their data; can unregister at any time; sees the aggregated skills map in their area without personal data; offers free courses and signs up for courses in their area (FR-020) |
 | Coordinator | Regular account; role assigned manually by the operator | Activates and deactivates crisis mode; searches for people by skill and distance; sees the contact details of people who confirmed availability |
 | Operator / admin | Product owner | Assigns the coordinator role; manages the skills taxonomy |
 
@@ -157,8 +159,8 @@ No formal institutional verification of coordinators in the MVP (manual role ass
 ## Non-Goals
 
 - **No skill verification (diplomas, certificates)** — self-declaration and trust; verification raises the entry barrier and adds complexity.
-- **No payments for services** — cashless exchange and volunteering; avoids financial and tax regulation.
-- **No everyday exchange board or wanted-skills list** — everyday mode in v1 is the aggregated skills map only. This was the one scope cut accepted during shaping.
+- **No payments for services** — cashless exchange and volunteering; avoids financial and tax regulation. Neighbour courses (FR-020) are free.
+- **No everyday exchange board or wanted-skills list** — everyday mode in v1 is the aggregated skills map, plus neighbour courses (FR-020, nice-to-have). This was the one scope cut accepted during shaping; on 2026-10-20 it was narrowed to let courses in. A general board of offers and requests, and a list of skills residents want to learn, stay out.
 - **No live map of confirmed volunteers in the binding MVP** — FR-013 is nice-to-have; the MVP ends at the operational list.
 
 # TODO: the user's additional non-goals (left as free text in the shaping notes, never filled in) — see Open Questions
