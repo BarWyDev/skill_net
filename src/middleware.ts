@@ -13,7 +13,16 @@ import { HSTS_HEADER, httpsRedirect, sendsHsts } from "@/lib/https";
 // reach these responses and they may be cached publicly (context/foundation/lessons.md).
 const PUBLIC_DATA_ROUTES = ["/api/mapa"];
 
-const PROTECTED_ROUTES = ["/dashboard", "/profil", "/koordynator", "/api/koordynator", "/zgoda", "/api/zgoda"];
+const PROTECTED_ROUTES = [
+  "/dashboard",
+  "/profil",
+  "/kursy",
+  "/api/kursy",
+  "/koordynator",
+  "/api/koordynator",
+  "/zgoda",
+  "/api/zgoda",
+];
 // Signed-in users without the coordinator role get a 403 here.
 const COORDINATOR_ROUTES = ["/koordynator", "/api/koordynator"];
 const ACCESS_DENIED_PAGE = "/brak-dostepu";

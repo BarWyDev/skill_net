@@ -1,0 +1,203 @@
+---
+// "Moje kursy": the organiser's courses with their status, and the new course form. Plain form
+// POSTs to /api/kursy/*, so everything works without JS. Sign-ups are a count, never who.
+import StatusLine from "@/components/StatusLine.astro";
+import CourseForm from "@/components/courses/CourseForm.astro";
+import { formatPauseUntil } from "@/lib/pause";
+import { hiddenReasonLabel } from "@/lib/services/courses";
+import { INLINE_LINK, NAV_LINK, SECTION_TITLE, type StatusTone } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
+import { formatCourseDuration } from "@/lib/validation/courses";
+import type { CourseAreaDTO, CourseHiddenReason, MyCourseDTO } from "@/types";
+
+interface Props {
+  courses: MyCourseDTO[];
+  area: CourseAreaDTO;
+  /** The resident's skills, by name, for the new course form and the course cards. */
+  skills: { slug: string; name: string }[];
+  /** Every skill name by slug: a course keeps its skill after it leaves the profile. */
+  skillNames: Map<string, string>;
+}
+
+const { courses, area, skills, skillNames } = Astro.props;
+
+// The same limit as create_course: open courses that have not expired.
+const OPEN_LIMIT = 3;
+const openCount = courses.filter((c) => c.isOpen && c.hiddenReason !== "expired").length;
+
+const TONES: Record<CourseHiddenReason, StatusTone> = {
+  closed: "neutral",
+  expired: "neutral",
+  paused: "attention",
+  skill_removed: "attention",
+  no_location: "attention",
+  recent_move: "attention",
+  square_hidden: "attention",
+};
+
+const signups = (course: MyCourseDTO) =>
+  course.capacity === null
+    ? `Zapisane osoby: ${course.signupCount} (bez limitu miejsc)`
+    : `Zapisane osoby: ${course.signupCount} z ${course.capacity}`;
+
+const eligibleOn = area.eligibleOn ? formatPauseUntil(area.eligibleOn) : null;
+const SMALL_BUTTON = "inline-flex min-h-11 items-center justify-center px-4 font-bold";
+const SUMMARY = cn(NAV_LINK, "text-chalk cursor-pointer font-bold underline");
+---
+
+<section aria-labelledby="my-courses-title">
+  <h2 id="my-courses-title" class:list={SECTION_TITLE}>
+    Moje kursy
+  </h2>
+  <p class="text-ash mt-4 leading-relaxed">
+    Zaproponuj sąsiadom bezpłatny kurs z jednej ze swoich umiejętności. Zobaczą go mieszkańcy Twojej okolicy, bez
+    Twojego imienia i kontaktu, a miejsce tylko jako kwadrat 2 km na mapie. Widzisz, ile osób się zapisało, ale nie kto.
+  </p>
+
+  {courses.length > 0 && (
+    <ul class="mt-10 space-y-10">
+      {courses.map((course) => (
+        <li>
+          <article aria-labelledby={`course-${course.id}-title`} class="border-seam border-t pt-6">
+            <h3 id={`course-${course.id}-title`} class="text-xl font-bold break-words">
+              {course.title}
+            </h3>
+            <p class="text-ash mt-1">
+              {skillNames.get(course.skillSlug) ?? course.skillSlug} · {formatCourseDuration(course.durationMinutes)}
+            </p>
+
+            <div class="mt-4 space-y-2">
+              {course.hiddenReason === null ? (
+                <StatusLine tone="done">
+                  <p>Widoczny dla sąsiadów do {formatPauseUntil(course.expiresOn)}.</p>
+                </StatusLine>
+              ) : (
+                <StatusLine tone={TONES[course.hiddenReason]}>
+                  <p>{hiddenReasonLabel(course.hiddenReason, area.eligibleOn)}</p>
+                  {course.hiddenReason !== "expired" && (
+                    <p class="text-ash text-[0.9375rem]">Wygasa {formatPauseUntil(course.expiresOn)}.</p>
+                  )}
+                </StatusLine>
+              )}
+              <p>{signups(course)}</p>
+            </div>
+
+            <p class="mt-4 leading-relaxed break-words">{course.description}</p>
+
+            <div class="mt-4">
+              <p class="font-bold">Szczegóły spotkania</p>
+              {course.meetingDetails ? (
+                <p class="mt-1 leading-relaxed break-words">{course.meetingDetails}</p>
+              ) : (
+                <p class="text-ash mt-1 leading-relaxed">
+                  Nie podano. Osoby zapisane zobaczą je, gdy dodasz je w edycji.
+                </p>
+              )}
+            </div>
+
+            <details class="mt-6">
+              <summary class:list={SUMMARY}>Edytuj</summary>
+              <div class="mt-6">
+                <CourseForm
+                  mode="edit"
+                  course={course}
+                  skillName={skillNames.get(course.skillSlug) ?? course.skillSlug}
+                />
+              </div>
+            </details>
+
+            <div class="mt-4 flex flex-wrap gap-3">
+              <form method="post" action={course.isOpen ? "/api/kursy/zamknij" : "/api/kursy/otworz"}>
+                <input type="hidden" name="id" value={course.id} />
+                <button type="submit" class:list={cn(SMALL_BUTTON, "btn-secondary cursor-pointer")}>
+                  {course.isOpen ? "Zamknij zapisy" : "Otwórz ponownie"}
+                </button>
+              </form>
+              <form method="post" action="/api/kursy/odnow">
+                <input type="hidden" name="id" value={course.id} />
+                <button type="submit" class:list={cn(SMALL_BUTTON, "btn-secondary cursor-pointer")}>
+                  Odnów na 90 dni
+                </button>
+              </form>
+            </div>
+
+            <details class="mt-4">
+              <summary class:list={cn(SUMMARY, "text-alarm")}>Usuń kurs</summary>
+              <form method="post" action="/api/kursy/usun" class="mt-4">
+                <input type="hidden" name="id" value={course.id} />
+                <label class="flex min-h-11 cursor-pointer items-center gap-4">
+                  <input type="checkbox" name="confirm" value="1" required class="check" />
+                  Usuwam kurs i wszystkie zapisy
+                </label>
+                <button type="submit" class:list={cn(SMALL_BUTTON, "btn-danger mt-4 w-full cursor-pointer sm:w-auto")}>
+                  Usuń kurs na zawsze
+                </button>
+              </form>
+            </details>
+          </article>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <section aria-labelledby="new-course-title" class="border-seam mt-12 border-t pt-8">
+    <h3 id="new-course-title" class="text-xl font-bold">
+      Nowy kurs
+    </h3>
+    <div class="mt-6">
+      {area.eligibility === "no_location" ? (
+        <p class="leading-relaxed">
+          Aby prowadzić kursy,{" "}
+          <a href="/profil" class:list={INLINE_LINK}>
+            dodaj lokalizację w profilu
+          </a>
+          . Kurs dodasz 7 dni po jej ustawieniu.
+        </p>
+      ) : area.eligibility === "recent_move" ? (
+        <p class="leading-relaxed">
+          Twoja lokalizacja zmieniła się w ostatnich 7 dniach.{" "}
+          {eligibleOn ? `Kurs dodasz od ${eligibleOn}.` : "Kurs dodasz 7 dni po zmianie."}
+        </p>
+      ) : area.eligibility === "too_new" ? (
+        <p class="leading-relaxed">
+          Kursy są dostępne dla kont założonych co najmniej 14 dni temu.{" "}
+          {eligibleOn ? `Kurs dodasz od ${eligibleOn}.` : ""}
+        </p>
+      ) : area.eligibility === "unconfirmed" ? (
+        <p class="leading-relaxed">Potwierdź adres e-mail, aby prowadzić kursy.</p>
+      ) : area.eligibility === "no_consent" ? (
+        <p class="leading-relaxed">
+          Aby prowadzić kursy,{" "}
+          <a href="/zgoda" class:list={INLINE_LINK}>
+            zaakceptuj zgodę na przetwarzanie danych
+          </a>
+          .
+        </p>
+      ) : skills.length === 0 ? (
+        <p class="leading-relaxed">
+          Aby prowadzić kurs,{" "}
+          <a href="/profil" class:list={INLINE_LINK}>
+            dodaj umiejętność w profilu
+          </a>
+          .
+        </p>
+      ) : openCount >= OPEN_LIMIT ? (
+        <p class="leading-relaxed">
+          Możesz mieć najwyżej {OPEN_LIMIT} otwarte kursy. Zamknij albo usuń jeden z nich, aby dodać nowy.
+        </p>
+      ) : (
+        <CourseForm mode="create" skills={skills} />
+      )}
+    </div>
+  </section>
+</section>
+
+<style>
+  /* No marker triangle: the summary reads as a link. */
+  summary {
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+</style>

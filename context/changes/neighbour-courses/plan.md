@@ -451,30 +451,30 @@ The list with a small map, sign-up and withdraw, meeting details for sign-ups, t
 #### Automated
 
 - [ ] 1.1 The migration applies to a fresh local database: `npx supabase db reset`
-- [x] 1.2 The new suite and all existing suites pass: `npm run test:db`
-- [x] 1.3 Types regenerate cleanly: `npm run db:types`, then `npx astro check`
-- [x] 1.4 Lint passes: `npm run lint`
+- [x] 1.2 The new suite and all existing suites pass: `npm run test:db` — 0077eac
+- [x] 1.3 Types regenerate cleanly: `npm run db:types`, then `npx astro check` — 0077eac
+- [x] 1.4 Lint passes: `npm run lint` — 0077eac
 
 #### Manual
 
-- [x] 1.5 Studio shows both tables with RLS on, no policies, and no client select
+- [x] 1.5 Studio shows both tables with RLS on, no policies, and no client select — 0077eac
 
 ### Phase 2: Organiser — "Moje kursy"
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass, including `course-text.test.ts`: `npm run test:unit`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Lint passes: `npm run lint`
-- [ ] 2.4 Build passes to a scratch outDir
+- [x] 2.1 Unit tests pass, including `course-text.test.ts`: `npm run test:unit`
+- [x] 2.2 Type check passes: `npx astro check`
+- [x] 2.3 Lint passes: `npm run lint`
+- [x] 2.4 Build passes to a scratch outDir
 
 #### Manual
 
-- [ ] 2.5 Create, edit, close, reopen, renew and delete work with the right flashes
-- [ ] 2.6 Limit and contact messages show
-- [ ] 2.7 The sparse-square course shows the "Ukryty" reason
-- [ ] 2.8 Ineligible residents see the explanation
-- [ ] 2.9 Phone viewport has no horizontal scroll
+- [x] 2.5 Create, edit, close, reopen, renew and delete work with the right flashes
+- [x] 2.6 Limit and contact messages show
+- [x] 2.7 The sparse-square course shows the "Ukryty" reason
+- [x] 2.8 Ineligible residents see the explanation
+- [x] 2.9 Phone viewport has no horizontal scroll
 
 ### Phase 3: Neighbour — "W okolicy" and "Moje zapisy"; notice and consent
 
