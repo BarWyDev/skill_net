@@ -36,6 +36,7 @@ const navLink = (href: string) => {
         <span class="text-ash max-w-full truncate">{user.email}</span>
         {isCoordinator && <a {...navLink("/koordynator")}>Koordynator</a>}
         <a {...navLink("/mapa")}>Mapa</a>
+        <a {...navLink("/kursy")}>Kursy</a>
         <a {...navLink("/profil")}>Mój profil</a>
         <form method="POST" action="/api/auth/signout">
           <button type="submit" class:list={cn(NAV_LINK, "cursor-pointer")}>

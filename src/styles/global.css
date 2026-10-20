@@ -264,3 +264,17 @@ html:has(.site) body {
   border: 3px solid var(--color-graphite);
   outline: 2px solid var(--color-chalk);
 }
+/* The course map's square letters (A, B, …): the list rows carry the same letter. */
+.site-map.leaflet-container .leaflet-tooltip.course-square-label {
+  background: var(--color-graphite);
+  border: 1px solid var(--color-signal);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--color-chalk);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0 6px;
+}
+.site-map.leaflet-container .leaflet-tooltip.course-square-label::before {
+  display: none;
+}
