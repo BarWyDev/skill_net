@@ -38,7 +38,8 @@ const [year, month, day] = CURRENT_CONSENT_VERSION.split("-");
         <li>adres e-mail, którego używasz do logowania;</li>
         <li>
           przybliżoną lokalizację: punkt na mapie lub kod pocztowy zamieniamy na środek kwadratu 500 × 500 m i nie
-          zapisujemy ani dokładnego punktu, ani kodu pocztowego;
+          zapisujemy ani dokładnego punktu, ani kodu pocztowego. Zapisujemy też, kiedy ostatnio zmieniła się
+          lokalizacja: kursy w okolicy działają 7 dni po zmianie;
         </li>
         <li>umiejętności, które wskażesz, wraz z ich poziomem;</li>
         <li>dni i godziny, w których możesz pomóc, oraz ewentualną przerwę w dostępności;</li>
@@ -73,9 +74,10 @@ const [year, month, day] = CURRENT_CONSENT_VERSION.split("-");
         Kurs, który prowadzisz, widzą zalogowani mieszkańcy z Twojego kwadratu 2 × 2 km i ośmiu kwadratów wokół niego:
         umiejętność, tytuł, opis, czas trwania, liczbę wolnych miejsc i kwadrat na mapie. Nigdy nie widzą Twojego
         imienia, adresu e-mail, telefonu, dokładnej lokalizacji ani poziomu umiejętności. Kurs pokazujemy tylko w
-        kwadracie, który jest widoczny na publicznej mapie, czyli tam, gdzie mieszka co najmniej 5 osób. Szczegóły
-        spotkania widzą tylko osoby zapisane na kurs. Ty widzisz, ile osób się zapisało, ale nie kto. Organizator nie
-        wie, kim są osoby zapisane.
+        kwadracie, który jest widoczny na publicznej mapie, czyli tam, gdzie mieszka co najmniej 5 osób. Kurs pokazuje
+        jednak, że w tym kwadracie ktoś ma daną umiejętność, nawet jeśli mapa dla jej kategorii tego kwadratu nie
+        pokazuje. Szczegóły spotkania widzą tylko osoby zapisane na kurs. Ty widzisz, ile osób się zapisało, ale nie
+        kto. Organizator nie wie, kim są osoby zapisane.
       </p>
     </section>
 

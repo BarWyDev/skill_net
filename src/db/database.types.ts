@@ -992,7 +992,6 @@ export type Database = {
         Returns: {
           available: boolean
           category_name: string
-          cell: Json
           description: string
           duration_minutes: number
           id: string

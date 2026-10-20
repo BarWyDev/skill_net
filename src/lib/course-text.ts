@@ -20,7 +20,8 @@ export const COURSE_TEXT_MESSAGES: Record<`${CourseTextField}_${"invalid" | "con
   description_invalid: `Opis musi mieć od ${COURSE_TEXT_BOUNDS.description.min} do ${COURSE_TEXT_BOUNDS.description.max} znaków.`,
   description_contact: "Opis nie może zawierać telefonu ani adresu e-mail.",
   meeting_invalid: `Szczegóły spotkania mogą mieć najwyżej ${COURSE_TEXT_BOUNDS.meeting.max} znaków.`,
-  meeting_contact: "Szczegóły spotkania nie mogą zawierać telefonu ani adresu e-mail.",
+  meeting_contact:
+    "Szczegóły spotkania nie mogą zawierać telefonu ani adresu e-mail. Datę zapisz z kropkami, np. 21.10.2026.",
 };
 
 // At least 9 digits separated by at most one space or dash: "600 100 200", "600-100-200",
