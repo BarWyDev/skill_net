@@ -25,7 +25,7 @@ milestone_status: open
 - **Intent:** A council coordinator can run a simulated crisis on real registrations from one area: residents register skills and location, the coordinator activates a crisis, gets a ranked list, alerts go out, and confirmed people land on the operational list, with the privacy guardrails in place for a real pilot.
 - **Source materials:** `context/foundation/prd.md` (v1); crisis-type × skills matrix and team templates from `docs/shape_not.md`, which the PRD cites as the seed spec.
 - **Done when:** every S-NN below is `done`.
-- **Scope anchors:** all must-have FRs (FR-001 to FR-012, FR-014, FR-015, FR-017, FR-019) and US-01. The nice-to-have FRs (FR-013, FR-016, FR-018) are parked.
+- **Scope anchors:** all must-have FRs (FR-001 to FR-012, FR-014, FR-015, FR-017, FR-019) and US-01. The nice-to-have FRs (FR-013, FR-016, FR-018, FR-020) are parked.
 
 ## Vision recap
 
@@ -344,7 +344,8 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **In-product editing of the taxonomy and crisis matrix (FR-018)** — Why parked: nice-to-have; v1 matrix and weights are fixed and change only through a release.
 - **Skill verification (diplomas, certificates)** — Why parked: PRD §Non-Goals; self-declaration and trust.
 - **Payments for services** — Why parked: PRD §Non-Goals; volunteering only.
-- **Everyday exchange board or wanted-skills list** — Why parked: PRD §Non-Goals; everyday mode in v1 is the aggregated map only.
+- **Neighbour courses (FR-020)** — Why parked: nice-to-have, added to the PRD on 2026-10-20; a resident offers a free course tied to a skill, signed-in residents in the area sign up in the app, and the list shows no organiser identity and only the 2 km square.
+- **Everyday exchange board or wanted-skills list** — Why parked: PRD §Non-Goals; everyday mode in v1 is the aggregated map, plus neighbour courses (FR-020) as nice-to-have.
 
 ## Milestone History
 
