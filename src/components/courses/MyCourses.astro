@@ -23,6 +23,8 @@ const { courses, area, skills, skillNames } = Astro.props;
 
 // The same limit as create_course: open courses that have not expired.
 const OPEN_LIMIT = 3;
+// create_course also caps all courses, closed and expired included.
+const TOTAL_LIMIT = 20;
 const openCount = courses.filter((c) => c.isOpen && c.hiddenReason !== "expired").length;
 
 const TONES: Record<CourseHiddenReason, StatusTone> = {
@@ -180,6 +182,10 @@ const SUMMARY = cn(NAV_LINK, "text-chalk cursor-pointer font-bold underline");
             dodaj umiejętność w profilu
           </a>
           .
+        </p>
+      ) : courses.length >= TOTAL_LIMIT ? (
+        <p class="leading-relaxed">
+          Możesz mieć najwyżej {TOTAL_LIMIT} kursów, także zamkniętych. Usuń stary kurs, aby dodać nowy.
         </p>
       ) : openCount >= OPEN_LIMIT ? (
         <p class="leading-relaxed">

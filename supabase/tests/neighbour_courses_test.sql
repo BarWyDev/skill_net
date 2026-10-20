@@ -9,7 +9,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(71);
+select plan(74);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as postgres)
@@ -138,7 +138,7 @@ select ok(
     select 1
     from unnest(array['anon', 'authenticated']) as r(role)
     cross join unnest(array['public.courses', 'public.course_signups']) as t(tbl)
-    cross join unnest(array['SELECT', 'INSERT', 'UPDATE', 'DELETE']) as p(priv)
+    cross join unnest(array['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER']) as p(priv)
     where has_table_privilege(r.role, t.tbl, p.priv)
   ),
   'no_client_table_privileges: anon and authenticated hold nothing on courses or course_signups'
@@ -322,6 +322,20 @@ select lives_ok(
   'create_course: an organiser in a sparse square can still create'
 );
 
+reset role;
+insert into public.courses (organiser_id, skill_slug, title, description, duration_minutes, is_open)
+select pg_temp.uid('D'), 'pierwsza-pomoc', 'Stary kurs ' || n, 'Zamknięty kurs pierwszej pomocy', 60, false
+from generate_series(1, 19) as n;
+set local role authenticated;
+select pg_temp.as_user('D');
+select throws_ok(
+  $$ select public.create_course('pierwsza-pomoc', 'Pierwsza pomoc E', 'Kolejny kurs pierwszej pomocy', 60, null, null) $$,
+  'P0001', 'course_total_limit_reached', 'total_course_limit: a 21st course is refused even when closed ones fill it'
+);
+reset role;
+delete from public.courses where organiser_id = pg_temp.uid('D') and title like 'Stary kurs %';
+set local role authenticated;
+
 -- ---------------------------------------------------------------------------
 -- Visibility
 -- ---------------------------------------------------------------------------
@@ -399,6 +413,17 @@ select set_eq(
             ('places_left'), ('is_full'), ('signed_up'), ('cell') $$,
   'nearby_has_no_organiser_column: no organiser, level, creation date or meeting details in the output'
 );
+select set_eq(
+  $$
+    select t.name
+    from pg_proc p
+    cross join lateral unnest(p.proargnames, p.proargmodes) as t(name, mode)
+    where p.oid = 'public.get_my_course_signups()'::regprocedure and t.mode = 't'
+  $$,
+  $$ values ('id'), ('skill_name'), ('category_name'), ('title'), ('description'), ('duration_minutes'),
+            ('meeting_details'), ('available') $$,
+  'signups_have_no_square: no organiser square, which would follow a move or a square below k = 5'
+);
 
 reset role;
 delete from public.profile_skills where user_id = pg_temp.uid('A');
@@ -449,6 +474,13 @@ select ok(
   not exists (select 1 from public.get_nearby_courses() where id = pg_temp.cid('a1')),
   'recent_move_hides: an organiser who moved 6 days ago has the course hidden'
 );
+select pg_temp.as_user('A');
+select is(
+  (select hidden_reason from public.get_my_courses() where id = pg_temp.cid('a1')),
+  'recent_move',
+  'recent_move_hides: the organiser is told why'
+);
+select pg_temp.as_user('B');
 reset role;
 update public.profiles set location_changed_at = now() - interval '8 days' where user_id = pg_temp.uid('A');
 set local role authenticated;

@@ -409,6 +409,11 @@ begin
     raise exception 'course_limit_reached';
   end if;
 
+  -- Closed and expired courses stay until deleted, so the total is capped too.
+  if (select count(*) from public.courses c where c.organiser_id = v_user_id) >= 20 then
+    raise exception 'course_total_limit_reached';
+  end if;
+
   insert into public.courses (organiser_id, skill_slug, title, description, duration_minutes, capacity, meeting_details)
   values (
     v_user_id,
@@ -659,12 +664,24 @@ set search_path = ''
 as $$
 declare
   v_user_id uuid := (select auth.uid());
+  v_sx integer;
+  v_sy integer;
 begin
   if v_user_id is null then
     raise exception 'not_authenticated';
   end if;
 
   perform public.ensure_skills_density_fresh(null);
+
+  -- Same answer as course_visible_to for an ineligible viewer, without a call per course.
+  if public.course_resident_eligible(v_user_id) <> 'ok' then
+    return;
+  end if;
+
+  select q.sx, q.sy into v_sx, v_sy
+  from public.profiles v
+  cross join lateral public.density_square(v.location) q
+  where v.user_id = v_user_id;
 
   return query
   select
@@ -687,7 +704,14 @@ begin
   join public.profiles o on o.user_id = c.organiser_id
   cross join lateral public.density_square(o.location) q
   cross join lateral (select public.course_active_signups(c.id) as active) n
-  where public.course_visible_to(c, v_user_id)
+  -- Cheap pre-filters narrow the candidates to open, unexpired courses in the viewer's 3×3 block;
+  -- course_visible_to stays the single rule that decides.
+  where c.is_open
+    and c.opened_at > now() - interval '90 days'
+    and c.organiser_id <> v_user_id
+    and q.sx between v_sx - 1 and v_sx + 1
+    and q.sy between v_sy - 1 and v_sy + 1
+    and public.course_visible_to(c, v_user_id)
   order by q.sx, q.sy, c.title, c.id;
 end;
 $$;
@@ -774,7 +798,8 @@ end;
 $$;
 
 -- The caller's active sign-ups with the meeting details. `available` is false when the course is
--- hidden for any reason; the details stay, since the sign-up has already seen them.
+-- hidden for any reason; the details stay, since the sign-up has already seen them. No square: it
+-- would follow the organiser's current location past the 7-day rule and below k = 5.
 create function public.get_my_course_signups()
 returns table (
   id uuid,
@@ -784,8 +809,7 @@ returns table (
   description text,
   duration_minutes integer,
   meeting_details text,
-  available boolean,
-  cell jsonb
+  available boolean
 )
 language plpgsql
 volatile
@@ -810,14 +834,11 @@ begin
     c.description,
     c.duration_minutes,
     c.meeting_details,
-    public.course_hidden_reason(c) is null,
-    case when o.location is not null then public.density_block_geojson(q.sx, q.sy, 1) end
+    public.course_hidden_reason(c) is null
   from public.course_signups cs
   join public.courses c on c.id = cs.course_id
   join public.skills s on s.slug = c.skill_slug
   join public.skill_categories k on k.slug = s.category_slug
-  join public.profiles o on o.user_id = c.organiser_id
-  cross join lateral public.density_square(o.location) q
   where cs.user_id = v_user_id and cs.withdrawn_at is null
   order by cs.signed_up_at desc, c.id;
 end;

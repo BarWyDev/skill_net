@@ -282,6 +282,4 @@ export interface MyCourseSignupDTO {
   meetingDetails: string | null;
   /** False while the course is hidden from neighbours (closed, expired, paused, …). */
   available: boolean;
-  /** Null when the organiser has no location. */
-  cell: Polygon | null;
 }

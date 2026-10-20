@@ -35,6 +35,7 @@ export const COURSE_ERROR_MESSAGES: Record<string, string> = {
   course_duration_invalid: "Wybierz czas trwania z listy.",
   course_capacity_invalid: "Liczba miejsc to od 1 do 50 albo puste pole.",
   course_limit_reached: "Możesz mieć najwyżej 3 otwarte kursy.",
+  course_total_limit_reached: "Możesz mieć najwyżej 20 kursów, także zamkniętych. Usuń stary kurs, aby dodać nowy.",
   course_capacity_below_signups: "Liczba miejsc nie może być mniejsza niż liczba osób, które już się zapisały.",
   course_not_found: "Nie znaleziono kursu.",
   course_own: "Nie możesz zapisać się na własny kurs.",
@@ -226,7 +227,6 @@ const myCourseSignupSchema = z.object({
   duration_minutes: z.number().int(),
   meeting_details: z.string().nullable(),
   available: z.boolean(),
-  cell: polygonSchema.nullable(),
 });
 
 /** The caller's active sign-ups, newest first, with the meeting details. */
@@ -245,7 +245,6 @@ export async function getMyCourseSignups(supabase: SupabaseClient): Promise<MyCo
       durationMinutes: c.duration_minutes,
       meetingDetails: c.meeting_details,
       available: c.available,
-      cell: c.cell,
     }));
 }
 
