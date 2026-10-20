@@ -450,7 +450,7 @@ The list with a small map, sign-up and withdraw, meeting details for sign-ups, t
 
 #### Automated
 
-- [ ] 1.1 The migration applies to a fresh local database: `npx supabase db reset`
+- [x] 1.1 The migration applies to a fresh local database: `npx supabase db reset`
 - [x] 1.2 The new suite and all existing suites pass: `npm run test:db` — 0077eac
 - [x] 1.3 Types regenerate cleanly: `npm run db:types`, then `npx astro check` — 0077eac
 - [x] 1.4 Lint passes: `npm run lint` — 0077eac
@@ -480,14 +480,14 @@ The list with a small map, sign-up and withdraw, meeting details for sign-ups, t
 
 #### Automated
 
-- [x] 3.1 Unit, db, type check and lint pass
-- [x] 3.2 Smoke passes against the local dev server
-- [x] 3.3 Build passes to a scratch outDir
+- [x] 3.1 Unit, db, type check and lint pass — adaff91
+- [x] 3.2 Smoke passes against the local dev server — adaff91
+- [x] 3.3 Build passes to a scratch outDir — adaff91
 
 #### Manual
 
-- [x] 3.4 Neighbour sees, signs up, reads meeting details; organiser sees the count change
-- [x] 3.5 Two-away, paused and resumed cases behave as specified
-- [x] 3.6 Capacity 1 shows "brak miejsc"
-- [x] 3.7 The consent bump sends existing residents to `/zgoda` once, and new sign-up works
-- [x] 3.8 Phone viewport fits the map and list
+- [x] 3.4 Neighbour sees, signs up, reads meeting details; organiser sees the count change — adaff91
+- [x] 3.5 Two-away, paused and resumed cases behave as specified — adaff91
+- [x] 3.6 Capacity 1 shows "brak miejsc" — adaff91
+- [x] 3.7 The consent bump sends existing residents to `/zgoda` once, and new sign-up works — adaff91
+- [x] 3.8 Phone viewport fits the map and list — adaff91
