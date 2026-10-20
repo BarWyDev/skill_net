@@ -213,7 +213,8 @@ select is(
   'list_reads_logged: a refused read leaves no row'
 );
 select ok(
-  (select viewed_at = now() from public.crisis_list_views order by id limit 1),
+  (select viewed_at = now() from public.crisis_list_views
+   where crisis_id = (select id from crisis_ids where name = 'first') order by id limit 1),
   'list_reads_logged: the read time is recorded'
 );
 
