@@ -4,10 +4,11 @@ import StatusLine from "@/components/StatusLine.astro";
 import StatusMark from "@/components/StatusMark.astro";
 import CrisisActivationForm from "@/components/crisis/CrisisActivationForm";
 import { createClient } from "@/lib/supabase";
-import { getCrisisTypes, listActiveCrises, listRecentEndedCrises } from "@/lib/services/crisis";
+import { getCrisisScenarios, getCrisisTypes, listActiveCrises, listRecentEndedCrises } from "@/lib/services/crisis";
 import { formatActivatedAt, formatActiveFor, formatPeople, isStale } from "@/lib/crisis-format";
-import type { CrisisDTO, CrisisTypeDTO } from "@/types";
-import { SECTION_TITLE } from "@/lib/site-styles";
+import type { CrisisDTO, CrisisScenarioDTO, CrisisTypeDTO } from "@/types";
+import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
 import { takeFlashError } from "@/lib/flash";
 
 // The middleware gates this route: only coordinators get here.
@@ -20,6 +21,7 @@ const now = new Date();
 let crisisTypes: CrisisTypeDTO[] | null = null;
 let activeCrises: CrisisDTO[] | null = null;
 let endedCrises: CrisisDTO[] | null = null;
+let scenarios: CrisisScenarioDTO[] = [];
 let loadError: string | null = null;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
@@ -27,10 +29,12 @@ if (!supabase) {
   loadError = "Supabase nie jest skonfigurowany.";
 } else {
   try {
-    [crisisTypes, activeCrises, endedCrises] = await Promise.all([
+    [crisisTypes, activeCrises, endedCrises, scenarios] = await Promise.all([
       getCrisisTypes(supabase),
       listActiveCrises(supabase),
       listRecentEndedCrises(supabase),
+      // Exercises are optional: a failure hides the section, never the panel.
+      getCrisisScenarios(supabase).catch(() => []),
     ]);
   } catch {
     loadError = "Nie udało się wczytać panelu. Odśwież stronę.";
@@ -77,7 +81,10 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
               <li>
                 <a href={`/koordynator/kryzys/${c.id}`} class:list={ROW}>
                   <span class="min-w-0">
-                    <span class="block text-xl font-bold underline-offset-4 group-hover:underline">{c.typeName}</span>
+                    <span class="block text-xl font-bold underline-offset-4 group-hover:underline">
+                      {c.typeName}
+                      {c.isExercise && <span class="text-signal font-normal"> · ćwiczenie</span>}
+                    </span>
                     <span class="mt-1 block text-[0.9375rem]">
                       {stale ? (
                         <StatusMark tone="attention" class="font-bold">
@@ -116,6 +123,36 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
     </section>
   )}
 
+  {crisisTypes && scenarios.length > 0 && (
+    <section aria-labelledby="exercises-heading" class="mt-16 sm:mt-20">
+      <h2 id="exercises-heading" class:list={SECTION_TITLE}>
+        Ćwiczenia
+      </h2>
+      <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">
+        Gotowe scenariusze do treningu i pokazów. Ćwiczenie działa jak kryzys, na prawdziwej liście mieszkańców, ale
+        nikt nie dostaje alertu, a numerów telefonów nie można ujawnić. Uruchamia się od razu i liczy do limitu 3
+        aktywacji na godzinę.
+      </p>
+      <ul class="border-seam mt-6 border-b">
+        {scenarios.map((s) => (
+          <li class="border-seam grid gap-x-6 gap-y-3 border-t py-4 md:grid-cols-[minmax(0,1fr)_16.5rem_auto] md:items-center">
+            <span class="min-w-0">
+              <span class="block text-xl font-bold">{s.name}</span>
+              <span class="text-ash mt-1 block text-[0.9375rem]">{s.typeName}</span>
+            </span>
+            <span class="tabular-nums">{`${s.radiusKm} km, okolice ${s.postcode}`}</span>
+            <form method="POST" action="/api/koordynator/cwiczenia" data-once>
+              <input type="hidden" name="scenario" value={s.slug} />
+              <button type="submit" class:list={cn(BUTTON, "btn-secondary w-full cursor-pointer md:w-auto")}>
+                Uruchom ćwiczenie<span class="sr-only">: {s.name}</span>
+              </button>
+            </form>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
   {endedCrises && endedCrises.length > 0 && (
     <section aria-labelledby="ended-heading" class="mt-16 sm:mt-20">
       <h2 id="ended-heading" class:list={SECTION_TITLE}>
@@ -126,7 +163,10 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
           <li>
             <a href={`/koordynator/kryzys/${c.id}`} class:list={ROW}>
               <span class="min-w-0">
-                <span class="block text-xl font-bold underline-offset-4 group-hover:underline">{c.typeName}</span>
+                <span class="block text-xl font-bold underline-offset-4 group-hover:underline">
+                  {c.typeName}
+                  {c.isExercise && <span class="text-ash font-normal"> · ćwiczenie</span>}
+                </span>
                 <span class="mt-1 block text-[0.9375rem]">
                   <StatusMark tone="neutral">
                     {c.endedAt ? `Zakończony ${formatActivatedAt(c.endedAt)}` : "Zakończony"}
@@ -143,3 +183,17 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
     </section>
   )}
 </PageShell>
+
+<script>
+  // One start per click: a second submit would start a second exercise.
+  for (const form of document.querySelectorAll<HTMLFormElement>("form[data-once]")) {
+    form.addEventListener("submit", (e) => {
+      if (form.dataset.sent) {
+        e.preventDefault();
+        return;
+      }
+      form.dataset.sent = "1";
+      form.querySelector("button")?.setAttribute("aria-disabled", "true");
+    });
+  }
+</script>

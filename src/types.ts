@@ -99,6 +99,17 @@ export interface ActivateCrisisInput {
   radiusKm: RadiusKm;
   /** Why the crisis is activated, trimmed. Stored with the crisis (security audit F-02). */
   reason: string;
+  /** An exercise: nobody is alerted and break-glass is refused. */
+  exercise: boolean;
+}
+
+/** A ready exercise from `crisis_scenarios`, started with one click. */
+export interface CrisisScenarioDTO {
+  slug: string;
+  name: string;
+  typeName: string;
+  postcode: string;
+  radiusKm: number;
 }
 
 export interface CrisisDTO {
@@ -120,9 +131,21 @@ export interface CrisisDTO {
    */
   revealDeclinedCount: number;
   status: "active" | "ended";
+  /** An exercise: nobody is alerted and break-glass is refused. Set at activation, never changed. */
+  isExercise: boolean;
 }
 
 export type CrisisSkillTier = "priority" | "supporting";
+
+/** One skill of the crisis type's matrix: how many people on the visible list have it. */
+export interface CrisisCoverageDTO {
+  slug: string;
+  name: string;
+  tier: CrisisSkillTier;
+  people: number;
+  /** Of `people`, those who share their availability and declare it for the current hour. */
+  availableNow: number;
+}
 
 /** One ranked row. No identity, no coordinates and no score: only what the coordinator needs. */
 export interface CrisisMatchDTO {
