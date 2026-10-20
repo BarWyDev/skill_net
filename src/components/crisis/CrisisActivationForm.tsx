@@ -18,6 +18,7 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
   const [location, setLocation] = useState<LocationValue>(EMPTY_LOCATION);
   const [radius, setRadius] = useState<RadiusKm>(DEFAULT_RADIUS);
   const [reason, setReason] = useState("");
+  const [exercise, setExercise] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // A postcode counts once the lookup found it; the server resolves the raw centroid itself.
@@ -134,6 +135,29 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
             kontem. Jeden koordynator może aktywować najwyżej 3 kryzysy na godzinę.
           </p>
         </div>
+
+        {/* Set once, at activation: the crisis page cannot turn an exercise into a real crisis. */}
+        <div>
+          <label htmlFor="exercise" className="flex min-h-11 cursor-pointer items-start gap-4 py-2.5">
+            <input
+              id="exercise"
+              type="checkbox"
+              name="exercise"
+              value="1"
+              checked={exercise}
+              onChange={(e) => {
+                setExercise(e.target.checked);
+              }}
+              aria-describedby="exercise-hint"
+              className="check mt-0.5"
+            />
+            <span className="font-bold">To jest ćwiczenie</span>
+          </label>
+          <p id="exercise-hint" className="text-ash max-w-[42rem] text-[0.9375rem] leading-relaxed">
+            Lista powstanie z prawdziwych mieszkańców, ale nikt nie dostanie alertu, a numerów telefonów nie będzie
+            można ujawnić. Tego nie da się zmienić po aktywacji.
+          </p>
+        </div>
       </div>
 
       {/* Consequential, so the one primary action stands apart from the fields, under a hairline. The
@@ -150,7 +174,7 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
             submitting && "cursor-wait",
           )}
         >
-          {submitting ? "Aktywuję…" : "Aktywuj kryzys"}
+          {submitting ? "Aktywuję…" : exercise ? "Aktywuj ćwiczenie" : "Aktywuj kryzys"}
         </button>
       </div>
     </form>

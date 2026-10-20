@@ -10,7 +10,7 @@ import { formatActivatedAt, formatDistanceKm, formatPeople } from "@/lib/crisis-
 import { BUTTON, NAV_LINK } from "@/lib/site-styles";
 import { formatPhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase";
-import { getCrisis, revealCrisisContacts } from "@/lib/services/crisis";
+import { EXERCISE_NO_REVEAL_MESSAGE, getCrisis, revealCrisisContacts } from "@/lib/services/crisis";
 import { parseRevealReason, REASON_MAX, REASON_MIN } from "@/lib/validation/crisis";
 import { cn } from "@/lib/utils";
 import { declinedVerb, revealCounts } from "@/lib/visibility";
@@ -21,6 +21,7 @@ import type { CrisisContactDTO, CrisisDTO } from "@/types";
 // no redirect, nothing in a URL, cookie or client storage. A reload or a resubmitted form is a new,
 // separately logged reveal. The middleware gates this route (coordinators only) and sends
 // Cache-Control: private, no-store; do not override it. Never log the reason or a number.
+// An exercise never reveals: the page says so and does not call the RPC, which refuses it anyway.
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const id = Astro.params.id ?? "";
@@ -30,7 +31,7 @@ let contacts: CrisisContactDTO[] | null = null;
 let revealedAt: string | null = null;
 let loadError: string | null = null;
 let formError: string | null = null;
-let endedMessage: string | null = null;
+let closedMessage: string | null = null;
 let reason = "";
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
@@ -46,7 +47,7 @@ if (!supabase) {
 
 if (!crisis && !loadError) Astro.response.status = 404;
 
-if (supabase && crisis?.status === "active" && Astro.request.method === "POST") {
+if (supabase && crisis?.status === "active" && !crisis.isExercise && Astro.request.method === "POST") {
   const form = await Astro.request.formData();
   const raw = form.get("reason");
   reason = typeof raw === "string" ? raw : "";
@@ -62,7 +63,7 @@ if (supabase && crisis?.status === "active" && Astro.request.method === "POST") 
         contacts = result.contacts;
         revealedAt = new Date().toISOString();
       } else if (result.ended) {
-        endedMessage = result.message;
+        closedMessage = result.message;
       } else {
         formError = result.message;
         Astro.response.status = result.status;
@@ -75,7 +76,9 @@ if (supabase && crisis?.status === "active" && Astro.request.method === "POST") 
 }
 
 if (crisis?.status === "ended") {
-  endedMessage = "Ten kryzys został zakończony — kontaktów nie można ujawnić.";
+  closedMessage = "Ten kryzys został zakończony — kontaktów nie można ujawnić.";
+} else if (crisis?.isExercise) {
+  closedMessage = EXERCISE_NO_REVEAL_MESSAGE;
 }
 
 // Declined (V4) is a count only, never who. The list's "ma telefon" marker and the revealed positions
@@ -90,7 +93,7 @@ const heading = !crisis
   ? loadError
     ? "Kontakty"
     : "Nie znaleziono kryzysu"
-  : endedMessage
+  : closedMessage
     ? crisis.typeName
     : contacts
       ? "Kontakty ujawnione"
@@ -114,13 +117,13 @@ const heading = !crisis
     <p class="max-w-[52ch] text-lg leading-relaxed">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
   )}
 
-  {crisis && endedMessage && (
+  {crisis && closedMessage && (
     <StatusLine tone="neutral" role="alert" class="max-w-[64ch] text-lg">
-      {endedMessage}
+      {closedMessage}
     </StatusLine>
   )}
 
-  {crisis && !endedMessage && !contacts && (
+  {crisis && !closedMessage && !contacts && (
     <>
       <CrisisFacts crisis={crisis} showType />
 

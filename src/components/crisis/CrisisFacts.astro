@@ -1,6 +1,6 @@
 ---
-// The facts under a crisis heading: its status in words (with the grid-motif marker), then radius, area,
-// times and the number of matched people as a definition list.
+// The facts under a crisis heading: its status in words (with the grid-motif marker), an exercise
+// notice, then radius, area, times and the number of matched people as a definition list.
 import StatusMark from "@/components/StatusMark.astro";
 import { formatActivatedAt, formatActiveFor, formatPeople, isStale } from "@/lib/crisis-format";
 import type { CrisisDTO } from "@/types";
@@ -27,6 +27,18 @@ const stale = crisis.status === "active" && isStale(crisis.activatedAt, now);
     <StatusMark tone="done">Kryzys {formatActiveFor(crisis.activatedAt, now)}</StatusMark>
   )}
 </p>
+
+{crisis.isExercise && (
+  <p class="mt-2 max-w-[64ch] leading-relaxed">
+    <StatusMark tone="attention" class="font-bold">
+      Ćwiczenie
+    </StatusMark>
+    <span class="text-ash">
+      {" "}
+      Lista to prawdziwi mieszkańcy, ale nikt nie dostaje alertu, a numerów telefonów nie można ujawnić.
+    </span>
+  </p>
+)}
 
 <dl class="mt-6 flex flex-wrap gap-x-10 gap-y-4">
   {showType && (

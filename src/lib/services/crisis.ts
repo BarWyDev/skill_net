@@ -6,8 +6,10 @@ import { assembleTeams } from "@/lib/team-assembly";
 import type {
   ActivateCrisisInput,
   CrisisContactDTO,
+  CrisisCoverageDTO,
   CrisisDTO,
   CrisisMatchDTO,
+  CrisisScenarioDTO,
   CrisisTeamDTO,
   CrisisTypeDTO,
   TeamMemberDTO,
@@ -47,6 +49,51 @@ export async function getCrisisTypes(supabase: SupabaseClient): Promise<CrisisTy
   return data.map((t) => ({ slug: t.slug, name: t.name_pl }));
 }
 
+/** Every ready exercise, in its seeded order. RLS shows them to coordinators only. */
+export async function getCrisisScenarios(supabase: SupabaseClient): Promise<CrisisScenarioDTO[]> {
+  const { data, error } = await supabase
+    .from("crisis_scenarios")
+    .select("slug, name_pl, postcode, radius_km, crisis_types(name_pl)")
+    .order("sort");
+  if (error) throw new Error(`getCrisisScenarios: ${error.code}`);
+  return data.map((s) => ({
+    slug: s.slug,
+    name: s.name_pl,
+    typeName: s.crisis_types.name_pl,
+    postcode: s.postcode,
+    radiusKm: s.radius_km,
+  }));
+}
+
+/**
+ * Starts a ready exercise: activates its crisis type at its postcode and radius, with its reason, as
+ * an exercise. Returns a Polish message on failure.
+ */
+export async function startScenario(
+  supabase: SupabaseClient,
+  slug: string,
+): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
+  const { data, error } = await supabase
+    .from("crisis_scenarios")
+    .select("crisis_type_slug, postcode, radius_km, reason")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) return { ok: false, message: GENERIC_ACTIVATE_ERROR };
+  if (!data) return { ok: false, message: "Nie znaleziono tego ćwiczenia. Odśwież stronę i wybierz je z listy." };
+
+  return activateCrisis(supabase, {
+    crisisType: data.crisis_type_slug,
+    locationSource: "postcode",
+    postcode: data.postcode,
+    lat: null,
+    lng: null,
+    // The table's check constraint keeps the radius to the presets.
+    radiusKm: data.radius_km as ActivateCrisisInput["radiusKm"],
+    reason: data.reason,
+    exercise: true,
+  });
+}
+
 /** Activates a crisis and writes its ranking snapshot. Returns a Polish message on failure. */
 export async function activateCrisis(
   supabase: SupabaseClient,
@@ -61,6 +108,7 @@ export async function activateCrisis(
     p_lng: input.lng,
     p_radius_km: input.radiusKm,
     p_reason: input.reason,
+    p_exercise: input.exercise,
   } as ActivateCrisisArgs;
   const { data, error } = await supabase.rpc("activate_crisis", args);
   return error ? { ok: false, message: activateErrorMessage(error) } : { ok: true, id: data };
@@ -93,7 +141,7 @@ export async function endCrisis(
 // `visible_match_count` and `reveal_declined_count` are PostgREST computed columns (SQL functions
 // over the crises row type).
 const CRISIS_COLUMNS =
-  "id, radius_m, activated_at, ended_at, visible_match_count, reveal_declined_count, status, epicentre_postcode, crisis_types(name_pl)";
+  "id, radius_m, activated_at, ended_at, visible_match_count, reveal_declined_count, status, is_exercise, epicentre_postcode, crisis_types(name_pl)";
 
 interface CrisisRow {
   id: string;
@@ -103,6 +151,7 @@ interface CrisisRow {
   visible_match_count: number | null;
   reveal_declined_count: number | null;
   status: string;
+  is_exercise: boolean;
   epicentre_postcode: string | null;
   crisis_types: { name_pl: string } | null;
 }
@@ -118,6 +167,7 @@ function toCrisisDTO(row: CrisisRow): CrisisDTO {
     matchCount: row.visible_match_count ?? 0,
     revealDeclinedCount: row.reveal_declined_count ?? 0,
     status: row.status === "ended" ? "ended" : "active",
+    isExercise: row.is_exercise,
   };
 }
 
@@ -194,7 +244,32 @@ export async function getCrisisMatches(supabase: SupabaseClient, id: string): Pr
   }));
 }
 
+const coverageTierSchema = z.enum(["priority", "supporting"]);
+
+/**
+ * Every skill of the crisis type's matrix with how many people on the visible list have it, priority
+ * skills first. Counts only, no person: reading them is not logged.
+ */
+export async function getCrisisCoverage(supabase: SupabaseClient, id: string): Promise<CrisisCoverageDTO[]> {
+  const [coverage, names] = await Promise.all([
+    supabase.rpc("get_crisis_coverage", { p_crisis_id: id }),
+    getSkillNames(supabase),
+  ]);
+  if (coverage.error) throw new Error(`getCrisisCoverage: ${coverage.error.code}`);
+
+  return coverage.data.map((row) => ({
+    slug: row.skill_slug,
+    name: names.get(row.skill_slug) ?? row.skill_slug,
+    tier: coverageTierSchema.parse(row.tier),
+    people: row.people,
+    availableNow: row.available_now,
+  }));
+}
+
 const GENERIC_REVEAL_ERROR = "Nie udało się ujawnić kontaktów. Spróbuj ponownie.";
+
+export const EXERCISE_NO_REVEAL_MESSAGE =
+  "To jest ćwiczenie. W ćwiczeniu nie ujawniamy numerów telefonów: mieszkańcy nie biorą w nim udziału.";
 
 // Messages raised by reveal_crisis_contacts in the break-glass migration. `field` marks the ones
 // the coordinator fixes in the reason box; `status` is the page's HTTP status, so failed reveals
@@ -209,6 +284,7 @@ const REVEAL_DB_ERRORS: Partial<Record<string, { message: string; status: number
   },
   reason_required: { message: REASON_REQUIRED_MESSAGE, status: 422, field: "reason" },
   reason_too_long: { message: REASON_TOO_LONG_MESSAGE, status: 422, field: "reason" },
+  exercise_no_reveal: { message: EXERCISE_NO_REVEAL_MESSAGE, status: 409 },
 };
 
 export type RevealResult =
