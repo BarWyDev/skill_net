@@ -100,7 +100,7 @@ export function parseUpdateCourseForm(form: FormData): Parsed<CourseInput & { id
   return { success: true, data: { id: result.data.id, ...courseInput(result.data) } };
 }
 
-/** Parses a form that carries only the course id: close, reopen, renew. */
+/** Parses a form that carries only the course id: close, reopen, renew, sign up, withdraw. */
 export function parseCourseIdForm(form: FormData): Parsed<string> {
   const result = idSchema.safeParse(text(form, "id"));
   return result.success ? { success: true, data: result.data } : { success: false, message: COURSE_NOT_FOUND };

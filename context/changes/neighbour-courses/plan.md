@@ -463,31 +463,31 @@ The list with a small map, sign-up and withdraw, meeting details for sign-ups, t
 
 #### Automated
 
-- [x] 2.1 Unit tests pass, including `course-text.test.ts`: `npm run test:unit`
-- [x] 2.2 Type check passes: `npx astro check`
-- [x] 2.3 Lint passes: `npm run lint`
-- [x] 2.4 Build passes to a scratch outDir
+- [x] 2.1 Unit tests pass, including `course-text.test.ts`: `npm run test:unit` — 96dfef1
+- [x] 2.2 Type check passes: `npx astro check` — 96dfef1
+- [x] 2.3 Lint passes: `npm run lint` — 96dfef1
+- [x] 2.4 Build passes to a scratch outDir — 96dfef1
 
 #### Manual
 
-- [x] 2.5 Create, edit, close, reopen, renew and delete work with the right flashes
-- [x] 2.6 Limit and contact messages show
-- [x] 2.7 The sparse-square course shows the "Ukryty" reason
-- [x] 2.8 Ineligible residents see the explanation
-- [x] 2.9 Phone viewport has no horizontal scroll
+- [x] 2.5 Create, edit, close, reopen, renew and delete work with the right flashes — 96dfef1
+- [x] 2.6 Limit and contact messages show — 96dfef1
+- [x] 2.7 The sparse-square course shows the "Ukryty" reason — 96dfef1
+- [x] 2.8 Ineligible residents see the explanation — 96dfef1
+- [x] 2.9 Phone viewport has no horizontal scroll — 96dfef1
 
 ### Phase 3: Neighbour — "W okolicy" and "Moje zapisy"; notice and consent
 
 #### Automated
 
-- [ ] 3.1 Unit, db, type check and lint pass
-- [ ] 3.2 Smoke passes against the local dev server
-- [ ] 3.3 Build passes to a scratch outDir
+- [x] 3.1 Unit, db, type check and lint pass
+- [x] 3.2 Smoke passes against the local dev server
+- [x] 3.3 Build passes to a scratch outDir
 
 #### Manual
 
-- [ ] 3.4 Neighbour sees, signs up, reads meeting details; organiser sees the count change
-- [ ] 3.5 Two-away, paused and resumed cases behave as specified
-- [ ] 3.6 Capacity 1 shows "brak miejsc"
-- [ ] 3.7 The consent bump sends existing residents to `/zgoda` once, and new sign-up works
-- [ ] 3.8 Phone viewport fits the map and list
+- [x] 3.4 Neighbour sees, signs up, reads meeting details; organiser sees the count change
+- [x] 3.5 Two-away, paused and resumed cases behave as specified
+- [x] 3.6 Capacity 1 shows "brak miejsc"
+- [x] 3.7 The consent bump sends existing residents to `/zgoda` once, and new sign-up works
+- [x] 3.8 Phone viewport fits the map and list
