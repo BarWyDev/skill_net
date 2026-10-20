@@ -3,7 +3,15 @@ import type { Database } from "@/db/database.types";
 import { COURSE_TEXT_MESSAGES } from "@/lib/course-text";
 import { formatPauseUntil } from "@/lib/pause";
 import type { SupabaseClient } from "@/lib/supabase";
-import type { CourseAreaDTO, CourseEligibility, CourseHiddenReason, CourseInput, MyCourseDTO } from "@/types";
+import type {
+  CourseAreaDTO,
+  CourseEligibility,
+  CourseHiddenReason,
+  CourseInput,
+  MyCourseDTO,
+  MyCourseSignupDTO,
+  NearbyCourseDTO,
+} from "@/types";
 
 // Never log input values here: course texts and meeting details can name a place or a person.
 
@@ -172,5 +180,81 @@ export async function renewCourse(supabase: SupabaseClient, id: string): Promise
 /** Deletes a course and every sign-up to it. */
 export async function deleteCourse(supabase: SupabaseClient, id: string): Promise<Result> {
   const { error } = await supabase.rpc("delete_course", { p_id: id });
+  return error ? { ok: false, message: courseErrorMessage(error) } : { ok: true };
+}
+
+const nearbyCourseSchema = z.object({
+  id: z.string(),
+  skill_name: z.string(),
+  category_name: z.string(),
+  title: z.string(),
+  description: z.string(),
+  duration_minutes: z.number().int(),
+  places_left: z.number().int().nullable(),
+  is_full: z.boolean(),
+  signed_up: z.boolean(),
+  cell: polygonSchema,
+});
+
+/** Open courses in the caller's 3×3 block, ordered by square, then title, then id. */
+export async function getNearbyCourses(supabase: SupabaseClient): Promise<NearbyCourseDTO[]> {
+  const { data, error } = await supabase.rpc("get_nearby_courses");
+  if (error) throw new Error(`getNearbyCourses: ${error.code}`);
+  return z
+    .array(nearbyCourseSchema)
+    .parse(data)
+    .map((c) => ({
+      id: c.id,
+      skillName: c.skill_name,
+      categoryName: c.category_name,
+      title: c.title,
+      description: c.description,
+      durationMinutes: c.duration_minutes,
+      placesLeft: c.places_left,
+      isFull: c.is_full,
+      signedUp: c.signed_up,
+      cell: c.cell,
+    }));
+}
+
+const myCourseSignupSchema = z.object({
+  id: z.string(),
+  skill_name: z.string(),
+  category_name: z.string(),
+  title: z.string(),
+  description: z.string(),
+  duration_minutes: z.number().int(),
+  meeting_details: z.string().nullable(),
+  available: z.boolean(),
+  cell: polygonSchema.nullable(),
+});
+
+/** The caller's active sign-ups, newest first, with the meeting details. */
+export async function getMyCourseSignups(supabase: SupabaseClient): Promise<MyCourseSignupDTO[]> {
+  const { data, error } = await supabase.rpc("get_my_course_signups");
+  if (error) throw new Error(`getMyCourseSignups: ${error.code}`);
+  return z
+    .array(myCourseSignupSchema)
+    .parse(data)
+    .map((c) => ({
+      id: c.id,
+      skillName: c.skill_name,
+      categoryName: c.category_name,
+      title: c.title,
+      description: c.description,
+      durationMinutes: c.duration_minutes,
+      meetingDetails: c.meeting_details,
+      available: c.available,
+      cell: c.cell,
+    }));
+}
+
+export async function signUpForCourse(supabase: SupabaseClient, id: string): Promise<Result> {
+  const { error } = await supabase.rpc("sign_up_for_course", { p_id: id });
+  return error ? { ok: false, message: courseErrorMessage(error) } : { ok: true };
+}
+
+export async function withdrawFromCourse(supabase: SupabaseClient, id: string): Promise<Result> {
+  const { error } = await supabase.rpc("withdraw_from_course", { p_id: id });
   return error ? { ok: false, message: courseErrorMessage(error) } : { ok: true };
 }

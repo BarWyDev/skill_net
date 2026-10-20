@@ -252,3 +252,36 @@ export interface MyCourseDTO extends CourseInput {
   /** Null: visible to eligible neighbours around its square. */
   hiddenReason: CourseHiddenReason | null;
 }
+
+/** An open course around the viewer (S-17). Never the organiser, level, creation date or meeting details. */
+export interface NearbyCourseDTO {
+  id: string;
+  skillName: string;
+  categoryName: string;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  /** Null: no limit. */
+  placesLeft: number | null;
+  isFull: boolean;
+  /** The viewer has an active sign-up. */
+  signedUp: boolean;
+  /** The course's 2 km square. */
+  cell: Polygon;
+}
+
+/** One of the viewer's active sign-ups, with the organiser's meeting details. */
+export interface MyCourseSignupDTO {
+  id: string;
+  skillName: string;
+  categoryName: string;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  /** Null: the organiser has not given them yet. */
+  meetingDetails: string | null;
+  /** False while the course is hidden from neighbours (closed, expired, paused, …). */
+  available: boolean;
+  /** Null when the organiser has no location. */
+  cell: Polygon | null;
+}

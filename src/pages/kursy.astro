@@ -2,10 +2,12 @@
 import PageShell from "@/components/PageShell.astro";
 import StatusLine from "@/components/StatusLine.astro";
 import MyCourses from "@/components/courses/MyCourses.astro";
+import MySignups from "@/components/courses/MySignups.astro";
+import NearbyCourses from "@/components/courses/NearbyCourses.astro";
 import { createClient } from "@/lib/supabase";
-import { getCourseArea, getMyCourses } from "@/lib/services/courses";
+import { getCourseArea, getMyCourseSignups, getMyCourses, getNearbyCourses } from "@/lib/services/courses";
 import { getMyProfile, getTaxonomy } from "@/lib/services/profile";
-import type { CourseAreaDTO, MyCourseDTO } from "@/types";
+import type { CourseAreaDTO, MyCourseDTO, MyCourseSignupDTO, NearbyCourseDTO } from "@/types";
 import { takeFlashError } from "@/lib/flash";
 
 // Per resident and behind the auth middleware: never cached by a shared proxy (lessons.md).
@@ -18,6 +20,8 @@ const SUCCESS_MESSAGES: [param: string, message: string][] = [
   ["otwarto", "Kurs znów przyjmuje zapisy."],
   ["odnowiono", "Kurs odnowiony na 90 dni."],
   ["usunieto", "Kurs usunięty."],
+  ["zapisano-na-kurs", "Zapisano. Szczegóły spotkania znajdziesz w „Moje zapisy”."],
+  ["wypisano", "Wypisano z kursu."],
 ];
 const success = SUCCESS_MESSAGES.find(([param]) => Astro.url.searchParams.has(param))?.[1] ?? null;
 // Left by the endpoint that redirected here; never read from the URL (security audit F-06).
@@ -25,6 +29,8 @@ const error = takeFlashError(Astro);
 
 let courses: MyCourseDTO[] | null = null;
 let area: CourseAreaDTO | null = null;
+let nearby: NearbyCourseDTO[] | null = null;
+let signups: MyCourseSignupDTO[] | null = null;
 let skills: { slug: string; name: string }[] = [];
 let skillNames = new Map<string, string>();
 let loadError: string | null = null;
@@ -35,11 +41,13 @@ if (!supabase) {
 } else {
   try {
     let taxonomy, profile;
-    [taxonomy, profile, courses, area] = await Promise.all([
+    [taxonomy, profile, courses, area, nearby, signups] = await Promise.all([
       getTaxonomy(supabase),
       getMyProfile(supabase),
       getMyCourses(supabase),
       getCourseArea(supabase),
+      getNearbyCourses(supabase),
+      getMyCourseSignups(supabase),
     ]);
     skillNames = new Map(taxonomy.skills.map((s) => [s.slug, s.name]));
     skills = profile.skills.map((s) => ({ slug: s.slug, name: skillNames.get(s.slug) ?? s.slug }));
@@ -72,5 +80,11 @@ if (!supabase) {
     </StatusLine>
   )}
 
-  {courses && area && <MyCourses courses={courses} area={area} skills={skills} skillNames={skillNames} />}
+  {courses && area && nearby && signups && (
+    <div class="space-y-16">
+      <NearbyCourses courses={nearby} area={area} />
+      <MySignups signups={signups} />
+      <MyCourses courses={courses} area={area} skills={skills} skillNames={skillNames} />
+    </div>
+  )}
 </PageShell>
