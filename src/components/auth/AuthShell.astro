@@ -8,14 +8,16 @@ import { PAGE_TITLE } from "@/lib/site-styles";
 
 interface Props {
   title: string;
+  /** The meta description; Layout's default when left out. */
+  description?: string;
   heading: string;
 }
 
-const { title, heading } = Astro.props;
+const { title, description, heading } = Astro.props;
 const hasAside = Astro.slots.has("aside");
 ---
 
-<Layout title={title}>
+<Layout title={title} description={description}>
   <div class="site min-h-screen">
     <div class="mx-auto max-w-6xl px-4 sm:px-8">
       <SiteHeader />

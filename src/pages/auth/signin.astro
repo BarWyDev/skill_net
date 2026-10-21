@@ -12,7 +12,11 @@ const unconfirmed = Astro.url.searchParams.has("niepotwierdzony");
 const returnTo = safeReturnPath(Astro.url.searchParams.get(RETURN_PARAM));
 ---
 
-<AuthShell title="Zaloguj się — SkillNet" heading="Zaloguj się">
+<AuthShell
+  title="Zaloguj się — SkillNet"
+  description="Zaloguj się do SkillNet, żeby zaktualizować swoje umiejętności, dostępność i ustawienia widoczności danych."
+  heading="Zaloguj się"
+>
   {returnTo && !error && (
     <p role="status" class="border-seam mb-8 border px-4 py-3 leading-relaxed">
       Ta strona jest dostępna po zalogowaniu. Zaloguj się, a od razu na nią wrócisz.
