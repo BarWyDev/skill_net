@@ -56,7 +56,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | done     |
 | S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done     |
 | S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
-| S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm        | S-05                          | FR-001                | ready    |
+| S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm        | S-05                          | FR-001                | planning |
 | S-17 | neighbour-courses               | resident can offer a free course and signed-in neighbours can sign up for it           | S-01, S-11, S-12              | FR-020                | done     |
 
 ## Streams
@@ -300,7 +300,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Unknowns:**
   - Which email-sending provider (Resend, Postmark, other)? — Owner: user. Block: no.
 - **Risk:** Split out of S-05 on 2026-10-06. S-05's sign-up, consent and confirmation route are live, but Supabase's built-in sender reaches team addresses only (about 2 emails an hour) and refuses template edits on the free plan, so no resident outside the team can confirm an account. Any pilot with real registrations is blocked until this lands.
-- **Status:** ready
+- **Status:** planning
 
 ### S-17: Resident offers a neighbour course
 
