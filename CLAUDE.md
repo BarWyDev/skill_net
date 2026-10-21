@@ -17,7 +17,7 @@ The app was bootstrapped from the `10x-astro-starter` template and now implement
 - `npm run format`: Prettier, with the Astro and Tailwind plugins
 - `npm run test:unit`: unit tests (`src/**/*.test.ts`) on Node's built-in `node:test`, with no build step. It needs Node ≥ 22.18, which strips TypeScript natively (`.nvmrc` pins 22.22.3, the minimum for the ESLint tooling), so tested modules may use only `import type` and relative imports, not the `@/` alias.
 - `npm run test:db`: pgTAP suites in `supabase/tests/` against the local Supabase.
-- `npm run smoke`: walks the full auth flow over HTTP (`scripts/smoke.mjs`) against a running server at `BASE_URL`, which defaults to `http://localhost:4321`. It needs a reachable Supabase with email confirmation disabled. There is no e2e test runner yet. Against production, always set `SMOKE_READONLY=1`: it runs only the two steps that create no accounts.
+- `npm run smoke`: walks the full auth flow over HTTP (`scripts/smoke.mjs`) against a running server at `BASE_URL`, which defaults to `http://localhost:4321`. It needs a reachable Supabase with email confirmation disabled. There is no e2e test runner yet. Against production, always set `SMOKE_READONLY=1`: it skips every step that creates an account and runs only the read-only checks, plus the HTTPS checks (HSTS, the http→https redirect) when `BASE_URL` is HTTPS.
 - `npx supabase start` / `npx supabase stop`: local Supabase (needs Docker). Studio runs at http://localhost:54323.
 
 A pre-commit hook (husky + lint-staged) runs `eslint --fix` on `*.{ts,tsx,astro}` files and `prettier --write` on `*.{json,css,md}` files.

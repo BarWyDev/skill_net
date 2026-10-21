@@ -14,6 +14,8 @@ interface Crumb {
 
 interface Props {
   title: string;
+  /** The meta description; Layout's default when left out. */
+  description?: string;
   heading: string;
   /** The pages above this one, outermost first. The current page closes the trail by itself. */
   crumbs?: Crumb[];
@@ -22,10 +24,10 @@ interface Props {
   wide?: boolean;
 }
 
-const { title, heading, crumbs = [], crumbLabel, wide = false } = Astro.props;
+const { title, description, heading, crumbs = [], crumbLabel, wide = false } = Astro.props;
 ---
 
-<Layout title={title}>
+<Layout title={title} description={description}>
   <div class="site min-h-screen">
     <div class="mx-auto max-w-6xl px-4 sm:px-8">
       <SiteHeader />

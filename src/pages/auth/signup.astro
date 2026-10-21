@@ -8,7 +8,11 @@ import { takeFlashError } from "@/lib/flash";
 const error = takeFlashError(Astro);
 ---
 
-<AuthShell title="Załóż konto — SkillNet" heading="Załóż konto">
+<AuthShell
+  title="Załóż konto — SkillNet"
+  description="Dodaj swoje umiejętności i przybliżoną lokalizację, żeby w razie kryzysu koordynator z gminy mógł poprosić Cię o pomoc."
+  heading="Załóż konto"
+>
   <SignUpForm serverError={error} client:load />
   <p class="text-ash mt-10">
     Masz już konto?{" "}
