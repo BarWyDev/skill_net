@@ -1,9 +1,9 @@
 ---
 change_id: email-delivery
 title: Own sending domain, custom SMTP and Polish auth emails
-status: new
+status: plan_reviewed
 created: 2026-10-06
-updated: 2026-10-06
+updated: 2026-10-21
 archived_at: null
 ---
 
