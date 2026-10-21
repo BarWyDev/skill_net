@@ -336,7 +336,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-13       | #14   | pause-availability              | Pause and resume availability                                   | done                  | Archived 2026-10-06                                 |
 | S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | done                  | Archived 2026-10-04                                 |
 | S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | done                  | Archived 2026-09-27; no issue was created           |
-| S-16       | —     | email-delivery                  | Own sending domain, custom SMTP and Polish confirmation email   | yes                   | Run `/10x-plan email-delivery`; blocks the pilot    |
+| S-16       | #103  | email-delivery                  | Own sending domain, custom SMTP and Polish confirmation email   | yes                   | Run `/10x-plan email-delivery`; blocks the pilot    |
 | S-17       | —     | neighbour-courses               | Neighbour courses: offer a free course, neighbours sign up      | done                  | Archived 2026-10-20; no issue was created           |
 
 ## Open Roadmap Questions
