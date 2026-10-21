@@ -57,7 +57,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done        |
 | S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done        |
 | S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm        | S-05                          | FR-001                | ready       |
-| S-17 | neighbour-courses               | resident can offer a free course and signed-in neighbours can sign up for it           | S-01, S-11, S-12              | FR-020                | in-progress |
+| S-17 | neighbour-courses               | resident can offer a free course and signed-in neighbours can sign up for it           | S-01, S-11, S-12              | FR-020                | done        |
 
 ## Streams
 
@@ -315,7 +315,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
   - Does a course in a sparse 2 km square follow the map's minimum-aggregation threshold, given that a listing reveals that someone with skill X lives there? — Owner: user. Block: no; the map's existing threshold is the default.
   - How do courses and sign-ups interact with the resident's controls: does turning off map contribution (S-12) hide their courses, and what happens to their courses and sign-ups when they pause (S-13) or unregister (S-14)? — Owner: user. Block: no.
 - **Risk:** Added on 2026-10-20 as the only nice-to-have pulled into M-1. It reopens a slice of the everyday exchange cut during shaping, so the privacy narrowing in FR-020 (signed-in only, no organiser identity, 2 km square) is the whole slice. It touches no crisis path, so it never competes with S-16 for the pilot's critical path.
-- **Status:** in-progress
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -380,3 +380,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-13: a resident can pause their availability without deleting the account, and resume it later.** — Archived 2026-10-06 → `context/archive/2026-10-06-pause-availability/`. Lesson: —.
 - **S-12: a resident can choose which of their data is visible, and whether it is visible in everyday mode, crisis mode or both.** — Archived 2026-10-19 → `context/archive/2026-10-19-data-visibility-controls/`. Lesson: —.
 - **S-05: a resident can sign up in Polish, verify their email, and give explicit consent to data processing, with the consent recorded in an audit trail that is not platform logs.** — Archived 2026-10-06 → `context/archive/2026-10-06-verified-sign-up-with-consent/`. Lesson: —.
+- **S-17: a resident can offer a free course tied to one of their skills (title, description, duration); signed-in residents see the courses offered in their area, with no organiser name or contact and the place only as the 2 km square of the public map, and sign up in the app; the organiser sees how many people signed up and gives them the meeting place and time.** — Archived 2026-10-20 → `context/archive/2026-10-20-neighbour-courses/`. Lesson: —.
