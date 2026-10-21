@@ -13,7 +13,11 @@ Astro.response.headers.set("Cache-Control", "private");
 const [year, month, day] = CURRENT_CONSENT_VERSION.split("-");
 ---
 
-<PageShell title="Prywatność — SkillNet" heading="Informacja o przetwarzaniu danych">
+<PageShell
+  title="Prywatność — SkillNet"
+  description="Jakie dane zbiera SkillNet, po co, kto je widzi w trybie kryzysowym i jak je usunąć. Informacja o przetwarzaniu danych osobowych."
+  heading="Informacja o przetwarzaniu danych"
+>
   <p class="text-ash">
     Wersja z dnia {day}.{month}.{year}
   </p>
