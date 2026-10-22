@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Twój link do logowania w SkillNet</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f4f4f5;">
+    <div style="display:none;max-height:0;overflow:hidden;">
+      Zaloguj się do SkillNet jednym kliknięciem.
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
+      <tr>
+        <td align="center" style="padding:24px 12px;">
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            style="max-width:560px;background:#ffffff;border-radius:8px;"
+          >
+            <tr>
+              <td
+                style="padding:32px 28px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#18181b;"
+              >
+                <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#18181b;">
+                  Zaloguj się do SkillNet
+                </h1>
+                <p style="margin:0 0 24px;">Kliknij przycisk, aby zalogować się do SkillNet bez wpisywania hasła.</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                  <tr>
+                    <td style="border-radius:6px;background:#1d4ed8;">
+                      <a
+                        href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink"
+                        style="display:inline-block;padding:14px 24px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px;"
+                      >
+                        Zaloguj się
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:0 0 8px;font-size:14px;color:#3f3f46;">
+                  Jeśli przycisk nie działa, skopiuj ten adres do przeglądarki:
+                </p>
+                <p style="margin:0 0 24px;font-size:14px;word-break:break-all;">
+                  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink" style="color:#1d4ed8;"
+                    >{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=magiclink</a
+                  >
+                </p>
+                <p style="margin:0 0 16px;">
+                  Link jest ważny przez <strong>godzinę</strong> i działa tylko raz. Jeśli wygaśnie, zaloguj się
+                  hasłem na stronie logowania.
+                </p>
+                <p style="margin:0;font-size:14px;color:#3f3f46;">
+                  Jeśli ta prośba nie pochodzi od Ciebie, zignoruj tę wiadomość. Bez kliknięcia nikt nie zaloguje się na
+                  Twoje konto.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="padding:16px 28px;border-top:1px solid #e4e4e7;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#52525b;"
+              >
+                Wiadomość wysłana automatycznie do {{ .Email }}. Nie odpowiadaj na nią. Kontakt: kontakt@skillnet.org.pl
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
