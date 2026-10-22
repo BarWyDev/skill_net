@@ -2,11 +2,28 @@
 
 Rozpiska kroków po Twojej stronie, w kolejności. Szczegóły i uzasadnienia są w `plan.md` (fazy 1–4) i `research.md` (§4.1 rekordy DNS, §4.4 checklista E2E). Kod (faza 2) jest w PR z gałęzi `feat/email-delivery`.
 
-Stan na 2026-10-22: domena `skillnet.org.pl` zamówiona w OVH (zamówienie 261431196, status „Zatwierdzenie”).
+## Stan (2026-10-22, wieczór)
+
+- Domena `skillnet.org.pl` zarejestrowana w OVH i aktywna (zamówienie 261431196, odnowienie co rok, ochrona przed transferem włączona).
+- Strefa dodana w Cloudflare (plan Free). Serwery nazw: `dora.ns.cloudflare.com`, `ethan.ns.cloudflare.com`. Domyślne rekordy OVH (strona parkingowa, FTP, MX Zimbry, SPF OVH, znaczniki TXT) usunięte. Dodany TXT `_dmarc` (`p=none`).
+- W OVH serwery DNS zmienione na Cloudflare (panel: „Aktywny”). DNSSEC w OVH zdążył się włączyć po zakupie i jest w trakcie wyłączania.
+- **Czekamy na rejestr `.pl`:** wieczorem 22.10 rejestr wciąż wskazywał serwery OVH i miał opublikowany rekord DS (klucz 11005 z OVH). Dopóki DS nie zniknie, nie włączaj DNSSEC w Cloudflare i nie dodawaj domeny w Resend.
+
+Sprawdzenie (dobry wynik: pusta odpowiedź przy DS, `dora`/`ethan` przy NS):
+
+```bash
+dig +norec DS skillnet.org.pl @b-dns.pl +short
+```
+
+```bash
+dig +norec NS skillnet.org.pl @b-dns.pl +noall +authority
+```
+
+**Następny krok:** gdy oba sprawdzenia są dobre i Cloudflare pokazuje strefę jako Active, punkt 1.5 (Email Routing).
 
 ## 0. Teraz, zanim domena będzie aktywna
 
-- [ ] Załóż konto Cloudflare (jeśli go nie masz).
+- [x] Załóż konto Cloudflare (jeśli go nie masz).
 - [ ] Załóż konto Resend (resend.com). Domeny jeszcze nie dodawaj.
 - [ ] Utwórz PAT w Supabase (Account → Access Tokens) i zapisz go tylko w menedżerze haseł.
 - [ ] Zapytaj IOD rady, czy dane maili muszą zostać w UE (Resend: wysyłka z eu-west-1, logi w USA).
@@ -15,8 +32,8 @@ Stan na 2026-10-22: domena `skillnet.org.pl` zamówiona w OVH (zamówienie 26143
 
 Gdy domena pojawi się w OVH w **Web Cloud → Domeny**:
 
-1. [ ] Cloudflare → **Add a site** → `skillnet.org.pl`, plan **Free**. Zapisz dwa serwery nazw, które poda.
-2. [ ] OVH: najpierw **wyłącz DNSSEC**, potem w zakładce **Serwery DNS** wpisz serwery z Cloudflare.
+1. [x] Cloudflare → **Add a site** → `skillnet.org.pl`, plan **Free**. Zapisz dwa serwery nazw, które poda.
+2. [x] OVH: najpierw **wyłącz DNSSEC**, potem w zakładce **Serwery DNS** wpisz serwery z Cloudflare. (Zrobione; rejestr `.pl` jeszcze przetwarza obie zmiany, zob. „Stan”.)
 3. [ ] Poczekaj, aż Cloudflare pokaże strefę jako **Active** (zwykle do kilku godzin, maks. 24 h).
 4. [ ] Cloudflare → DNS → **DNSSEC: Enable**, a rekord DS z Cloudflare wpisz w OVH.
 5. [ ] Cloudflare → **Email Routing**: włącz, potwierdź swoją prywatną skrzynkę jako adres docelowy, dodaj reguły `kontakt@` i `dmarc@` → prywatna skrzynka. Cloudflare sam doda MX `route1-3.mx.cloudflare.net`, SPF i DKIM `cf2024-1._domainkey`.
@@ -27,7 +44,7 @@ Gdy domena pojawi się w OVH w **Web Cloud → Domeny**:
    - MX `send.auth`: host feedback Resend, priorytet 10,
    - TXT `send.auth`: `v=spf1 include:amazonses.com ~all`.
    - W Cloudflare wpisuj nazwę bez domeny (`send.auth`, nie `send.auth.skillnet.org.pl`).
-9. [ ] Dodaj TXT `_dmarc`: `v=DMARC1; p=none; rua=mailto:dmarc@skillnet.org.pl; adkim=r; aspf=r; fo=1`
+9. [x] Dodaj TXT `_dmarc`: `v=DMARC1; p=none; rua=mailto:dmarc@skillnet.org.pl; adkim=r; aspf=r; fo=1`
 10. [ ] Resend → **Verify**. Domena musi pokazać **Verified** (zwykle ≤ 15 min, maks. 72 h).
 11. [ ] Resend → domena → **Configuration**: Click tracking i Open tracking **wyłączone** (przepisany link psuje token).
 12. [ ] Resend → **API Keys** → nowy klucz, uprawnienie **Sending access**, domena tylko `auth.skillnet.org.pl`. Zapisz go tylko w menedżerze haseł.
