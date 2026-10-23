@@ -2,24 +2,25 @@
 
 Rozpiska kroków po Twojej stronie, w kolejności. Szczegóły i uzasadnienia są w `plan.md` (fazy 1–4) i `research.md` (§4.1 rekordy DNS, §4.4 checklista E2E). Kod (faza 2) jest w PR z gałęzi `feat/email-delivery`.
 
-## Stan (2026-10-22, wieczór)
+## Stan (2026-10-23, wieczór)
 
 - Domena `skillnet.org.pl` zarejestrowana w OVH i aktywna (zamówienie 261431196, odnowienie co rok, ochrona przed transferem włączona).
-- Strefa dodana w Cloudflare (plan Free). Serwery nazw: `dora.ns.cloudflare.com`, `ethan.ns.cloudflare.com`. Domyślne rekordy OVH (strona parkingowa, FTP, MX Zimbry, SPF OVH, znaczniki TXT) usunięte. Dodany TXT `_dmarc` (`p=none`).
-- W OVH serwery DNS zmienione na Cloudflare (panel: „Aktywny”). DNSSEC w OVH zdążył się włączyć po zakupie i jest w trakcie wyłączania.
-- **Czekamy na rejestr `.pl`:** wieczorem 22.10 rejestr wciąż wskazywał serwery OVH i miał opublikowany rekord DS (klucz 11005 z OVH). Dopóki DS nie zniknie, nie włączaj DNSSEC w Cloudflare i nie dodawaj domeny w Resend.
+- Strefa w Cloudflare **Active** (plan Free), serwery nazw `dora.ns.cloudflare.com` i `ethan.ns.cloudflare.com`, widoczne w rejestrze `.pl`.
+- DNSSEC: włączony w Cloudflare, DS (klucz 2371, alg. 13) dodany w OVH i opublikowany przez rejestr. Walidacja przechodzi (flaga `ad` w 1.1.1.1, 8.8.8.8, 9.9.9.9).
+- Email Routing włączony: MX `route1-3`, jeden SPF, DKIM `cf2024-1`. Reguły `kontakt@` i `dmarc@` → prywatny Gmail, catch-all wyłączony (Drop, Disabled).
+- **Otwarte:** testowy mail z Onetu (19:29) nie dotarł, Activity log pusty. Serwer MX Cloudflare przyjmuje `RCPT TO:<kontakt@skillnet.org.pl>` (250), więc najpewniej Onet trzyma mail w kolejce po wcześniejszym braku MX. Sprawdź Activity log; jeśli nadal pusto, wyślij test od innego dostawcy.
 
-Sprawdzenie (dobry wynik: pusta odpowiedź przy DS, `dora`/`ethan` przy NS):
+Sprawdzenie (dobry wynik: DS `2371 13 2 …`, MX `route1-3.mx.cloudflare.net`):
 
 ```bash
 dig +norec DS skillnet.org.pl @b-dns.pl +short
 ```
 
 ```bash
-dig +norec NS skillnet.org.pl @b-dns.pl +noall +authority
+dig +short MX skillnet.org.pl
 ```
 
-**Następny krok:** gdy oba sprawdzenia są dobre i Cloudflare pokazuje strefę jako Active, punkt 1.5 (Email Routing).
+**Następny krok:** potwierdzić test `kontakt@` (punkt 13), konto Resend (punkt 0), potem punkt 1.7 (domena `auth.skillnet.org.pl` w Resend, eu-west-1) i zrzut zakładki Records.
 
 ## 0. Teraz, zanim domena będzie aktywna
 
@@ -34,10 +35,10 @@ Gdy domena pojawi się w OVH w **Web Cloud → Domeny**:
 
 1. [x] Cloudflare → **Add a site** → `skillnet.org.pl`, plan **Free**. Zapisz dwa serwery nazw, które poda.
 2. [x] OVH: najpierw **wyłącz DNSSEC**, potem w zakładce **Serwery DNS** wpisz serwery z Cloudflare. (Zrobione; rejestr `.pl` jeszcze przetwarza obie zmiany, zob. „Stan”.)
-3. [ ] Poczekaj, aż Cloudflare pokaże strefę jako **Active** (zwykle do kilku godzin, maks. 24 h).
-4. [ ] Cloudflare → DNS → **DNSSEC: Enable**, a rekord DS z Cloudflare wpisz w OVH.
-5. [ ] Cloudflare → **Email Routing**: włącz, potwierdź swoją prywatną skrzynkę jako adres docelowy, dodaj reguły `kontakt@` i `dmarc@` → prywatna skrzynka. Cloudflare sam doda MX `route1-3.mx.cloudflare.net`, SPF i DKIM `cf2024-1._domainkey`.
-6. [ ] Sprawdź, że na `@` jest **dokładnie jeden** rekord SPF: `v=spf1 include:_spf.mx.cloudflare.net ~all`.
+3. [x] Poczekaj, aż Cloudflare pokaże strefę jako **Active** (zwykle do kilku godzin, maks. 24 h).
+4. [x] Cloudflare → DNS → **DNSSEC: Enable**, a rekord DS z Cloudflare wpisz w OVH. (23.10: DS 2371 dodany w OVH, w OVH „Trwa aktywacja”.)
+5. [x] Cloudflare → **Email Routing**: włącz, potwierdź swoją prywatną skrzynkę jako adres docelowy, dodaj reguły `kontakt@` i `dmarc@` → prywatna skrzynka. Cloudflare sam doda MX `route1-3.mx.cloudflare.net`, SPF i DKIM `cf2024-1._domainkey`.
+6. [x] Sprawdź, że na `@` jest **dokładnie jeden** rekord SPF: `v=spf1 include:_spf.mx.cloudflare.net ~all`.
 7. [ ] Resend → Domains → **Add domain** → `auth.skillnet.org.pl`, region **eu-west-1 (Ireland)**.
 8. [ ] Rekordy z zakładki **Records** w Resend przepisz do Cloudflare DNS, wszystkie jako **DNS only** (szara chmurka):
    - TXT `resend._domainkey.auth`: klucz DKIM (bez cudzysłowów i spacji w środku),
