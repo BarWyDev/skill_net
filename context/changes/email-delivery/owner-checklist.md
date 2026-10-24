@@ -23,7 +23,9 @@ dig +short MX skillnet.org.pl
 
 - Resend Configuration (24.10): śledzenie wyłączone (subdomena śledzenia nieskonfigurowana), TLS Opportunistic.
 
-**Następny krok:** punkt 1.12 (klucz API), potem 1.14 (Postmaster Tools).
+- Resend API key `supabase-smtp-prod` (Sending access) utworzony 24.10, wartość tylko w menedżerze haseł.
+
+**Następny krok:** punkt 1.14 (Google Postmaster Tools), potem przegląd i merge PR (sekcja 2).
 
 ## 0. Teraz, zanim domena będzie aktywna
 
@@ -51,7 +53,7 @@ Gdy domena pojawi się w OVH w **Web Cloud → Domeny**:
 9. [x] Dodaj TXT `_dmarc`: `v=DMARC1; p=none; rua=mailto:dmarc@skillnet.org.pl; adkim=r; aspf=r; fo=1`
 10. [x] Resend → **Verify**. Domena musi pokazać **Verified** (zwykle ≤ 15 min, maks. 72 h).
 11. [x] Resend → domena → **Configuration**: Click tracking i Open tracking **wyłączone** (przepisany link psuje token). Od Forge śledzenie jest domyślnie wyłączone i włącza się dopiero po skonfigurowaniu subdomeny śledzenia („Enable tracking metrics” → Configure): tego **nie** klikamy. TLS zostaje **Opportunistic**.
-12. [ ] Resend → **API Keys** → nowy klucz, uprawnienie **Sending access**, domena tylko `auth.skillnet.org.pl`. Zapisz go tylko w menedżerze haseł.
+12. [x] Resend → **API Keys** → nowy klucz, uprawnienie **Sending access**, domena tylko `auth.skillnet.org.pl`. Zapisz go tylko w menedżerze haseł. (24.10: klucz `supabase-smtp-prod`, Sending access. Stary nieużywany klucz `Onboarding` do usunięcia.)
 13. [x] Wyślij test na `kontakt@skillnet.org.pl` i sprawdź, czy dochodzi do prywatnej skrzynki.
 14. [ ] Dodaj `skillnet.org.pl` do Google Postmaster Tools (weryfikacja przez TXT).
 
