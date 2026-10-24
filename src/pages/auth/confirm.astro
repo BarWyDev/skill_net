@@ -1,0 +1,66 @@
+---
+import AuthShell from "@/components/auth/AuthShell.astro";
+import { parseConfirmParams } from "@/lib/confirm-link";
+import { BUTTON } from "@/lib/site-styles";
+import { createClient } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+
+// The confirmation and magic-link emails link here (roadmap S-05, S-16). A token_hash link works in
+// any browser, so a resident can sign up on a laptop and confirm on a phone; verifyOtp also signs
+// them in. Mail scanners (Outlook Safe Links, council gateways) fetch every link in an email, and the
+// token works once, so GET only shows a button and never calls Supabase. Only the button's POST spends
+// the token. The token sits in this page's URL and form: load nothing from third parties here.
+
+const NO_STORE = { "Cache-Control": "private, no-store" };
+
+function redirect(location: string) {
+  return new Response(null, { status: 302, headers: { Location: location, ...NO_STORE } });
+}
+
+const isPost = Astro.request.method === "POST";
+const params = parseConfirmParams(isPost ? await Astro.request.formData() : Astro.url.searchParams);
+if (!params) {
+  return redirect("/auth/link-wygasl");
+}
+
+if (isPost) {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (!supabase) {
+    return redirect("/auth/link-wygasl");
+  }
+  const { error } = await supabase.auth.verifyOtp({ type: params.type, token_hash: params.tokenHash });
+  return redirect(error ? "/auth/link-wygasl" : "/profil");
+}
+
+Astro.response.headers.set("Cache-Control", NO_STORE["Cache-Control"]);
+
+const isSignIn = params.type === "magiclink";
+const content = isSignIn
+  ? {
+      heading: "Zaloguj się",
+      text: "Kliknij przycisk, aby zalogować się do SkillNet.",
+      button: "Zaloguj się",
+    }
+  : {
+      heading: "Potwierdź adres e-mail",
+      text: "Ostatni krok: kliknij przycisk, aby potwierdzić adres e-mail i dokończyć zakładanie konta w SkillNet.",
+      button: "Potwierdzam",
+    };
+---
+
+<AuthShell title={`${content.heading} — SkillNet`} heading={content.heading}>
+  <p class="text-lg leading-relaxed sm:text-xl">{content.text}</p>
+
+  <form method="POST" action="/auth/confirm" class="mt-10">
+    <input type="hidden" name="token_hash" value={params.tokenHash} />
+    <input type="hidden" name="type" value={params.type} />
+    <button type="submit" class:list={cn(BUTTON, "btn-primary w-full cursor-pointer sm:w-auto")}>
+      {content.button}
+    </button>
+  </form>
+
+  <p slot="aside">
+    Pytamy o kliknięcie, bo programy pocztowe same otwierają linki z wiadomości, żeby sprawdzić, czy są bezpieczne. Bez
+    tego kroku link mógłby się zużyć, zanim do niego zajrzysz.
+  </p>
+</AuthShell>

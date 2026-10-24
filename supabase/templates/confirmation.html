@@ -1,14 +1,155 @@
-<h2>Potwierdź swój adres e-mail</h2>
-
-<p>
-  Dziękujemy za założenie konta w SkillNet — lokalnym katalogu umiejętności do pomocy sąsiedzkiej i w sytuacjach
-  kryzysowych.
-</p>
-
-<p>Kliknij poniższy link, aby potwierdzić adres e-mail i dokończyć profil:</p>
-
-<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Potwierdzam adres e-mail</a></p>
-
-<p>Link jest ważny przez godzinę i działa tylko raz. Jeśli wygaśnie, na stronie logowania możesz poprosić o nowy.</p>
-
-<p>Jeśli konto nie zostało założone przez Ciebie, zignoruj tę wiadomość — bez potwierdzenia nie zostanie aktywowane.</p>
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Graphite like the app: tell clients that honour it not to invert the colours. -->
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
+    <title>Potwierdź adres e-mail w SkillNet</title>
+    <!-- The app's typefaces where the client loads web fonts; the inline fallbacks cover Gmail and Outlook. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Big+Shoulders+Display:wght@800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body style="margin: 0; padding: 0; background: #1e2024">
+    <div style="display: none; max-height: 0; overflow: hidden">
+      Jedno kliknięcie i Twoje konto w SkillNet jest aktywne.
+    </div>
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      bgcolor="#1e2024"
+      style="background: #1e2024"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 20px 40px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px">
+            <tr>
+              <td
+                style="
+                  padding: 0 0 40px;
+                  font-family:
+                    Big Shoulders Display,
+                    Arial Narrow,
+                    Arial,
+                    sans-serif;
+                  font-size: 28px;
+                  font-weight: 800;
+                  line-height: 1;
+                  color: #ece9e2;
+                "
+              >
+                SkillNet
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 0 0 40px;
+                  font-family:
+                    Atkinson Hyperlegible Next,
+                    Verdana,
+                    Arial,
+                    sans-serif;
+                  font-size: 17px;
+                  line-height: 1.6;
+                  color: #ece9e2;
+                "
+              >
+                <h1
+                  style="
+                    margin: 0 0 24px;
+                    font-family:
+                      Big Shoulders Display,
+                      Arial Narrow,
+                      Arial,
+                      sans-serif;
+                    font-size: 48px;
+                    font-weight: 800;
+                    line-height: 0.95;
+                    color: #ece9e2;
+                  "
+                >
+                  Potwierdź swój adres <span style="white-space: nowrap">e-mail</span>
+                </h1>
+                <p style="margin: 0 0 16px">
+                  Dziękujemy za założenie konta w SkillNet, lokalnym katalogu umiejętności do pomocy sąsiedzkiej i w
+                  sytuacjach kryzysowych.
+                </p>
+                <p style="margin: 0 0 28px">Kliknij przycisk, aby potwierdzić adres e-mail i dokończyć profil.</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 0 28px">
+                  <tr>
+                    <td bgcolor="#f2c230" style="background: #f2c230">
+                      <a
+                        href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email"
+                        style="
+                          display: inline-block;
+                          padding: 15px 26px;
+                          font-family:
+                            Atkinson Hyperlegible Next,
+                            Verdana,
+                            Arial,
+                            sans-serif;
+                          font-size: 17px;
+                          font-weight: bold;
+                          line-height: 1.2;
+                          color: #1e2024;
+                          text-decoration: none;
+                        "
+                      >
+                        Potwierdź adres e-mail
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin: 0 0 32px">
+                  Link jest ważny przez <strong>godzinę</strong> i działa tylko raz. Jeśli wygaśnie, na stronie
+                  logowania możesz poprosić o nowy.
+                </p>
+                <p style="margin: 0 0 6px; font-size: 15px; color: #a3a6ad">
+                  Jeśli przycisk nie działa, skopiuj ten adres do przeglądarki:
+                </p>
+                <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.5; word-break: break-all">
+                  <a
+                    href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email"
+                    style="color: #ece9e2; text-decoration: underline"
+                    >{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email</a
+                  >
+                </p>
+                <p style="margin: 0; font-size: 15px; color: #a3a6ad">
+                  Jeśli konto nie zostało założone przez Ciebie, zignoruj tę wiadomość. Bez potwierdzenia konto nie
+                  zostanie aktywowane.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 20px 0 0;
+                  border-top: 1px solid #3a3d44;
+                  font-family:
+                    Atkinson Hyperlegible Next,
+                    Verdana,
+                    Arial,
+                    sans-serif;
+                  font-size: 13px;
+                  line-height: 1.5;
+                  color: #a3a6ad;
+                "
+              >
+                Wiadomość wysłana automatycznie do {{ .Email }}. Nie odpowiadaj na nią. Kontakt:
+                <a href="mailto:kontakt@skillnet.org.pl" style="color: #a3a6ad; text-decoration: underline"
+                  >kontakt@skillnet.org.pl</a
+                >
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
