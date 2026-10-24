@@ -21,7 +21,9 @@ dig +norec DS skillnet.org.pl @b-dns.pl +short
 dig +short MX skillnet.org.pl
 ```
 
-**Następny krok:** punkt 1.11 (zakładka Configuration w Resend: Click i Open tracking wyłączone), potem punkt 1.12 (klucz API).
+- Resend Configuration (24.10): śledzenie wyłączone (subdomena śledzenia nieskonfigurowana), TLS Opportunistic.
+
+**Następny krok:** punkt 1.12 (klucz API), potem 1.14 (Postmaster Tools).
 
 ## 0. Teraz, zanim domena będzie aktywna
 
@@ -48,7 +50,7 @@ Gdy domena pojawi się w OVH w **Web Cloud → Domeny**:
    - W Cloudflare wpisuj nazwę bez domeny (`send.auth`, nie `send.auth.skillnet.org.pl`).
 9. [x] Dodaj TXT `_dmarc`: `v=DMARC1; p=none; rua=mailto:dmarc@skillnet.org.pl; adkim=r; aspf=r; fo=1`
 10. [x] Resend → **Verify**. Domena musi pokazać **Verified** (zwykle ≤ 15 min, maks. 72 h).
-11. [ ] Resend → domena → **Configuration**: Click tracking i Open tracking **wyłączone** (przepisany link psuje token).
+11. [x] Resend → domena → **Configuration**: Click tracking i Open tracking **wyłączone** (przepisany link psuje token). Od Forge śledzenie jest domyślnie wyłączone i włącza się dopiero po skonfigurowaniu subdomeny śledzenia („Enable tracking metrics” → Configure): tego **nie** klikamy. TLS zostaje **Opportunistic**.
 12. [ ] Resend → **API Keys** → nowy klucz, uprawnienie **Sending access**, domena tylko `auth.skillnet.org.pl`. Zapisz go tylko w menedżerze haseł.
 13. [x] Wyślij test na `kontakt@skillnet.org.pl` i sprawdź, czy dochodzi do prywatnej skrzynki.
 14. [ ] Dodaj `skillnet.org.pl` do Google Postmaster Tools (weryfikacja przez TXT).
