@@ -227,11 +227,20 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Polish confirmation email (roadmap S-05). Production uses the same subject and body, pasted into
-# the dashboard (Auth -> Email Templates -> Confirm signup).
+# Polish auth emails (roadmap S-05, S-16). Production gets the same subjects and bodies only through
+# `npm run auth:email-config`, which reads these three sections; never edit them in the dashboard.
 [auth.email.template.confirmation]
 subject = "Potwierdź adres e-mail w SkillNet"
 content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Twój link do logowania w SkillNet"
+content_path = "./supabase/templates/magic_link.html"
+
+# No reset flow exists yet: this email says so and carries no link.
+[auth.email.template.recovery]
+subject = "Resetowanie hasła w SkillNet"
+content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
