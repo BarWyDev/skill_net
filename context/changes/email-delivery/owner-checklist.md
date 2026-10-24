@@ -2,7 +2,7 @@
 
 Rozpiska kroków po Twojej stronie, w kolejności. Szczegóły i uzasadnienia są w `plan.md` (fazy 1–4) i `research.md` (§4.1 rekordy DNS, §4.4 checklista E2E). Kod (faza 2) jest w PR z gałęzi `feat/email-delivery`.
 
-## Stan (2026-10-24, po południu)
+## Stan (2026-10-24, wieczór)
 
 - Domena `skillnet.org.pl` zarejestrowana w OVH i aktywna (zamówienie 261431196, odnowienie co rok, ochrona przed transferem włączona).
 - Strefa w Cloudflare **Active** (plan Free), serwery nazw `dora.ns.cloudflare.com` i `ethan.ns.cloudflare.com`, widoczne w rejestrze `.pl`.
@@ -27,7 +27,9 @@ dig +short MX skillnet.org.pl
 
 - Google Postmaster Tools / Search Console: `skillnet.org.pl` zweryfikowana 24.10 (TXT `google-site-verification` na `@`). Dane pojawią się dopiero przy większym wolumenie wysyłki do Gmaila.
 
-**Następny krok:** sekcja 2 (przegląd szablonów maili i merge PR #106). Otwarte z sekcji 0: PAT w Supabase, pytanie do IOD o dane w UE.
+- Faza 2 (24.10): szablony w stylu aplikacji (grafit, żółty przycisk, Big Shoulders + Atkinson), PR #106 zmergowany po PR #107 (poprawka `undici` dla audytu). Produkcja wdrożona, smoke tylko do odczytu przeszedł w całości. Supabase wciąż wysyła maile po staremu do czasu fazy 3.
+
+**Następny krok:** faza 3, punkt 1 (zmiana limitu „sign ups and sign ins” o 1 w Rate Limits i zrzut ekranu). Przygotuj PAT Supabase i klucz `supabase-smtp-prod`. Otwarte z sekcji 0: PAT w Supabase, pytanie do IOD o dane w UE.
 
 ## 0. Teraz, zanim domena będzie aktywna
 
@@ -79,9 +81,9 @@ Zrobione przeze mnie: testy jednostkowe, lint, `astro check`, build, smoke lokal
 
 Po Twojej stronie:
 
-- [ ] Otwórz `supabase/templates/confirmation.html`, `magic_link.html` i `recovery.html` w przeglądarce i oceń treść oraz wygląd (zmienne `{{ .SiteURL }}` itd. będą widoczne jako tekst, to normalne).
-- [ ] Sprawdź, że CI (`ci` i `smoke`) jest zielone, i zmerguj PR. Workers Builds wdroży go sam.
-- [ ] Po wdrożeniu (smoke tylko do odczytu na produkcji):
+- [x] Otwórz `supabase/templates/confirmation.html`, `magic_link.html` i `recovery.html` w przeglądarce i oceń treść oraz wygląd (zmienne `{{ .SiteURL }}` itd. będą widoczne jako tekst, to normalne).
+- [x] Sprawdź, że CI (`ci` i `smoke`) jest zielone, i zmerguj PR. Workers Builds wdroży go sam.
+- [x] Po wdrożeniu (smoke tylko do odczytu na produkcji):
 
 ```bash
 SMOKE_READONLY=1 BASE_URL=https://skillnet.barwy.workers.dev npm run smoke
