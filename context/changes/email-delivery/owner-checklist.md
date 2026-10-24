@@ -2,13 +2,13 @@
 
 Rozpiska kroków po Twojej stronie, w kolejności. Szczegóły i uzasadnienia są w `plan.md` (fazy 1–4) i `research.md` (§4.1 rekordy DNS, §4.4 checklista E2E). Kod (faza 2) jest w PR z gałęzi `feat/email-delivery`.
 
-## Stan (2026-10-23, wieczór)
+## Stan (2026-10-24)
 
 - Domena `skillnet.org.pl` zarejestrowana w OVH i aktywna (zamówienie 261431196, odnowienie co rok, ochrona przed transferem włączona).
 - Strefa w Cloudflare **Active** (plan Free), serwery nazw `dora.ns.cloudflare.com` i `ethan.ns.cloudflare.com`, widoczne w rejestrze `.pl`.
 - DNSSEC: włączony w Cloudflare, DS (klucz 2371, alg. 13) dodany w OVH i opublikowany przez rejestr. Walidacja przechodzi (flaga `ad` w 1.1.1.1, 8.8.8.8, 9.9.9.9).
 - Email Routing włączony: MX `route1-3`, jeden SPF, DKIM `cf2024-1`. Reguły `kontakt@` i `dmarc@` → prywatny Gmail, catch-all wyłączony (Drop, Disabled).
-- **Otwarte:** testowy mail z Onetu (19:29) nie dotarł, Activity log pusty. Serwer MX Cloudflare przyjmuje `RCPT TO:<kontakt@skillnet.org.pl>` (250), więc najpewniej Onet trzyma mail w kolejce po wcześniejszym braku MX. Sprawdź Activity log; jeśli nadal pusto, wyślij test od innego dostawcy.
+- Test `kontakt@` przeszedł: mail z Onetu dotarł do prywatnego Gmaila (z opóźnieniem, Onet trzymał go w kolejce po wcześniejszym braku MX).
 
 Sprawdzenie (dobry wynik: DS `2371 13 2 …`, MX `route1-3.mx.cloudflare.net`):
 
@@ -20,7 +20,7 @@ dig +norec DS skillnet.org.pl @b-dns.pl +short
 dig +short MX skillnet.org.pl
 ```
 
-**Następny krok:** potwierdzić test `kontakt@` (punkt 13), konto Resend (punkt 0), potem punkt 1.7 (domena `auth.skillnet.org.pl` w Resend, eu-west-1) i zrzut zakładki Records.
+**Następny krok:** konto Resend (punkt 0), potem punkt 1.7 (domena `auth.skillnet.org.pl` w Resend, eu-west-1) i zrzut zakładki Records.
 
 ## 0. Teraz, zanim domena będzie aktywna
 
@@ -49,7 +49,7 @@ Gdy domena pojawi się w OVH w **Web Cloud → Domeny**:
 10. [ ] Resend → **Verify**. Domena musi pokazać **Verified** (zwykle ≤ 15 min, maks. 72 h).
 11. [ ] Resend → domena → **Configuration**: Click tracking i Open tracking **wyłączone** (przepisany link psuje token).
 12. [ ] Resend → **API Keys** → nowy klucz, uprawnienie **Sending access**, domena tylko `auth.skillnet.org.pl`. Zapisz go tylko w menedżerze haseł.
-13. [ ] Wyślij test na `kontakt@skillnet.org.pl` i sprawdź, czy dochodzi do prywatnej skrzynki.
+13. [x] Wyślij test na `kontakt@skillnet.org.pl` i sprawdź, czy dochodzi do prywatnej skrzynki.
 14. [ ] Dodaj `skillnet.org.pl` do Google Postmaster Tools (weryfikacja przez TXT).
 
 Sprawdzenie (możesz wkleić mi wyniki):
