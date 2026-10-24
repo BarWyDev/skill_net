@@ -2,13 +2,14 @@
 
 Rozpiska kroków po Twojej stronie, w kolejności. Szczegóły i uzasadnienia są w `plan.md` (fazy 1–4) i `research.md` (§4.1 rekordy DNS, §4.4 checklista E2E). Kod (faza 2) jest w PR z gałęzi `feat/email-delivery`.
 
-## Stan (2026-10-24)
+## Stan (2026-10-24, po południu)
 
 - Domena `skillnet.org.pl` zarejestrowana w OVH i aktywna (zamówienie 261431196, odnowienie co rok, ochrona przed transferem włączona).
 - Strefa w Cloudflare **Active** (plan Free), serwery nazw `dora.ns.cloudflare.com` i `ethan.ns.cloudflare.com`, widoczne w rejestrze `.pl`.
 - DNSSEC: włączony w Cloudflare, DS (klucz 2371, alg. 13) dodany w OVH i opublikowany przez rejestr. Walidacja przechodzi (flaga `ad` w 1.1.1.1, 8.8.8.8, 9.9.9.9).
 - Email Routing włączony: MX `route1-3`, jeden SPF, DKIM `cf2024-1`. Reguły `kontakt@` i `dmarc@` → prywatny Gmail, catch-all wyłączony (Drop, Disabled).
 - Test `kontakt@` przeszedł: mail z Onetu dotarł do prywatnego Gmaila (z opóźnieniem, Onet trzymał go w kolejce po wcześniejszym braku MX).
+- Resend: konto założone, domena `auth.skillnet.org.pl` w eu-west-1 ma status **Verified** (24.10, 15:02), Resend Forge: Enabled. Rekordy w Cloudflare (wszystkie DNS only): TXT `resend._domainkey.auth` (klucz DKIM, 218 znaków), CNAME `rsend.auth` → `rsend-euw1.forge.rmta.net`, CNAME `send.auth` → `send.forge.rmta.net`.
 
 Sprawdzenie (dobry wynik: DS `2371 13 2 …`, MX `route1-3.mx.cloudflare.net`):
 
@@ -20,12 +21,12 @@ dig +norec DS skillnet.org.pl @b-dns.pl +short
 dig +short MX skillnet.org.pl
 ```
 
-**Następny krok:** konto Resend (punkt 0), potem punkt 1.7 (domena `auth.skillnet.org.pl` w Resend, eu-west-1) i zrzut zakładki Records.
+**Następny krok:** punkt 1.11 (zakładka Configuration w Resend: Click i Open tracking wyłączone), potem punkt 1.12 (klucz API).
 
 ## 0. Teraz, zanim domena będzie aktywna
 
 - [x] Załóż konto Cloudflare (jeśli go nie masz).
-- [ ] Załóż konto Resend (resend.com). Domeny jeszcze nie dodawaj.
+- [x] Załóż konto Resend (resend.com). Domeny jeszcze nie dodawaj.
 - [ ] Utwórz PAT w Supabase (Account → Access Tokens) i zapisz go tylko w menedżerze haseł.
 - [ ] Zapytaj IOD rady, czy dane maili muszą zostać w UE (Resend: wysyłka z eu-west-1, logi w USA).
 
@@ -39,14 +40,14 @@ Gdy domena pojawi się w OVH w **Web Cloud → Domeny**:
 4. [x] Cloudflare → DNS → **DNSSEC: Enable**, a rekord DS z Cloudflare wpisz w OVH. (23.10: DS 2371 dodany w OVH, w OVH „Trwa aktywacja”.)
 5. [x] Cloudflare → **Email Routing**: włącz, potwierdź swoją prywatną skrzynkę jako adres docelowy, dodaj reguły `kontakt@` i `dmarc@` → prywatna skrzynka. Cloudflare sam doda MX `route1-3.mx.cloudflare.net`, SPF i DKIM `cf2024-1._domainkey`.
 6. [x] Sprawdź, że na `@` jest **dokładnie jeden** rekord SPF: `v=spf1 include:_spf.mx.cloudflare.net ~all`.
-7. [ ] Resend → Domains → **Add domain** → `auth.skillnet.org.pl`, region **eu-west-1 (Ireland)**.
-8. [ ] Rekordy z zakładki **Records** w Resend przepisz do Cloudflare DNS, wszystkie jako **DNS only** (szara chmurka):
+7. [x] Resend → Domains → **Add domain** → `auth.skillnet.org.pl`, region **eu-west-1 (Ireland)**.
+8. [x] Rekordy z zakładki **Records** w Resend przepisz do Cloudflare DNS, wszystkie jako **DNS only** (szara chmurka). Od października 2026 Resend (Forge) podaje zamiast MX i TXT na `send.auth` dwa CNAME-y; SPF i MX zwrotny rozwiązują się przez nie:
    - TXT `resend._domainkey.auth`: klucz DKIM (bez cudzysłowów i spacji w środku),
-   - MX `send.auth`: host feedback Resend, priorytet 10,
-   - TXT `send.auth`: `v=spf1 include:amazonses.com ~all`.
+   - CNAME `rsend.auth` → `rsend-euw1.forge.rmta.net`,
+   - CNAME `send.auth` → `send.forge.rmta.net`.
    - W Cloudflare wpisuj nazwę bez domeny (`send.auth`, nie `send.auth.skillnet.org.pl`).
 9. [x] Dodaj TXT `_dmarc`: `v=DMARC1; p=none; rua=mailto:dmarc@skillnet.org.pl; adkim=r; aspf=r; fo=1`
-10. [ ] Resend → **Verify**. Domena musi pokazać **Verified** (zwykle ≤ 15 min, maks. 72 h).
+10. [x] Resend → **Verify**. Domena musi pokazać **Verified** (zwykle ≤ 15 min, maks. 72 h).
 11. [ ] Resend → domena → **Configuration**: Click tracking i Open tracking **wyłączone** (przepisany link psuje token).
 12. [ ] Resend → **API Keys** → nowy klucz, uprawnienie **Sending access**, domena tylko `auth.skillnet.org.pl`. Zapisz go tylko w menedżerze haseł.
 13. [x] Wyślij test na `kontakt@skillnet.org.pl` i sprawdź, czy dochodzi do prywatnej skrzynki.
@@ -59,7 +60,7 @@ dig +short TXT resend._domainkey.auth.skillnet.org.pl
 ```
 
 ```bash
-dig +short MX send.auth.skillnet.org.pl
+dig +short CNAME send.auth.skillnet.org.pl
 ```
 
 ```bash
