@@ -51,6 +51,17 @@ test("the visitor's address is limited across every auth endpoint", async () => 
   assert.deepEqual(new Set(ip.keys), new Set(["ip:203.0.113.7"]));
 });
 
+test("the confirm button's POST counts against the visitor's address, a link's GET does not", async () => {
+  const ip = fakeLimiter(0);
+  const limiters = { ip: ip.limiter };
+  const link = new Request("https://skillnet.example/auth/confirm?token_hash=abc&type=email");
+  assert.equal(await authThrottled(link, "/auth/confirm", limiters), false);
+  assert.equal(
+    await authThrottled(post("/auth/confirm", { token_hash: "abc", type: "email" }), "/auth/confirm", limiters),
+    true,
+  );
+});
+
 test("an account is limited per endpoint, whichever address the attempts come from", async () => {
   const account = fakeLimiter(2);
   const limiters = { ip: fakeLimiter(100).limiter, account: account.limiter };

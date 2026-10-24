@@ -22,12 +22,13 @@ export interface AuthLimiters {
   account?: RateLimiter;
 }
 
-/** The POST endpoints the throttle covers. Each takes credentials or sends an email. */
+/** The POST endpoints the throttle covers. Each takes credentials, sends an email or spends a token. */
 export const THROTTLED_AUTH_PATHS: readonly string[] = [
   "/api/auth/signin",
   "/api/auth/signup",
   "/api/auth/resend",
   "/api/auth/unregister",
+  "/auth/confirm",
 ];
 
 /** Where a throttled request is sent: a page that explains the wait. */

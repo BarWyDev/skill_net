@@ -182,10 +182,21 @@ const readonlySteps = [
     () => request("/auth/confirm"),
     { status: 302, location: "/auth/link-wygasl", cacheControlIncludes: "no-store" },
   ],
+  // S-16: a link's GET only shows the button, so a mail scanner cannot spend the token.
   [
-    "confirm with bogus token redirects to link error",
+    "confirm link shows a button and spends nothing",
     () => request("/auth/confirm?token_hash=smoke-not-a-token&type=email"),
+    { status: 200, bodyIncludes: 'method="POST"', cacheControlIncludes: "no-store" },
+  ],
+  [
+    "confirm link of an unsupported type redirects to link error",
+    () => request("/auth/confirm?token_hash=smoke-not-a-token&type=recovery"),
     { status: 302, location: "/auth/link-wygasl" },
+  ],
+  [
+    "confirm button with bogus token redirects to link error",
+    () => request("/auth/confirm", { method: "POST", form: { token_hash: "smoke-not-a-token", type: "email" } }),
+    { status: 302, location: "/auth/link-wygasl", cacheControlIncludes: "no-store" },
   ],
   [
     "throttle page answers 429",

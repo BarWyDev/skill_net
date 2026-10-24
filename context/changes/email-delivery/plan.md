@@ -320,17 +320,17 @@ None. The confirm page adds one render and one form post per confirmation.
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm run test:unit`
-- [ ] 2.2 Lint passes: `npm run lint`
-- [ ] 2.3 Type check passes: `npx astro check`
-- [ ] 2.4 Build passes: `npm run build`
-- [ ] 2.5 Smoke passes locally against `npm run preview`
+- [x] 2.1 Unit tests pass: `npm run test:unit`
+- [x] 2.2 Lint passes: `npm run lint`
+- [x] 2.3 Type check passes: `npx astro check`
+- [x] 2.4 Build passes: `npm run build`
+- [x] 2.5 Smoke passes locally against `npm run preview`
 - [ ] 2.6 CI `ci` and `smoke` jobs are green on the PR
 
 #### Manual
 
-- [ ] 2.7 Local Mailpit round trip: button page, `/profil`, reload does not spend the token
-- [ ] 2.8 Confirm page works on a phone, in dark mode and without JavaScript
+- [x] 2.7 Local Mailpit round trip: button page, `/profil`, reload does not spend the token (checked with a real magic-link token from the local admin API instead of Mailpit)
+- [x] 2.8 Confirm page works on a phone, in dark mode and without JavaScript
 - [ ] 2.9 The three templates render in Mailpit
 
 ### Phase 3: Production auth configuration
