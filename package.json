@@ -81,6 +81,9 @@
     },
     "eslint-plugin-jsx-a11y": {
       "eslint": "$eslint"
+    },
+    "miniflare": {
+      "undici": "7.30.1"
     }
   }
 }
