@@ -3,44 +3,113 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Graphite like the app: tell clients that honour it not to invert the colours. -->
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
     <title>Resetowanie hasła w SkillNet</title>
+    <!-- The app's typefaces where the client loads web fonts; the inline fallbacks cover Gmail and Outlook. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Big+Shoulders+Display:wght@800&display=swap"
+      rel="stylesheet"
+    />
   </head>
-  <body style="margin:0;padding:0;background:#f4f4f5;">
-    <div style="display:none;max-height:0;overflow:hidden;">
-      Reset hasła w SkillNet nie jest jeszcze dostępny.
-    </div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
+  <body style="margin: 0; padding: 0; background: #1e2024">
+    <div style="display: none; max-height: 0; overflow: hidden">Reset hasła w SkillNet nie jest jeszcze dostępny.</div>
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      bgcolor="#1e2024"
+      style="background: #1e2024"
+    >
       <tr>
-        <td align="center" style="padding:24px 12px;">
-          <table
-            role="presentation"
-            width="100%"
-            cellpadding="0"
-            cellspacing="0"
-            style="max-width:560px;background:#ffffff;border-radius:8px;"
-          >
+        <td align="center" style="padding: 32px 20px 40px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px">
             <tr>
               <td
-                style="padding:32px 28px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#18181b;"
+                style="
+                  padding: 0 0 40px;
+                  font-family:
+                    Big Shoulders Display,
+                    Arial Narrow,
+                    Arial,
+                    sans-serif;
+                  font-size: 28px;
+                  font-weight: 800;
+                  line-height: 1;
+                  color: #ece9e2;
+                "
               >
-                <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#18181b;">Resetowanie hasła</h1>
-                <p style="margin:0 0 16px;">
+                SkillNet
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 0 0 40px;
+                  font-family:
+                    Atkinson Hyperlegible Next,
+                    Verdana,
+                    Arial,
+                    sans-serif;
+                  font-size: 17px;
+                  line-height: 1.6;
+                  color: #ece9e2;
+                "
+              >
+                <h1
+                  style="
+                    margin: 0 0 24px;
+                    font-family:
+                      Big Shoulders Display,
+                      Arial Narrow,
+                      Arial,
+                      sans-serif;
+                    font-size: 48px;
+                    font-weight: 800;
+                    line-height: 0.95;
+                    color: #ece9e2;
+                  "
+                >
+                  Resetowanie hasła
+                </h1>
+                <p style="margin: 0 0 16px">
                   Otrzymaliśmy prośbę o zresetowanie hasła do konta w SkillNet. Ta funkcja nie jest jeszcze dostępna.
                 </p>
-                <p style="margin:0 0 16px;">
-                  Jeśli nie pamiętasz hasła, napisz do nas na kontakt@skillnet.org.pl z adresu, na który założone jest
-                  konto. Pomożemy odzyskać dostęp.
+                <p style="margin: 0 0 32px">
+                  Jeśli nie pamiętasz hasła, napisz do nas na
+                  <a
+                    href="mailto:kontakt@skillnet.org.pl"
+                    style="color: #ece9e2; font-weight: bold; text-decoration: underline"
+                    >kontakt@skillnet.org.pl</a
+                  >
+                  z adresu, na który założone jest konto. Pomożemy odzyskać dostęp.
                 </p>
-                <p style="margin:0;font-size:14px;color:#3f3f46;">
+                <p style="margin: 0; font-size: 15px; color: #a3a6ad">
                   Jeśli ta prośba nie pochodzi od Ciebie, zignoruj tę wiadomość. Twoje hasło się nie zmieniło.
                 </p>
               </td>
             </tr>
             <tr>
               <td
-                style="padding:16px 28px;border-top:1px solid #e4e4e7;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#52525b;"
+                style="
+                  padding: 20px 0 0;
+                  border-top: 1px solid #3a3d44;
+                  font-family:
+                    Atkinson Hyperlegible Next,
+                    Verdana,
+                    Arial,
+                    sans-serif;
+                  font-size: 13px;
+                  line-height: 1.5;
+                  color: #a3a6ad;
+                "
               >
-                Wiadomość wysłana automatycznie do {{ .Email }}. Nie odpowiadaj na nią. Kontakt: kontakt@skillnet.org.pl
+                Wiadomość wysłana automatycznie do {{ .Email }}. Nie odpowiadaj na nią. Kontakt:
+                <a href="mailto:kontakt@skillnet.org.pl" style="color: #a3a6ad; text-decoration: underline"
+                  >kontakt@skillnet.org.pl</a
+                >
               </td>
             </tr>
           </table>
