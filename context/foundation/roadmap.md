@@ -56,7 +56,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | done     |
 | S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done     |
 | S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
-| S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm        | S-05                          | FR-001                | planning |
+| S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm        | S-05                          | FR-001                | done     |
 | S-17 | neighbour-courses               | resident can offer a free course and signed-in neighbours can sign up for it           | S-01, S-11, S-12              | FR-020                | done     |
 
 ## Streams
@@ -297,10 +297,9 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Prerequisites:** S-05
 - **Parallel with:** S-07, S-08, S-12, S-17
 - **Blockers:** an own domain, verified with an email-sending provider (SPF, DKIM, DMARC). DNS verification is the lead-time item.
-- **Unknowns:**
-  - Which email-sending provider (Resend, Postmark, other)? — Owner: user. Block: no.
+- **Unknowns:** — (resolved 2026-10-24: Resend, domain `skillnet.org.pl`, sending subdomain `auth.skillnet.org.pl`)
 - **Risk:** Split out of S-05 on 2026-10-06. S-05's sign-up, consent and confirmation route are live, but Supabase's built-in sender reaches team addresses only (about 2 emails an hour) and refuses template edits on the free plan, so no resident outside the team can confirm an account. Any pilot with real registrations is blocked until this lands.
-- **Status:** planning
+- **Status:** done (2026-10-25: live on production; E2E on onet.pl and mail-tester 10/10, other providers deferred)
 
 ### S-17: Resident offers a neighbour course
 
@@ -336,7 +335,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-13       | #14   | pause-availability              | Pause and resume availability                                   | done                  | Archived 2026-10-06                                 |
 | S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | done                  | Archived 2026-10-04                                 |
 | S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | done                  | Archived 2026-09-27; no issue was created           |
-| S-16       | #103  | email-delivery                  | Own sending domain, custom SMTP and Polish confirmation email   | yes                   | Run `/10x-plan email-delivery`; blocks the pilot    |
+| S-16       | #103  | email-delivery                  | Own sending domain, custom SMTP and Polish confirmation email   | done                  | Live 2026-10-25; archive pending                    |
 | S-17       | —     | neighbour-courses               | Neighbour courses: offer a free course, neighbours sign up      | done                  | Archived 2026-10-20; no issue was created           |
 
 ## Open Roadmap Questions
@@ -351,7 +350,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 8. **The shaping quality cross-check never ran** (`quality_check_status: pending`, phase 6 of 8). — Owner: user. Block: roadmap-wide (unknown gaps).
 9. **Parallel incidents, alert limits and per-municipality matrices are unresolved at scale.** — Owner: user. Block: none for the pilot; must be answered before multi-municipality rollout.
 10. **When does production move to the Workers Paid plan?** It is a human-only change, and it must happen before the first deploy that carries crisis alerts. — Owner: user. Block: S-07.
-11. **Which own domain and email-sending provider back sign-up verification?** — Owner: user. Block: S-16, and therefore any pilot with real registrations.
+11. ~~**Which own domain and email-sending provider back sign-up verification?**~~ Resolved 2026-10-24: `skillnet.org.pl` with Resend (eu-west-1). Open follow-up: the pilot council's DPO on Resend's US-hosted logs (see 12).
 12. **What will the pilot council's data-protection officer accept for where phone numbers and locations are processed?** The Supabase region is fixed, but Workers process requests at any edge location. — Owner: user. Block: pilot launch (S-07, S-08, S-09 with real data).
 
 ## Parked
