@@ -70,15 +70,18 @@ export type Database = {
       consent_versions: {
         Row: {
           published_at: string
+          retired_at: string | null
           version: string
         }
         ComputedFields: never
         Insert: {
           published_at?: string
+          retired_at?: string | null
           version: string
         }
         Update: {
           published_at?: string
+          retired_at?: string | null
           version?: string
         }
         Relationships: []
