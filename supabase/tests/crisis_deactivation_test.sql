@@ -62,9 +62,9 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
 insert into crisis_ids
-select 'ended', public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 20);
+select 'ended', public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 20, 'Testowa aktywacja kryzysu');
 insert into crisis_ids
-select 'kept', public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 20);
+select 'kept', public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 20, 'Testowa aktywacja kryzysu');
 
 reset role;
 

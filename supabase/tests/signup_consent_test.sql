@@ -205,7 +205,7 @@ delete from public.skills_density_refreshes;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
-insert into crisis_ids select public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 1);
+insert into crisis_ids select public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 1, 'Testowa aktywacja kryzysu');
 
 -- Four consenting residents in the square: below the 5-resident threshold, so the square is
 -- hidden. Counting X as well would make 5 and show it.

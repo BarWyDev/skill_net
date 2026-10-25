@@ -114,7 +114,7 @@ select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-0000000
 select lives_ok(
   $$
     insert into crisis_ids
-    select 'main', public.activate_crisis('awaria-pradu', 'pin', null, lat, lng, 2)
+    select 'main', public.activate_crisis('awaria-pradu', 'pin', null, lat, lng, 2, 'Testowa aktywacja kryzysu')
     from epicentres where name = 'main'
   $$,
   'coordinator_activates_and_reads: a coordinator activates a power outage'
@@ -181,37 +181,37 @@ select throws_ok(
 -- ---------------------------------------------------------------------------
 
 select throws_ok(
-  $$ select public.activate_crisis('tsunami', 'postcode', '31-001', null, null, 5) $$,
+  $$ select public.activate_crisis('tsunami', 'postcode', '31-001', null, null, 5, 'Testowa aktywacja kryzysu') $$,
   'P0001',
   'unknown_crisis_type',
   'unknown_type_radius_postcode_raise: an unknown type raises unknown_crisis_type'
 );
 select throws_ok(
-  $$ select public.activate_crisis('pozar', 'postcode', '31-001', null, null, 3) $$,
+  $$ select public.activate_crisis('pozar', 'postcode', '31-001', null, null, 3, 'Testowa aktywacja kryzysu') $$,
   'P0001',
   'invalid_radius',
   'unknown_type_radius_postcode_raise: a radius outside the presets raises invalid_radius'
 );
 select throws_ok(
-  $$ select public.activate_crisis('pozar', 'postcode', '99-999', null, null, 5) $$,
+  $$ select public.activate_crisis('pozar', 'postcode', '99-999', null, null, 5, 'Testowa aktywacja kryzysu') $$,
   'P0001',
   'unknown_postcode',
   'unknown_type_radius_postcode_raise: an unknown postcode raises unknown_postcode'
 );
 select throws_ok(
-  $$ select public.activate_crisis('pozar', 'pin', null, 48.5, 19.9, 5) $$,
+  $$ select public.activate_crisis('pozar', 'pin', null, 48.5, 19.9, 5, 'Testowa aktywacja kryzysu') $$,
   'P0001',
   'outside_poland',
   'unknown_type_radius_postcode_raise: a pin outside Poland raises outside_poland'
 );
 select throws_ok(
-  $$ select public.activate_crisis('pozar', 'pin', null, 50.06, null, 5) $$,
+  $$ select public.activate_crisis('pozar', 'pin', null, 50.06, null, 5, 'Testowa aktywacja kryzysu') $$,
   'P0001',
   'location_required',
   'unknown_type_radius_postcode_raise: a pin without lng raises location_required'
 );
 select lives_ok(
-  $$ insert into crisis_ids select 'postcode', public.activate_crisis('pozar', 'postcode', '31-001', null, null, 5) $$,
+  $$ insert into crisis_ids select 'postcode', public.activate_crisis('pozar', 'postcode', '31-001', null, null, 5, 'Testowa aktywacja kryzysu') $$,
   'unknown_type_radius_postcode_raise: a known postcode activates'
 );
 
@@ -225,7 +225,7 @@ set local role authenticated;
 select lives_ok(
   $$
     insert into crisis_ids
-    select name, public.activate_crisis('awaria-pradu', 'pin', null, lat, lng, 1)
+    select name, public.activate_crisis('awaria-pradu', 'pin', null, lat, lng, 1, 'Testowa aktywacja kryzysu')
     from epicentres where name in ('edge_in', 'edge_out')
   $$,
   'radius_inclusive_and_excludes_outside: edge activations succeed'
@@ -400,7 +400,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"eeeeeeee-0000-0000-0000-000000000000","role":"authenticated"}', true);
 
 select throws_ok(
-  $$ select public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 5) $$,
+  $$ select public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 5, 'Testowa aktywacja kryzysu') $$,
   'P0001',
   'not_coordinator',
   'resident_cannot_activate: a resident gets not_coordinator'
@@ -439,7 +439,7 @@ set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 
 select throws_ok(
-  $$ select public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 5) $$,
+  $$ select public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 5, 'Testowa aktywacja kryzysu') $$,
   '42501',
   null::text,
   'anon_cannot_execute: anon cannot call activate_crisis'

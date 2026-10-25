@@ -66,13 +66,13 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "cccccccc-0000-0000-0000-00000000aaaa", "role": "authenticated"}', true);
 
 select throws_ok(
-  $$select public.activate_crisis('awaria-pradu', 'pin', null, 50.53, 14.79, 5)$$,
+  $$select public.activate_crisis('awaria-pradu', 'pin', null, 50.53, 14.79, 5, 'Testowa aktywacja kryzysu')$$,
   'outside_poland',
   'an epicentre in Czechia inside the old bounding box is refused'
 );
 
 select throws_ok(
-  $$select public.activate_crisis('awaria-pradu', 'pin', null, 52.52, 13.4, 5)$$,
+  $$select public.activate_crisis('awaria-pradu', 'pin', null, 52.52, 13.4, 5, 'Testowa aktywacja kryzysu')$$,
   'outside_poland',
   'an epicentre in Berlin is refused'
 );
@@ -81,7 +81,7 @@ create temp table activated (label text, id uuid) on commit drop;
 grant all on activated to authenticated;
 
 insert into activated
-select 'postcode', public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 5);
+select 'postcode', public.activate_crisis('awaria-pradu', 'postcode', '31-001', null, null, 5, 'Testowa aktywacja kryzysu');
 
 -- A pin on the 31-001 centroid: its nearest postcode is 31-001 itself.
 insert into activated
@@ -89,7 +89,8 @@ select 'pin', public.activate_crisis(
   'awaria-pradu', 'pin', null,
   (select extensions.st_y(centroid::extensions.geometry) from public.postcodes where postcode = '31-001'),
   (select extensions.st_x(centroid::extensions.geometry) from public.postcodes where postcode = '31-001'),
-  5
+  5,
+  'Testowa aktywacja kryzysu'
 );
 
 select is(
