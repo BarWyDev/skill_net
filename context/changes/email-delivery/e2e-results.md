@@ -6,16 +6,16 @@ Konfiguracja w czasie testu: SMTP Resend (`auth.skillnet.org.pl`, eu-west-1), na
 
 ## Rejestracja (mail „Potwierdź adres e-mail w SkillNet”)
 
-| Dostawca    | Data  | Czas dotarcia | Folder | SPF | DKIM | DMARC | Link działa     |
-| ----------- | ----- | ------------- | ------ | --- | ---- | ----- | --------------- |
-| onet.pl     | 25.10 | „po chwili”   | ?      | ?   | ?    | ?     | tak, zalogowało |
-| Gmail       |       |               |        |     |      |       |                 |
-| Outlook.com |       |               |        |     |      |       |                 |
-| wp.pl       |       |               |        |     |      |       |                 |
-| o2.pl       |       |               |        |     |      |       |                 |
-| interia.pl  |       |               |        |     |      |       |                 |
-| iCloud      |       |               |        |     |      |       |                 |
-| Proton      |       |               |        |     |      |       |                 |
+| Dostawca    | Data  | Czas dotarcia | Folder   | SPF | DKIM | DMARC | Link działa     |
+| ----------- | ----- | ------------- | -------- | --- | ---- | ----- | --------------- |
+| onet.pl     | 25.10 | „po chwili”   | Odebrane | ?   | ?    | ?     | tak, zalogowało |
+| Gmail       |       |               |          |     |      |       |                 |
+| Outlook.com |       |               |          |     |      |       |                 |
+| wp.pl       |       |               |          |     |      |       |                 |
+| o2.pl       |       |               |          |     |      |       |                 |
+| interia.pl  |       |               |          |     |      |       |                 |
+| iCloud      |       |               |          |     |      |       |                 |
+| Proton      |       |               |          |     |      |       |                 |
 
 ## Pozostałe punkty
 
