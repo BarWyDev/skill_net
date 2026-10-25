@@ -32,7 +32,9 @@ dig +short MX skillnet.org.pl
 - Faza 3 (25.10, 13:54): `npm run auth:email-config -- --set-smtp-pass` zastosował 15 zmian (SMTP Resend, limity 30/h i 300/5 min, polskie tematy i szablony). Nazwa pola `rate_limit_otp` potwierdzona (31 w Dashboard → 31 w podglądzie). Drugi podgląd: „No changes”. Kopia konfiguracji sprzed zmiany: `$TMPDIR/auth-config-before-2026-10-25T13-54-48-311Z.json` (na Macu właściciela).
 - Uwaga: na produkcji było `mailer_autoconfirm true` (potwierdzanie maila wyłączone), a plan zakłada `false`. Skrypt tego nie zmienia; włączamy ręcznie „Confirm email”.
 
-**Następny krok:** faza 3, punkt 6 (sprawdzenie w Dashboard) i włączenie „Confirm email”, potem faza 4. Otwarte z sekcji 0: pytanie do IOD o dane w UE.
+- 25.10: „Confirm email” włączone (`mailer_autoconfirm false` potwierdzone przez API), SMTP i limity w Dashboard zgodne z planem.
+
+**Następny krok:** faza 4, pierwsza rejestracja na Gmailu. Otwarte z sekcji 0: pytanie do IOD o dane w UE.
 
 ## 0. Teraz, zanim domena będzie aktywna
 
@@ -131,7 +133,7 @@ npm run auth:email-config -- --set-smtp-pass
 npm run auth:email-config -- --dry-run
 ```
 
-6. [ ] W Dashboard → Authentication → Sign In / Providers → Email włącz **Confirm email** (na produkcji było wyłączone). Potem sprawdź: SMTP Settings → Resend, nadawca `SkillNet <no-reply@auth.skillnet.org.pl>`; Rate Limits → 30 maili/h, 300 na 5 min dla weryfikacji i dla rejestracji/logowania.
+6. [x] W Dashboard → Authentication → Sign In / Providers → Email włącz **Confirm email** (na produkcji było wyłączone). Potem sprawdź: SMTP Settings → Resend, nadawca `SkillNet <no-reply@auth.skillnet.org.pl>`; Rate Limits → 30 maili/h, 300 na 5 min dla weryfikacji i dla rejestracji/logowania.
 
 Rollback: `npm run auth:email-config -- --restore <plik z $TMPDIR>` (najpierw z `--dry-run`).
 
