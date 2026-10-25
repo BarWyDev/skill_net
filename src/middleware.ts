@@ -83,12 +83,14 @@ async function route(context: APIContext, next: MiddlewareNext): Promise<Respons
   const supabase = createClient(context.request.headers, context.cookies);
 
   if (supabase) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    context.locals.user = user ?? null;
+    // Verifies the JWT locally against the cached JWKS (ES256), so a signed-in request no longer
+    // pays a GoTrue round trip (security audit O-08). A revoked session stays valid until the
+    // access token expires (1 h); every RPC still runs as auth.uid() under RLS.
+    const { data } = await supabase.auth.getClaims();
+    const claims = data?.claims;
+    context.locals.user = claims ? { id: claims.sub, email: claims.email } : null;
 
-    if (user) {
+    if (claims) {
       // Both lookups run in parallel, so a signed-in request still costs one round trip.
       const [coordinator, consentVersion] = await Promise.allSettled([
         isCoordinator(supabase),
