@@ -1,13 +1,15 @@
 ---
 change_id: email-delivery
 title: Own sending domain, custom SMTP and Polish auth emails
-status: plan_reviewed
+status: implemented
 created: 2026-10-06
-updated: 2026-10-21
+updated: 2026-10-25
 archived_at: null
 ---
 
 ## Notes
+
+**Implemented 2026-10-25.** Sending domain `auth.skillnet.org.pl` (apex `skillnet.org.pl`, OVH registrar, Cloudflare DNS) verified in Resend (eu-west-1); Supabase production sends through Resend SMTP with the Polish templates (applied with `npm run auth:email-config`). "Confirm email" turned back on: production had drifted to `mailer_autoconfirm true` since the 2026-09-25 check. E2E: a real sign-up on onet.pl landed in the inbox and its link signed in; mail-tester.com scored 10/10. The remaining providers are deferred (`e2e-results.md`). Not checked in this run: the `signup` consent row and the `/zgoda` gate for an existing team account.
 
 Split out of `verified-sign-up-with-consent` (roadmap S-05) on 2026-10-06. S-05's code and migration are live on production; only email delivery is left, and it **blocks the pilot**: Supabase's built-in sender delivers about 2 emails an hour, to team addresses only, so residents outside the team can't confirm their accounts.
 

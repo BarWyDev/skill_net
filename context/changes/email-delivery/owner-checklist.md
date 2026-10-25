@@ -2,7 +2,7 @@
 
 Rozpiska kroków po Twojej stronie, w kolejności. Szczegóły i uzasadnienia są w `plan.md` (fazy 1–4) i `research.md` (§4.1 rekordy DNS, §4.4 checklista E2E). Kod (faza 2) jest w PR z gałęzi `feat/email-delivery`.
 
-## Stan (2026-10-24, po południu)
+## Stan (2026-10-25)
 
 - Domena `skillnet.org.pl` zarejestrowana w OVH i aktywna (zamówienie 261431196, odnowienie co rok, ochrona przed transferem włączona).
 - Strefa w Cloudflare **Active** (plan Free), serwery nazw `dora.ns.cloudflare.com` i `ethan.ns.cloudflare.com`, widoczne w rejestrze `.pl`.
@@ -27,13 +27,22 @@ dig +short MX skillnet.org.pl
 
 - Google Postmaster Tools / Search Console: `skillnet.org.pl` zweryfikowana 24.10 (TXT `google-site-verification` na `@`). Dane pojawią się dopiero przy większym wolumenie wysyłki do Gmaila.
 
-**Następny krok:** sekcja 2 (przegląd szablonów maili i merge PR #106). Otwarte z sekcji 0: PAT w Supabase, pytanie do IOD o dane w UE.
+- Faza 2 (24.10): szablony w stylu aplikacji (grafit, żółty przycisk, Big Shoulders + Atkinson), PR #106 zmergowany po PR #107 (poprawka `undici` dla audytu). Produkcja wdrożona, smoke tylko do odczytu przeszedł w całości. Supabase wciąż wysyła maile po staremu do czasu fazy 3.
+
+- Faza 3 (25.10, 13:54): `npm run auth:email-config -- --set-smtp-pass` zastosował 15 zmian (SMTP Resend, limity 30/h i 300/5 min, polskie tematy i szablony). Nazwa pola `rate_limit_otp` potwierdzona (31 w Dashboard → 31 w podglądzie). Drugi podgląd: „No changes”. Kopia konfiguracji sprzed zmiany: `$TMPDIR/auth-config-before-2026-10-25T13-54-48-311Z.json` (na Macu właściciela).
+- Uwaga: na produkcji było `mailer_autoconfirm true` (potwierdzanie maila wyłączone), a plan zakłada `false`. Skrypt tego nie zmienia; włączamy ręcznie „Confirm email”.
+
+- 25.10: „Confirm email” włączone (`mailer_autoconfirm false` potwierdzone przez API), SMTP i limity w Dashboard zgodne z planem.
+
+- Faza 4 (25.10): rejestracja na onet.pl (Odebrane, link loguje) i mail-tester.com 10/10. Reszta testów odłożona, zob. `e2e-results.md`. S-16 zamknięte.
+
+**Po Twojej stronie:** unieważnij PAT Supabase (Account → Access Tokens), usuń konta testowe (onet, mail-tester) w Supabase → Users, Resend Pro przed ogłoszeniem pilotażu. Otwarte z sekcji 0: pytanie do IOD o dane w UE. Otwarte z sekcji 0: pytanie do IOD o dane w UE.
 
 ## 0. Teraz, zanim domena będzie aktywna
 
 - [x] Załóż konto Cloudflare (jeśli go nie masz).
 - [x] Załóż konto Resend (resend.com). Domeny jeszcze nie dodawaj.
-- [ ] Utwórz PAT w Supabase (Account → Access Tokens) i zapisz go tylko w menedżerze haseł.
+- [x] Utwórz PAT w Supabase (Account → Access Tokens) i zapisz go tylko w menedżerze haseł.
 - [ ] Zapytaj IOD rady, czy dane maili muszą zostać w UE (Resend: wysyłka z eu-west-1, logi w USA).
 
 ## 1. Domena, DNS i Resend (faza 1)
@@ -79,9 +88,9 @@ Zrobione przeze mnie: testy jednostkowe, lint, `astro check`, build, smoke lokal
 
 Po Twojej stronie:
 
-- [ ] Otwórz `supabase/templates/confirmation.html`, `magic_link.html` i `recovery.html` w przeglądarce i oceń treść oraz wygląd (zmienne `{{ .SiteURL }}` itd. będą widoczne jako tekst, to normalne).
-- [ ] Sprawdź, że CI (`ci` i `smoke`) jest zielone, i zmerguj PR. Workers Builds wdroży go sam.
-- [ ] Po wdrożeniu (smoke tylko do odczytu na produkcji):
+- [x] Otwórz `supabase/templates/confirmation.html`, `magic_link.html` i `recovery.html` w przeglądarce i oceń treść oraz wygląd (zmienne `{{ .SiteURL }}` itd. będą widoczne jako tekst, to normalne).
+- [x] Sprawdź, że CI (`ci` i `smoke`) jest zielone, i zmerguj PR. Workers Builds wdroży go sam.
+- [x] Po wdrożeniu (smoke tylko do odczytu na produkcji):
 
 ```bash
 SMOKE_READONLY=1 BASE_URL=https://skillnet.barwy.workers.dev npm run smoke
@@ -93,8 +102,8 @@ Nowa strona przyjmuje stare linki (`type=email`), więc merge przed fazą 3 nicz
 
 Dopiero gdy faza 1 jest zweryfikowana, a PR z fazy 2 działa na produkcji. Robisz to sam, w swoim terminalu: sekrety nie trafiają do mnie ani do repo.
 
-1. [ ] Ustal nazwę pola limitu „sign ups and sign ins”: w Supabase Dashboard → Authentication → Rate Limits zmień ten limit o 1 i zapisz. Potem uruchom podgląd (krok 3). Jeśli `rate_limit_otp` **nie** pokazuje zmienionej wartości, napisz mi, którą nazwę poprawić (`SIGNIN_LIMIT_FIELD` w `src/lib/auth-email-config.ts`).
-2. [ ] Ustaw zmienne w terminalu (wartości wklej ręcznie, nie zapisuj w plikach):
+1. [x] Ustal nazwę pola limitu „sign ups and sign ins”: w Supabase Dashboard → Authentication → Rate Limits zmień ten limit o 1 i zapisz. Potem uruchom podgląd (krok 3). Jeśli `rate_limit_otp` **nie** pokazuje zmienionej wartości, napisz mi, którą nazwę poprawić (`SIGNIN_LIMIT_FIELD` w `src/lib/auth-email-config.ts`).
+2. [x] Ustaw zmienne w terminalu (wartości wklej ręcznie, nie zapisuj w plikach):
 
 ```bash
 export SUPABASE_PROJECT_REF="<ref z: npx supabase projects list>"
@@ -108,34 +117,36 @@ read -rs SUPABASE_ACCESS_TOKEN && export SUPABASE_ACCESS_TOKEN
 read -rs RESEND_SMTP_KEY && export RESEND_SMTP_KEY
 ```
 
-3. [ ] Podgląd zmian (nic nie zmienia):
+3. [x] Podgląd zmian (nic nie zmienia):
 
 ```bash
 npm run auth:email-config -- --dry-run --set-smtp-pass
 ```
 
-4. [ ] Jeśli podgląd jest w porządku, zastosuj. Skrypt poprosi o wpisanie `ref` projektu i zapisze kopię obecnej konfiguracji do `$TMPDIR` (do rollbacku):
+4. [x] Jeśli podgląd jest w porządku, zastosuj. Skrypt poprosi o wpisanie `ref` projektu i zapisze kopię obecnej konfiguracji do `$TMPDIR` (do rollbacku):
 
 ```bash
 npm run auth:email-config -- --set-smtp-pass
 ```
 
-5. [ ] Drugi podgląd, bez `--set-smtp-pass`, musi pokazać „No changes”:
+5. [x] Drugi podgląd, bez `--set-smtp-pass`, musi pokazać „No changes”:
 
 ```bash
 npm run auth:email-config -- --dry-run
 ```
 
-6. [ ] W Dashboard sprawdź: SMTP Settings → Resend, nadawca `SkillNet <no-reply@auth.skillnet.org.pl>`; Rate Limits → 30 maili/h, 300 na 5 min dla weryfikacji i dla rejestracji/logowania.
+6. [x] W Dashboard → Authentication → Sign In / Providers → Email włącz **Confirm email** (na produkcji było wyłączone). Potem sprawdź: SMTP Settings → Resend, nadawca `SkillNet <no-reply@auth.skillnet.org.pl>`; Rate Limits → 30 maili/h, 300 na 5 min dla weryfikacji i dla rejestracji/logowania.
 
 Rollback: `npm run auth:email-config -- --restore <plik z $TMPDIR>` (najpierw z `--dry-run`).
 
 ## 4. Test na produkcji (faza 4)
 
+25.10: zrobione onet.pl i mail-tester; pozostałe punkty odłożone (`e2e-results.md`).
+
 - [ ] Konta testowe spoza zespołu: Gmail, Outlook.com, wp.pl, o2.pl, interia.pl, onet.pl, iCloud, Proton.
 - [ ] Na każdym: rejestracja, czas dotarcia, folder (Odebrane / Oferty / Spam), w źródle maila `spf=pass`, `dkim=pass`, `dmarc=pass`. Zapisuj tylko nazwy dostawców, bez adresów.
 - [ ] Outlook.com: odczekaj 5 min przed kliknięciem, link nadal działa.
-- [ ] mail-tester.com: wynik co najmniej 9/10.
+- [x] mail-tester.com: wynik co najmniej 9/10. (25.10: 10/10)
 - [ ] Pięć rejestracji z rzędu z różnych urządzeń w ciągu 5 minut, bez błędu limitu.
 - [ ] Poproś testerów, żeby w wp, onet i interii oznaczyli mail jako „To nie spam”.
 - [ ] Po 24–48 h: pierwszy raport DMARC na `dmarc@`.
