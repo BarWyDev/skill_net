@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-10-21
+updated: 2026-10-25
 prd_version: 2
 main_goal: market-feedback
 top_blocker: decisions
@@ -299,7 +299,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Blockers:** an own domain, verified with an email-sending provider (SPF, DKIM, DMARC). DNS verification is the lead-time item.
 - **Unknowns:** — (resolved 2026-10-24: Resend, domain `skillnet.org.pl`, sending subdomain `auth.skillnet.org.pl`)
 - **Risk:** Split out of S-05 on 2026-10-06. S-05's sign-up, consent and confirmation route are live, but Supabase's built-in sender reaches team addresses only (about 2 emails an hour) and refuses template edits on the free plan, so no resident outside the team can confirm an account. Any pilot with real registrations is blocked until this lands.
-- **Status:** done (2026-10-25: live on production; E2E on onet.pl and mail-tester 10/10, other providers deferred)
+- **Status:** done
 
 ### S-17: Resident offers a neighbour course
 
@@ -335,7 +335,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-13       | #14   | pause-availability              | Pause and resume availability                                   | done                  | Archived 2026-10-06                                 |
 | S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | done                  | Archived 2026-10-04                                 |
 | S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | done                  | Archived 2026-09-27; no issue was created           |
-| S-16       | #103  | email-delivery                  | Own sending domain, custom SMTP and Polish confirmation email   | done                  | Live 2026-10-25; archive pending                    |
+| S-16       | #103  | email-delivery                  | Own sending domain, custom SMTP and Polish confirmation email   | done                  | Archived 2026-10-25                                 |
 | S-17       | —     | neighbour-courses               | Neighbour courses: offer a free course, neighbours sign up      | done                  | Archived 2026-10-20; no issue was created           |
 
 ## Open Roadmap Questions
@@ -380,3 +380,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-12: a resident can choose which of their data is visible, and whether it is visible in everyday mode, crisis mode or both.** — Archived 2026-10-19 → `context/archive/2026-10-19-data-visibility-controls/`. Lesson: —.
 - **S-05: a resident can sign up in Polish, verify their email, and give explicit consent to data processing, with the consent recorded in an audit trail that is not platform logs.** — Archived 2026-10-06 → `context/archive/2026-10-06-verified-sign-up-with-consent/`. Lesson: —.
 - **S-17: a resident can offer a free course tied to one of their skills (title, description, duration); signed-in residents see the courses offered in their area, with no organiser name or contact and the place only as the 2 km square of the public map, and sign up in the app; the organiser sees how many people signed up and gives them the meeting place and time.** — Archived 2026-10-20 → `context/archive/2026-10-20-neighbour-courses/`. Lesson: —.
+- **S-16: a resident with any email address can sign up on production, receive the Polish confirmation email from SkillNet's own sending domain, and confirm the account through the link, which signs them in and opens `/profil`.** — Archived 2026-10-25 → `context/archive/2026-10-06-email-delivery/`. Lesson: Supabase dashboard settings drift (production had `mailer_autoconfirm` back on true); verify auth config through the Management API, not memory.
