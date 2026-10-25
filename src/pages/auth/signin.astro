@@ -1,6 +1,7 @@
 ---
 import AuthShell from "@/components/auth/AuthShell.astro";
 import SignInForm from "@/components/auth/SignInForm";
+import Turnstile from "@/components/auth/Turnstile.astro";
 import { RETURN_PARAM, safeReturnPath } from "@/lib/return-path";
 import { TEXT_LINK } from "@/lib/site-styles";
 import { takeFlashError } from "@/lib/flash";
@@ -22,7 +23,10 @@ const returnTo = safeReturnPath(Astro.url.searchParams.get(RETURN_PARAM));
       Ta strona jest dostępna po zalogowaniu. Zaloguj się, a od razu na nią wrócisz.
     </p>
   )}
-  <SignInForm serverError={error} unconfirmed={unconfirmed} returnTo={returnTo} client:load />
+  <SignInForm serverError={error} unconfirmed={unconfirmed} returnTo={returnTo} client:load>
+    <Turnstile slot="captcha" />
+    {unconfirmed && <Turnstile slot="resend-captcha" class="mt-4" />}
+  </SignInForm>
   <p class="text-ash mt-10">
     Nie masz konta?{" "}
     <a href="/auth/signup" class:list={TEXT_LINK}>

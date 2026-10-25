@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
 import { unregisterMe } from "@/lib/services/account";
 import { redirectWithError } from "@/lib/flash";
+import { captchaToken } from "@/lib/captcha";
 
 // Errors go back to the page the form came from, so a resident refusing consent on /zgoda sees them
 // there instead of being bounced through the gate. Only these pages are accepted.
@@ -30,7 +31,7 @@ export const POST: APIRoute = async (context) => {
     return redirectWithError(context, errorPage, "Tego konta nie można usunąć hasłem.");
   }
 
-  const result = await unregisterMe(supabase, user.email, password);
+  const result = await unregisterMe(supabase, user.email, password, captchaToken(form));
   if (!result.ok) {
     return redirectWithError(context, errorPage, result.message);
   }

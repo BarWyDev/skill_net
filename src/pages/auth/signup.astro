@@ -1,6 +1,7 @@
 ---
 import AuthShell from "@/components/auth/AuthShell.astro";
 import SignUpForm from "@/components/auth/SignUpForm";
+import Turnstile from "@/components/auth/Turnstile.astro";
 import { TEXT_LINK } from "@/lib/site-styles";
 import { takeFlashError } from "@/lib/flash";
 
@@ -13,7 +14,9 @@ const error = takeFlashError(Astro);
   description="Dodaj swoje umiejętności i przybliżoną lokalizację, żeby w razie kryzysu koordynator z gminy mógł poprosić Cię o pomoc."
   heading="Załóż konto"
 >
-  <SignUpForm serverError={error} client:load />
+  <SignUpForm serverError={error} client:load>
+    <Turnstile slot="captcha" />
+  </SignUpForm>
   <p class="text-ash mt-10">
     Masz już konto?{" "}
     <a href="/auth/signin" class:list={TEXT_LINK}>

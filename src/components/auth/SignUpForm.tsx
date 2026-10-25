@@ -16,6 +16,8 @@ const ACCOUNT_EXISTS_MESSAGE = authErrorMessage("user_already_exists");
 
 interface Props {
   serverError?: string | null;
+  /** The Turnstile widget (Turnstile.astro) passed as a slot. */
+  captcha?: React.ReactNode;
 }
 
 function charactersWord(n: number) {
@@ -25,7 +27,7 @@ function charactersWord(n: number) {
   return "znaków";
 }
 
-export default function SignUpForm({ serverError }: Props) {
+export default function SignUpForm({ serverError, captcha }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -195,6 +197,8 @@ export default function SignUpForm({ serverError }: Props) {
         </label>
         {errors.consent && <FieldError id="consent-error">{errors.consent}</FieldError>}
       </div>
+
+      {captcha}
 
       <div className="space-y-4">
         <ServerError message={serverError} />

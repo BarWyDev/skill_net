@@ -18,9 +18,18 @@ interface Props {
   unconfirmed?: boolean;
   /** A checked same-site path to go back to after signing in (`powrot`). */
   returnTo?: string | null;
+  /** Turnstile widgets (Turnstile.astro) passed as slots, one per form. */
+  captcha?: React.ReactNode;
+  resendCaptcha?: React.ReactNode;
 }
 
-export default function SignInForm({ serverError, unconfirmed = false, returnTo = null }: Props) {
+export default function SignInForm({
+  serverError,
+  unconfirmed = false,
+  returnTo = null,
+  captcha,
+  resendCaptcha,
+}: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -110,6 +119,8 @@ export default function SignInForm({ serverError, unconfirmed = false, returnTo 
           }
         />
 
+        {captcha}
+
         <div className="space-y-4 pt-2">
           <ServerError message={serverError} />
           <SubmitButton pendingText="Logowanie...">Zaloguj się</SubmitButton>
@@ -122,6 +133,7 @@ export default function SignInForm({ serverError, unconfirmed = false, returnTo 
             Link nie dotarł albo wygasł? Wyślemy nowy na adres podany powyżej.
           </p>
           <input type="hidden" name="email" value={email} />
+          {resendCaptcha}
           <button
             type="submit"
             disabled={!email.trim()}

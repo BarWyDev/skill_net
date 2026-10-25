@@ -1,6 +1,8 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
 import { redirectWithError } from "@/lib/flash";
+import { authErrorMessage } from "@/lib/auth-errors";
+import { captchaToken } from "@/lib/captcha";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -18,8 +20,16 @@ export const POST: APIRoute = async (context) => {
 
   const supabase = createClient(context.request.headers, context.cookies);
   if (supabase) {
-    // The error is ignored on purpose (see above). It is never logged: it would carry the address.
-    await supabase.auth.resend({ type: "signup", email });
+    // Every other error is ignored on purpose (see above), and never logged: it would carry the
+    // address. A failed captcha is checked before the address, so reporting it reveals nothing.
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { captchaToken: captchaToken(form) },
+    });
+    if (error?.code === "captcha_failed") {
+      return redirectWithError(context, "/auth/link-wygasl", authErrorMessage(error.code));
+    }
   }
 
   return context.redirect("/auth/confirm-email?ponownie=1");
