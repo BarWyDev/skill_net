@@ -50,7 +50,7 @@ grant select, insert on crisis_ids, seen to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-0000000000f1","role":"authenticated"}', true);
 
-insert into crisis_ids select 'outage', public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 1);
+insert into crisis_ids select 'outage', public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 1, 'Testowa aktywacja kryzysu');
 select count(*) from public.reveal_crisis_contacts(
   (select id from crisis_ids where name = 'outage'), 'Brak potwierdzeń od mieszkańców Kazimierza'
 );

@@ -191,7 +191,7 @@ set local role authenticated;
 select pg_temp.as_user('cccccccc-0000-0000-0000-000000000001');
 
 insert into crisis_ids
-select 'during_pause', public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 1);
+select 'during_pause', public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 1, 'Testowa aktywacja kryzysu');
 
 reset role;
 
@@ -230,7 +230,7 @@ set local role authenticated;
 select pg_temp.as_user('cccccccc-0000-0000-0000-000000000001');
 
 insert into crisis_ids
-select 'live', public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 1);
+select 'live', public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 1, 'Testowa aktywacja kryzysu');
 
 reset role;
 

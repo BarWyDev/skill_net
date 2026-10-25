@@ -285,6 +285,12 @@ const REVEAL_DB_ERRORS: Partial<Record<string, { message: string; status: number
   reason_required: { message: REASON_REQUIRED_MESSAGE, status: 422, field: "reason" },
   reason_too_long: { message: REASON_TOO_LONG_MESSAGE, status: 422, field: "reason" },
   exercise_no_reveal: { message: EXERCISE_NO_REVEAL_MESSAGE, status: 409 },
+  // From the crisis RPC limits migration.
+  reveal_rate_limited: {
+    message:
+      "Limit ujawnień: najwyżej 10 na godzinę na jednego koordynatora, we wszystkich kryzysach. Spróbuj później albo poproś o ujawnienie innego koordynatora.",
+    status: 429,
+  },
 };
 
 export type RevealResult =

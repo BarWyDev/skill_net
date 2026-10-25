@@ -335,7 +335,7 @@ select is(
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"dddddddd-0000-0000-0000-000000000004","role":"authenticated"}', true);
 
-insert into crisis_ids select 'main', public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 2);
+insert into crisis_ids select 'main', public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 2, 'Testowa aktywacja kryzysu');
 insert into rpc_rows select * from public.get_crisis_matches((select id from crisis_ids));
 
 reset role;
