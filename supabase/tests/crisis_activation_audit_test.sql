@@ -5,7 +5,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(27);
+select plan(28);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as postgres: bypasses RLS, triggers still apply)
@@ -88,14 +88,21 @@ select throws_ok(
   'reason_too_long',
   'activation_reason: a reason over 500 characters raises reason_too_long'
 );
-select lives_ok(
-  $$ insert into crisis_ids select 'legacy', public.activate_crisis('wypadek-masowy', 'pin', null, 50.0614, 19.9366, 1) $$,
-  'activation_reason: until the contract migration, a call without a reason still activates'
+select throws_ok(
+  $$ select public.activate_crisis('wypadek-masowy', 'pin', null, 50.0614, 19.9366, 1) $$,
+  'P0001',
+  'reason_required',
+  'activation_reason: a call without a reason raises reason_required'
 );
-select is(
-  (select reason from public.crises where id = (select id from crisis_ids where name = 'legacy')),
-  null,
-  'activation_reason: a call without a reason stores a null reason'
+select throws_ok(
+  $$ select public.activate_crisis('wypadek-masowy', 'pin', null, 50.0614, 19.9366, 1, null) $$,
+  'P0001',
+  'reason_required',
+  'activation_reason: a null reason raises reason_required'
+);
+select lives_ok(
+  $$ insert into crisis_ids select 'second', public.activate_crisis('wypadek-masowy', 'pin', null, 50.0614, 19.9366, 1, 'Druga aktywacja w ciągu godziny') $$,
+  'activation_reason: a second activation with a reason succeeds'
 );
 
 -- ---------------------------------------------------------------------------
@@ -131,7 +138,7 @@ select lives_ok(
 reset role;
 update public.crises
 set activated_at = activated_at - interval '61 minutes'
-where id = (select id from crisis_ids where name = 'legacy');
+where id = (select id from crisis_ids where name = 'second');
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
