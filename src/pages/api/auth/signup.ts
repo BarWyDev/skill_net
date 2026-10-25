@@ -4,6 +4,7 @@ import { authErrorMessage } from "@/lib/auth-errors";
 import { CONSENT_REQUIRED_MESSAGE, CURRENT_CONSENT_VERSION } from "@/lib/consent";
 import { redirectWithError } from "@/lib/flash";
 import { passwordProblem } from "@/lib/password";
+import { captchaToken } from "@/lib/captcha";
 
 export const POST: APIRoute = async (context) => {
   const form = await context.request.formData();
@@ -34,7 +35,7 @@ export const POST: APIRoute = async (context) => {
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { consent_version: CURRENT_CONSENT_VERSION } },
+    options: { data: { consent_version: CURRENT_CONSENT_VERSION }, captchaToken: captchaToken(form) },
   });
 
   if (error) {

@@ -194,6 +194,8 @@ token_verifications = 30
 web3 = 30
 
 # Configure one of the supported captcha providers: `hcaptcha`, `turnstile`.
+# Off locally on purpose: the smoke test posts the forms without a widget. Production enables
+# Turnstile in the Supabase dashboard (README "Turnstile"; security audit S-02).
 # [auth.captcha]
 # enabled = true
 # provider = "hcaptcha"
