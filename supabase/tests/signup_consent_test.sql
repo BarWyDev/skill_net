@@ -1,14 +1,14 @@
 -- Sign-up consent guarantees: the trigger records consent for an email sign-up and refuses one
--- without a published version (nothing created), fixture and non-email inserts are exempt, the
--- audit trail is owner-read-only and append-only, the consent gate RPCs, residents who never
--- consented are absent from crisis activation and the density map, and consent records survive
--- erasure.
+-- without a published version or with an outdated one (nothing created), fixture and non-email
+-- inserts are exempt, the audit trail is owner-read-only and append-only, the consent gate RPCs,
+-- residents who never consented are absent from crisis activation and the density map, and
+-- consent records survive erasure.
 -- Run with `npm run test:db`. Everything is rolled back at the end.
 
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(39);
+select plan(44);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as postgres: bypasses RLS, triggers still apply)
@@ -42,12 +42,12 @@ select is(
 -- A: a GoTrue-shaped email sign-up with the current version.
 insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values (
   'aaaaaaaa-0000-0000-0000-000000000001', 'a@test.local',
-  '{"provider":"email","providers":["email"]}', '{"consent_version":"2026-10-06"}'
+  '{"provider":"email","providers":["email"]}', '{"consent_version":"2026-10-21"}'
 );
 
 select results_eq(
   $$ select version, source from public.consent_events where user_id = 'aaaaaaaa-0000-0000-0000-000000000001' $$,
-  $$ values ('2026-10-06'::text, 'signup'::text) $$,
+  $$ values ('2026-10-21'::text, 'signup'::text) $$,
   'signup_records: an email sign-up with a published version writes one signup row'
 );
 
@@ -101,7 +101,7 @@ select is(
 -- Another consenting user, so A has someone else's row to not see.
 insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values (
   'aaaaaaaa-0000-0000-0000-000000000004', 'd@test.local',
-  '{"provider":"email","providers":["email"]}', '{"consent_version":"2026-10-06"}'
+  '{"provider":"email","providers":["email"]}', '{"consent_version":"2026-10-21"}'
 );
 
 set local role authenticated;
@@ -139,7 +139,7 @@ select throws_ok(
 );
 select is(
   public.my_latest_consent_version(),
-  '2026-10-06',
+  '2026-10-21',
   'latest_version: A''s latest consent is the sign-up version'
 );
 
@@ -363,6 +363,50 @@ select ok(
 select ok(
   has_table_privilege('postgres', 'public.consent_events', 'insert'),
   'definer_can_write: the definer (postgres) can insert into consent_events'
+);
+
+-- ---------------------------------------------------------------------------
+-- No retired versions (R-05), as postgres
+-- ---------------------------------------------------------------------------
+
+reset role;
+
+select is(
+  (select array_agg(version order by version) from public.consent_versions where retired_at is not null),
+  array['2026-10-06', '2026-10-10', '2026-10-19']::text[],
+  'retired: every version before the one the app sends is retired'
+);
+select throws_ok(
+  $$ insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values (
+       'aaaaaaaa-0000-0000-0000-000000000010', 'old@test.local',
+       '{"provider":"email","providers":["email"]}', '{"consent_version":"2026-10-06"}'
+     ) $$,
+  'P0001',
+  'consent_required',
+  'signup_retired_version: an email sign-up with a retired version is refused'
+);
+select is(
+  (select count(*) from auth.users where id = 'aaaaaaaa-0000-0000-0000-000000000010'),
+  0::bigint,
+  'retired_creates_nothing: a refused retired-version sign-up leaves no account'
+);
+
+-- Publishing a new version never retires the previous one: both are accepted until step 3.
+insert into public.consent_versions (version) values ('2099-02-01');
+
+select lives_ok(
+  $$ insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values (
+       'aaaaaaaa-0000-0000-0000-000000000011', 'prev@test.local',
+       '{"provider":"email","providers":["email"]}', '{"consent_version":"2026-10-21"}'
+     ) $$,
+  'signup_previous_version: the previous version is accepted until it is retired'
+);
+select lives_ok(
+  $$ insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values (
+       'aaaaaaaa-0000-0000-0000-000000000012', 'new@test.local',
+       '{"provider":"email","providers":["email"]}', '{"consent_version":"2099-02-01"}'
+     ) $$,
+  'signup_new_version: a newly published version is accepted'
 );
 
 select * from finish();

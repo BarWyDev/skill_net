@@ -1,0 +1,29 @@
+---
+// The Turnstile widget (security audit S-02). Placed inside a form, it adds the token field that
+// the endpoint forwards to Supabase Auth (src/lib/captcha.ts). Renders nothing without
+// TURNSTILE_SITE_KEY, so local dev, previews and CI run without it. A React form takes it as a
+// slot: Astro passes slots as static HTML, so hydration never touches the widget's iframe.
+import { TURNSTILE_SITE_KEY } from "astro:env/server";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  /** Spacing around the widget; it renders no element at all without a site key. */
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+{TURNSTILE_SITE_KEY && (
+  <div class:list={cn("cf-turnstile", className)} data-sitekey={TURNSTILE_SITE_KEY} data-language="pl" />
+)}
+
+<script>
+  // Once per page, however many widgets it has: the API renders every .cf-turnstile it finds.
+  if (document.querySelector(".cf-turnstile")) {
+    const api = document.createElement("script");
+    api.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    api.async = true;
+    document.head.append(api);
+  }
+</script>

@@ -3,6 +3,7 @@
 // (src/lib/flash.ts) at the top of the page named by `returnTo` (/profil or /zgoda).
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
+import Turnstile from "@/components/auth/Turnstile.astro";
 
 interface Props {
   returnTo?: "/profil" | "/zgoda";
@@ -39,6 +40,7 @@ const { returnTo = "/profil" } = Astro.props;
       aria-describedby="delete-account-consequence"
       class="field block h-12 w-full px-3 text-lg sm:max-w-sm"
     />
+    <Turnstile class="mt-6" />
     <button type="submit" class:list={cn(BUTTON, "btn-danger mt-6 w-full cursor-pointer sm:w-auto")}>
       Usuń konto na zawsze
     </button>

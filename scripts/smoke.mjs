@@ -7,6 +7,8 @@
 // to assert a response header equals a value.
 // A step may set `flash: true` to assert the response leaves a one-shot error notice (src/lib/flash.ts)
 // in the flash cookie, which is how endpoints report errors since security audit F-06.
+// A step may set `sessionCookie: true` to assert the response sets the Supabase session cookie
+// with HttpOnly, Secure, SameSite=Lax and at most 30 days of Max-Age (security audit S-01).
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const READONLY = process.env.SMOKE_READONLY === "1";
@@ -32,6 +34,31 @@ const throttledSignin = () =>
   });
 // The one-shot error notice cookie (src/lib/flash.ts).
 const FLASH_COOKIE = "skillnet_flash";
+// SESSION_MAX_AGE in src/lib/supabase.ts.
+const SESSION_MAX_AGE = 30 * 24 * 60 * 60;
+
+// True when the response sets at least one session cookie (`sb-*`) and every one it sets carries
+// the S-01 flags. Deletions (Max-Age=0) are skipped.
+function sessionCookieFlagsOk(setCookies) {
+  const session = setCookies
+    .map((raw) => raw.split(";").map((part) => part.trim()))
+    .filter(([pair]) => pair.startsWith("sb-"))
+    .filter((parts) => !parts.some((a) => /^max-age=0$/i.test(a)));
+  return (
+    session.length > 0 &&
+    session.every((parts) => {
+      const attrs = parts.slice(1).map((a) => a.toLowerCase());
+      const maxAge = Number(attrs.find((a) => a.startsWith("max-age="))?.slice("max-age=".length));
+      return (
+        attrs.includes("httponly") &&
+        attrs.includes("secure") &&
+        attrs.includes("samesite=lax") &&
+        maxAge > 0 &&
+        maxAge <= SESSION_MAX_AGE
+      );
+    })
+  );
+}
 const TEAMS_PATH = "/koordynator/kryzys/00000000-0000-0000-0000-000000000000/zespoly";
 
 function cookieHeader() {
@@ -76,6 +103,7 @@ async function request(path, { method = "GET", form, json, rawBody, contentType,
   storeCookies(response);
   return {
     setCookieNames: response.headers.getSetCookie().map((raw) => raw.split("=")[0].trim()),
+    setCookies: response.headers.getSetCookie(),
     status: response.status,
     location: response.headers.get("location") ?? "",
     cacheControl: response.headers.get("cache-control") ?? "",
@@ -259,7 +287,7 @@ const writeSteps = [
   [
     "signin redirects new user to profil",
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/profil", exact: true },
+    { status: 302, location: "/profil", exact: true, sessionCookie: true },
   ],
   ["profil renders for signed-in user", () => request("/profil"), { status: 200 }],
   // A signed-in visitor's session never reaches the publicly cached map data (lessons.md).
@@ -535,7 +563,8 @@ for (const [name, run, expected] of steps) {
     (expected.bodyExcludes === undefined || !actual.body.includes(expected.bodyExcludes)) &&
     (expected.cacheControlIncludes === undefined || actual.cacheControl.includes(expected.cacheControlIncludes)) &&
     (expected.header === undefined || actual.headers.get(expected.header[0]) === expected.header[1]) &&
-    (expected.flash === undefined || actual.setCookieNames.includes(FLASH_COOKIE) === expected.flash);
+    (expected.flash === undefined || actual.setCookieNames.includes(FLASH_COOKIE) === expected.flash) &&
+    (expected.sessionCookie === undefined || sessionCookieFlagsOk(actual.setCookies) === expected.sessionCookie);
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;
@@ -547,6 +576,13 @@ for (const [name, run, expected] of steps) {
         `      expected Cache-Control to include ${expected.cacheControlIncludes}, got "${actual.cacheControl}"`,
       );
     if (expected.flash !== undefined) console.log(`      expected a ${FLASH_COOKIE} cookie: ${expected.flash}`);
+    if (expected.sessionCookie !== undefined)
+      // Names and attributes only: the values are session tokens.
+      console.log(
+        `      expected session cookie flags (S-01), got ${JSON.stringify(
+          actual.setCookies.map((raw) => raw.replace(/=[^;]*/, "=…")),
+        )}`,
+      );
     if (expected.header !== undefined)
       console.log(
         `      expected ${expected.header[0]}: ${expected.header[1]}, got "${actual.headers.get(expected.header[0])}"`,

@@ -80,6 +80,20 @@ Both are declared in the `env.schema` of `astro.config.mjs` as optional server-o
 
 Locally, email confirmation is turned off in `supabase/config.toml`, so new accounts can sign in right away. Studio runs at http://localhost:54323. Stop the stack with `npx supabase stop`.
 
+### Turnstile (bot check on the auth forms)
+
+Sign-in, sign-up, both "send the link again" forms and account deletion carry a Cloudflare Turnstile widget. Supabase Auth checks the token with the widget's secret, so the Worker only needs the public `TURNSTILE_SITE_KEY` (optional, server, public). Without it no widget renders, which is how local dev, previews and CI run: local Supabase has captcha off.
+
+To see the widget locally, put Cloudflare's test key `TURNSTILE_SITE_KEY=1x00000000000000000000AA` in `.dev.vars`. Take it out again before any `npx wrangler secret bulk .dev.vars`, or production gets the test key.
+
+Turning it on in production takes three steps, in this order. Enabling captcha in Supabase first would refuse every sign-in, because the forms would send no token yet:
+
+1. Cloudflare dashboard → Turnstile → add a widget (Managed) for `skillnet.barwy.workers.dev`.
+2. Add the site key to `vars` in `wrangler.jsonc` and merge it, so the deploy renders the widget. Supabase ignores the token while captcha is off.
+3. Supabase dashboard → Authentication → Attack Protection → enable captcha, provider Turnstile, with the widget's secret key. Then sign in once on production.
+
+Rollback: turn captcha off in Supabase first, then remove the key.
+
 ## Scripts
 
 | Script              | What it does                                                                      |

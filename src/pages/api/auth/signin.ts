@@ -4,6 +4,7 @@ import { profileNeedsAttention } from "@/lib/services/profile";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { RETURN_PARAM, safeReturnPath } from "@/lib/return-path";
 import { redirectWithError } from "@/lib/flash";
+import { captchaToken } from "@/lib/captcha";
 
 export const POST: APIRoute = async (context) => {
   const form = await context.request.formData();
@@ -16,7 +17,11 @@ export const POST: APIRoute = async (context) => {
   if (!supabase) {
     return redirectWithError(context, "/auth/signin", "Supabase nie jest skonfigurowany.");
   }
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+    options: { captchaToken: captchaToken(form) },
+  });
 
   if (error) {
     // The form shows a resend block for this flag. The address stays in the browser, never in the URL.
