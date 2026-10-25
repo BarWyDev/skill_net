@@ -20,6 +20,6 @@ Konfiguracja w czasie testu: SMTP Resend (`auth.skillnet.org.pl`, eu-west-1), na
 ## Pozostałe punkty
 
 - [ ] Outlook.com: kliknięcie po 5 min, link nadal działa.
-- [ ] mail-tester.com: wynik ≥ 9/10.
+- [x] mail-tester.com: wynik ≥ 9/10. (25.10: **10/10**, temat „Potwierdź adres e-mail w SkillNet”, raport https://mail-tester.com/test-dummdmxhp; 10/10 oznacza przechodzące SPF, DKIM i DMARC.)
 - [ ] Pięć rejestracji z różnych urządzeń w 5 min bez błędu limitu.
 - [ ] Pierwszy raport DMARC na `dmarc@` (24–48 h).
