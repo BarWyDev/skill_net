@@ -194,7 +194,7 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
 - [x] `[human]` Worker → Settings → Domains & Routes → **Preview URLs → enable Cloudflare Access** (one click). Allow only your email.
   - _Why:_ previews run against the **production** Supabase.
   - `[agent]` verify: `curl -sI <preview-url>` returns a 302 to `cloudflareaccess.com`. **Verified 2026-09-25:** `bece9ffd-skillnet.barwy.workers.dev` → 302 to the Access team `fancy-surf-cca9.cloudflareaccess.com`. Production `skillnet.barwy.workers.dev` stays public (200).
-- [ ] `[human]` GitHub branch protection / ruleset on `master`: require the status checks `ci` and `smoke`, and require a PR before merging.
+- [x] `[human]` GitHub branch protection / ruleset on `master`: require the status checks `ci` and `smoke`, and require a PR before merging. **Active (checked 2026-10-25 with `gh api repos/BarWyDev/skill_net/branches/master/protection`):** classic branch protection requires `ci` and `smoke` and blocks force pushes. It sets no separate PR rule, but a commit can only carry passing checks after a PR or branch push ran CI. Admins are not included (`enforce_admins: false`, audit O-05), so an admin can still push straight to `master`.
   - _Why:_ Workers Builds deploys on **every push to `master`**, regardless of GitHub Actions results. This is the only thing that stops a red build shipping.
   - _Edge case:_ rulesets and branch protection on **private** repos need GitHub Pro/Team. If the repo is private on Free, the fallback is discipline: always merge through a PR after green CI. Note this as an accepted risk.
 - [ ] `[agent]` Verify: open a PR with a deliberate lint error, confirm merge is blocked (or, on the fallback, that CI goes red), then close the PR.
@@ -252,7 +252,7 @@ When needed: the zone on Cloudflare DNS → Worker → Domains & Routes → **Cu
 
 - **Rollback rehearsal** (Phase 7). The agent was blocked by the auto-mode permission classifier (production change). The owner runs it: `npx wrangler rollback <previous-id> --name skillnet --message "rehearsal"`, read-only smoke, then roll forward to the latest ID. IDs come from `npx wrangler versions list --name skillnet --json`.
 - **Confirmation-email test** (Phases 3–4). **Done 2026-10-25** (S-16): a sign-up on onet.pl got the Polish email from `auth.skillnet.org.pl` and its link signed in on `skillnet.barwy.workers.dev`. Original item: one sign-up with a team address after the hourly SMTP reset, to prove the Site URL and Redirect URLs (the confirmation link must land on `skillnet.barwy.workers.dev`).
-- **`master` ruleset** (Phase 6). The repo is public, so it's free. Require a PR plus the `ci` and `smoke` checks. Until then, Workers Builds deploys red builds too.
+- ~~**`master` ruleset** (Phase 6).~~ **Done:** branch protection requires `ci` and `smoke` (checked 2026-10-25). Still open: `enforce_admins: true` (audit O-05), since Workers Builds deploys whatever reaches `master`, red builds included.
 - **Supabase CLI** (Phases 1 and 3): `npx supabase login`, then `npx supabase link --project-ref grbhvhfwwjmzmrbzpxzu` (the DB password is human input), then `npx supabase db push --dry-run`. Needed before the first migration.
 - **Workers Paid** plus `limits.cpu_ms` before crisis mode ships (Free by the owner's choice).
 - **Stale named preview** `test-preview-build`, left over from the closed test PR. It's behind Access; delete it with `npx wrangler preview delete` (human-approved) if wanted.
