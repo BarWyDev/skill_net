@@ -306,15 +306,15 @@ None. The confirm page adds one render and one form post per confirmation.
 
 #### Automated
 
-- [ ] 1.1 `dig +short TXT resend._domainkey.auth.skillnet.org.pl` returns the DKIM key
-- [ ] 1.2 `dig +short MX send.auth.skillnet.org.pl` returns the Resend feedback host
-- [ ] 1.3 `dig +short TXT _dmarc.skillnet.org.pl` returns the `p=none` record
+- [x] 1.1 `dig +short TXT resend._domainkey.auth.skillnet.org.pl` returns the DKIM key
+- [x] 1.2 `dig +short MX send.auth.skillnet.org.pl` returns the Resend feedback host (superseded: Resend Forge publishes CNAMEs `send.auth` → `send.forge.rmta.net` and `rsend.auth` → `rsend-euw1.forge.rmta.net` instead of MX/TXT; checked 2026-10-25)
+- [x] 1.3 `dig +short TXT _dmarc.skillnet.org.pl` returns the `p=none` record
 
 #### Manual
 
-- [ ] 1.4 Resend shows `auth.skillnet.org.pl` as Verified, with tracking off
-- [ ] 1.5 A test email to `kontakt@skillnet.org.pl` reaches the private mailbox
-- [ ] 1.6 `skillnet.org.pl` is added to Google Postmaster Tools
+- [x] 1.4 Resend shows `auth.skillnet.org.pl` as Verified, with tracking off
+- [x] 1.5 A test email to `kontakt@skillnet.org.pl` reaches the private mailbox
+- [x] 1.6 `skillnet.org.pl` is added to Google Postmaster Tools (verified through Search Console)
 
 ### Phase 2: Scanner-safe confirm page, Polish templates and config script
 
@@ -325,7 +325,7 @@ None. The confirm page adds one render and one form post per confirmation.
 - [x] 2.3 Type check passes: `npx astro check`
 - [x] 2.4 Build passes: `npm run build`
 - [x] 2.5 Smoke passes locally against `npm run preview`
-- [ ] 2.6 CI `ci` and `smoke` jobs are green on the PR
+- [x] 2.6 CI `ci` and `smoke` jobs are green on the PR (PR #106 and #108)
 
 #### Manual
 
@@ -337,24 +337,24 @@ None. The confirm page adds one render and one form post per confirmation.
 
 #### Automated
 
-- [ ] 3.1 `npm run auth:email-config -- --dry-run` (without `--set-smtp-pass`) reports no pending changes after the apply
+- [x] 3.1 `npm run auth:email-config -- --dry-run` (without `--set-smtp-pass`) reports no pending changes after the apply (2026-10-25: "No changes")
 
 #### Manual
 
-- [ ] 3.2 Dashboard SMTP Settings show Resend and the own-domain sender
-- [ ] 3.3 Rollback snapshot exists and contains no `smtp_pass`
-- [ ] 3.4 Dashboard Rate Limits show 30 emails/h and 300 per 5 min for verify and sign-up/sign-in
+- [x] 3.2 Dashboard SMTP Settings show Resend and the own-domain sender
+- [x] 3.3 Rollback snapshot exists and contains no `smtp_pass`
+- [x] 3.4 Dashboard Rate Limits show 30 emails/h and 300 per 5 min for verify and sign-up/sign-in
 
 ### Phase 4: End-to-end proof on production and close-out
 
 #### Automated
 
-- [ ] 4.1 Read-only smoke passes against production
-- [ ] 4.2 `npx prettier --check` passes on the changed Markdown
+- [x] 4.1 Read-only smoke passes against production (2026-10-24 after the #106 deploy; CI smoke on #108)
+- [x] 4.2 `npx prettier --check` passes on the changed Markdown
 
 #### Manual
 
-- [ ] 4.3 research.md §4.4 checklist passes or has recorded exceptions
-- [ ] 4.4 mail-tester.com scores at least 9/10
+- [x] 4.3 research.md §4.4 checklist passes or has recorded exceptions (exceptions recorded: only onet.pl and mail-tester run; the rest deferred in `e2e-results.md`)
+- [x] 4.4 mail-tester.com scores at least 9/10 (10/10)
 - [ ] 4.5 First DMARC aggregate report arrives within 48 hours
 - [ ] 4.6 Five sign-ups in a row from different devices succeed without a rate-limit error
