@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@/lib/supabase";
+import { authErrorMessage } from "@/lib/auth-errors";
 
 // Never log the email or password here: both are personal data.
 
@@ -12,19 +13,24 @@ const DB_ERROR_MESSAGES: Record<string, string> = {
 
 /**
  * Erases the caller's account and all personal data, then clears the session cookies.
- * Signing in again refreshes the JWT `amr` timestamp that `unregister_me` requires. Returns a Polish message on failure.
+ * Signing in again refreshes the JWT `amr` timestamp that `unregister_me` requires, so it needs the
+ * form's Turnstile token like any sign-in. Returns a Polish message on failure.
  */
 export async function unregisterMe(
   supabase: SupabaseClient,
   email: string,
   password: string,
+  captchaToken: string | undefined,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+    options: { captchaToken },
+  });
   if (signInError) {
-    return {
-      ok: false,
-      message: signInError.code === "invalid_credentials" ? WRONG_PASSWORD : GENERIC_UNREGISTER_ERROR,
-    };
+    if (signInError.code === "invalid_credentials") return { ok: false, message: WRONG_PASSWORD };
+    if (signInError.code === "captcha_failed") return { ok: false, message: authErrorMessage(signInError.code) };
+    return { ok: false, message: GENERIC_UNREGISTER_ERROR };
   }
 
   const { error } = await supabase.rpc("unregister_me");

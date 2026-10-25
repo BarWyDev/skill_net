@@ -1,6 +1,7 @@
 ---
 import AuthShell from "@/components/auth/AuthShell.astro";
 import { ServerError } from "@/components/auth/ServerError";
+import Turnstile from "@/components/auth/Turnstile.astro";
 import { cn } from "@/lib/utils";
 import { BUTTON, TEXT_LINK } from "@/lib/site-styles";
 import { takeFlashError } from "@/lib/flash";
@@ -31,6 +32,7 @@ const error = takeFlashError(Astro);
         class="field h-12 w-full px-3 text-lg"
       />
     </div>
+    <Turnstile />
     <div class="space-y-4 pt-2">
       <ServerError message={error} />
       <button type="submit" class:list={cn(BUTTON, "btn-primary w-full cursor-pointer sm:w-auto")}>

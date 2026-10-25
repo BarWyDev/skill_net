@@ -10,6 +10,7 @@ const MESSAGES: Record<string, string> = {
   weak_password: "Hasło jest za słabe. Użyj co najmniej 10 znaków, w tym małej litery, wielkiej litery i cyfry.",
   over_email_send_rate_limit: "Wysłaliśmy już niedawno wiadomość. Spróbuj ponownie za kilka minut.",
   validation_failed: "Sprawdź poprawność adresu e-mail i hasła.",
+  captcha_failed: "Nie udało się sprawdzić, czy formularz wysyła człowiek. Spróbuj ponownie.",
 };
 
 export const GENERIC_AUTH_ERROR = "Coś poszło nie tak. Spróbuj ponownie za chwilę.";
