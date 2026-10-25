@@ -34,7 +34,9 @@ dig +short MX skillnet.org.pl
 
 - 25.10: „Confirm email” włączone (`mailer_autoconfirm false` potwierdzone przez API), SMTP i limity w Dashboard zgodne z planem.
 
-**Następny krok:** faza 4, pierwsza rejestracja na Gmailu. Otwarte z sekcji 0: pytanie do IOD o dane w UE.
+- Faza 4 (25.10): rejestracja na onet.pl (Odebrane, link loguje) i mail-tester.com 10/10. Reszta testów odłożona, zob. `e2e-results.md`. S-16 zamknięte.
+
+**Po Twojej stronie:** unieważnij PAT Supabase (Account → Access Tokens), usuń konta testowe (onet, mail-tester) w Supabase → Users, Resend Pro przed ogłoszeniem pilotażu. Otwarte z sekcji 0: pytanie do IOD o dane w UE. Otwarte z sekcji 0: pytanie do IOD o dane w UE.
 
 ## 0. Teraz, zanim domena będzie aktywna
 
@@ -139,10 +141,12 @@ Rollback: `npm run auth:email-config -- --restore <plik z $TMPDIR>` (najpierw z 
 
 ## 4. Test na produkcji (faza 4)
 
+25.10: zrobione onet.pl i mail-tester; pozostałe punkty odłożone (`e2e-results.md`).
+
 - [ ] Konta testowe spoza zespołu: Gmail, Outlook.com, wp.pl, o2.pl, interia.pl, onet.pl, iCloud, Proton.
 - [ ] Na każdym: rejestracja, czas dotarcia, folder (Odebrane / Oferty / Spam), w źródle maila `spf=pass`, `dkim=pass`, `dmarc=pass`. Zapisuj tylko nazwy dostawców, bez adresów.
 - [ ] Outlook.com: odczekaj 5 min przed kliknięciem, link nadal działa.
-- [ ] mail-tester.com: wynik co najmniej 9/10.
+- [x] mail-tester.com: wynik co najmniej 9/10. (25.10: 10/10)
 - [ ] Pięć rejestracji z rzędu z różnych urządzeń w ciągu 5 minut, bez błędu limitu.
 - [ ] Poproś testerów, żeby w wp, onet i interii oznaczyli mail jako „To nie spam”.
 - [ ] Po 24–48 h: pierwszy raport DMARC na `dmarc@`.

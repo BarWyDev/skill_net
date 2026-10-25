@@ -115,7 +115,7 @@ All steps are `[agent]` and run locally. They only change the repo.
   - **Redirect URLs:** `https://skillnet.<subdomain>.workers.dev/**`, plus the preview pattern `https://*-skillnet.<subdomain>.workers.dev/**`
   - _Edge case:_ without this, confirmation emails link to `localhost:3000`, which is the `supabase/config.toml` default.
 - [x] `[human]` Auth → Email: keep **Confirm email ON** in production. Verified 2026-09-25: `/auth/v1/settings` reports `mailer_autoconfirm: false`.
-- [ ] **Email delivery decision.** Supabase's built-in SMTP only sends to **your project team's addresses** and is capped at about 2 emails/hour.
+- [x] **Email delivery decision.** Done 2026-10-25 in S-16 (`context/changes/email-delivery/`): Resend SMTP on `auth.skillnet.org.pl`. Supabase's built-in SMTP only sends to **your project team's addresses** and is capped at about 2 emails/hour.
   - That's fine for the first deploy's manual test with your own address.
   - **Configure custom SMTP (e.g. Resend, Postmark, SES) before any non-team user signs up.** Track it as an open item; it isn't blocking for this release.
 - [ ] `[agent]` `npx supabase link --project-ref <ref>` (it prompts for the DB password, so it's `[human]` input). Then `npx supabase db push --dry-run`. The expected result is "no migrations", because `supabase/migrations/` doesn't exist yet. This proves the pipeline for later.
@@ -251,7 +251,7 @@ When needed: the zone on Cloudflare DNS → Worker → Domains & Routes → **Cu
 **Deferred at closure (2026-09-25):**
 
 - **Rollback rehearsal** (Phase 7). The agent was blocked by the auto-mode permission classifier (production change). The owner runs it: `npx wrangler rollback <previous-id> --name skillnet --message "rehearsal"`, read-only smoke, then roll forward to the latest ID. IDs come from `npx wrangler versions list --name skillnet --json`.
-- **Confirmation-email test** (Phases 3–4). One sign-up with a team address after the hourly SMTP reset, to prove the Site URL and Redirect URLs (the confirmation link must land on `skillnet.barwy.workers.dev`).
+- **Confirmation-email test** (Phases 3–4). **Done 2026-10-25** (S-16): a sign-up on onet.pl got the Polish email from `auth.skillnet.org.pl` and its link signed in on `skillnet.barwy.workers.dev`. Original item: one sign-up with a team address after the hourly SMTP reset, to prove the Site URL and Redirect URLs (the confirmation link must land on `skillnet.barwy.workers.dev`).
 - **`master` ruleset** (Phase 6). The repo is public, so it's free. Require a PR plus the `ci` and `smoke` checks. Until then, Workers Builds deploys red builds too.
 - **Supabase CLI** (Phases 1 and 3): `npx supabase login`, then `npx supabase link --project-ref grbhvhfwwjmzmrbzpxzu` (the DB password is human input), then `npx supabase db push --dry-run`. Needed before the first migration.
 - **Workers Paid** plus `limits.cpu_ms` before crisis mode ships (Free by the owner's choice).
@@ -260,7 +260,7 @@ When needed: the zone on Cloudflare DNS → Worker → Domains & Routes → **Cu
 
 **Carried over from planning:**
 
-- Custom SMTP provider for Supabase auth emails (needed before real users). Tracked in `context/changes/email-delivery/` since 2026-10-06. Confirmed on 2026-09-25: the built-in limit blocked sign-up after a handful of attempts. Sending to arbitrary addresses needs a verified own domain, which `workers.dev` can't provide, so this is tied to Phase 8.
+- **Done 2026-10-25 (S-16):** custom SMTP provider for Supabase auth emails (needed before real users). Tracked in `context/changes/email-delivery/` since 2026-10-06. Confirmed on 2026-09-25: the built-in limit blocked sign-up after a handful of attempts. Sending to arbitrary addresses needs a verified own domain, which `workers.dev` can't provide, so this is tied to Phase 8.
 - Supabase Pro upgrade before the pilot (removes pausing and adds backups).
 - A staging Supabase project, if previews ever need writable test data.
 - Upgrade to wrangler ≥ 4.135 and Worker Previews once #15682 is resolved.
