@@ -444,7 +444,7 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 #### Automated
 
-- [ ] 3.1 Preview build succeeds
+- [x] 3.1 Preview build succeeds
 
 #### Manual
 
@@ -456,7 +456,7 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 #### Automated
 
-- [ ] 4.1 dev-guard tests pass
+- [x] 4.1 dev-guard tests pass
 
 #### Manual
 
