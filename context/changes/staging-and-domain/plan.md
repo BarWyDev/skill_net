@@ -450,7 +450,7 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 - [ ] 3.2 Sign-in with the Studio account works on the preview and sign-up is refused
 - [ ] 3.3 Profile and crisis view work against staging data
-- [ ] 3.4 No test account on production
+- [x] 3.4 No test account on production
 
 ### Phase 4: dev-guard knows staging
 
