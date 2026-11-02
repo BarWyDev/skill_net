@@ -430,15 +430,15 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 #### Automated
 
-- [x] 2.1 `db:status:staging` shows all migrations applied
-- [x] 2.2 `db:push:staging -- --dry-run` reports nothing to push
+- [x] 2.1 `db:status:staging` shows all migrations applied — e15bd08
+- [x] 2.2 `db:push:staging -- --dry-run` reports nothing to push — e15bd08
 
 #### Manual
 
-- [x] 2.3 Reference data (and seed residents) present on staging
-- [x] 2.4 Studio test account with `consent_version` is accepted
-- [x] 2.5 Direct sign-up through the staging API is refused
-- [x] 2.6 Production migration list unchanged
+- [x] 2.3 Reference data (and seed residents) present on staging — e15bd08
+- [x] 2.4 Studio test account with `consent_version` is accepted — e15bd08
+- [x] 2.5 Direct sign-up through the staging API is refused — e15bd08
+- [x] 2.6 Production migration list unchanged — e15bd08
 
 ### Phase 3: Previews on staging
 
@@ -466,7 +466,7 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 #### Automated
 
-- [ ] 5.1 Lint and Prettier pass on touched files
+- [x] 5.1 Lint and Prettier pass on touched files
 
 #### Manual
 
