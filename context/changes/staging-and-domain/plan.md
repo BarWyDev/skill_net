@@ -416,29 +416,29 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 #### Automated
 
-- [x] 1.1 Lint passes
-- [x] 1.2 Missing `.staging-db-url` is refused
-- [x] 1.3 A production ref in `.staging-db-url` is refused by every subcommand
-- [x] 1.4 A URL without a parsable ref is refused
-- [x] 1.5 `.staging-db-url` is gitignored
+- [x] 1.1 Lint passes — 8f2b187
+- [x] 1.2 Missing `.staging-db-url` is refused — 8f2b187
+- [x] 1.3 A production ref in `.staging-db-url` is refused by every subcommand — 8f2b187
+- [x] 1.4 A URL without a parsable ref is refused — 8f2b187
+- [x] 1.5 `.staging-db-url` is gitignored — 8f2b187
 
 #### Manual
 
-- [x] 1.6 Error messages are clear and never show the password
+- [x] 1.6 Error messages are clear and never show the password — 8f2b187
 
 ### Phase 2: Create the staging project (owner)
 
 #### Automated
 
-- [ ] 2.1 `db:status:staging` shows all migrations applied
-- [ ] 2.2 `db:push:staging -- --dry-run` reports nothing to push
+- [x] 2.1 `db:status:staging` shows all migrations applied
+- [x] 2.2 `db:push:staging -- --dry-run` reports nothing to push
 
 #### Manual
 
-- [ ] 2.3 Reference data (and seed residents) present on staging
-- [ ] 2.4 Studio test account with `consent_version` is accepted
-- [ ] 2.5 Direct sign-up through the staging API is refused
-- [ ] 2.6 Production migration list unchanged
+- [x] 2.3 Reference data (and seed residents) present on staging
+- [x] 2.4 Studio test account with `consent_version` is accepted
+- [x] 2.5 Direct sign-up through the staging API is refused
+- [x] 2.6 Production migration list unchanged
 
 ### Phase 3: Previews on staging
 
