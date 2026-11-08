@@ -470,13 +470,13 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 #### Manual
 
-- [ ] 5.2 A PR shows the template
+- [x] 5.2 A PR shows the template — PR #115
 
 ### Phase 6: Attach skillnet.org.pl
 
 #### Automated
 
-- [ ] 6.1 Preview build succeeds with `routes`
+- [x] 6.1 Preview build succeeds with `routes` — PR #115
 - [ ] 6.2 Read-only smoke passes on `skillnet.org.pl`
 - [ ] 6.3 Read-only smoke still passes on `workers.dev`
 
