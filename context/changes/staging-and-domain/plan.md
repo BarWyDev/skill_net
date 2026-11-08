@@ -448,8 +448,8 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 #### Manual
 
-- [ ] 3.2 Sign-in with the Studio account works on the preview and sign-up is refused
-- [ ] 3.3 Profile and crisis view work against staging data
+- [x] 3.2 Sign-in with the Studio account works on the preview and sign-up is refused — 2026-11-08
+- [x] 3.3 Profile and crisis view work against staging data — 2026-11-08
 - [x] 3.4 No test account on production
 
 ### Phase 4: dev-guard knows staging
