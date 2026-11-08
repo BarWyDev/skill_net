@@ -35,3 +35,6 @@ data/
 
 # local QA test-account passwords (skillnet-qa skill)
 docs/qa/.konta.local
+
+# staging database connection string for scripts/db-staging.mjs (never committed)
+.staging-db-url

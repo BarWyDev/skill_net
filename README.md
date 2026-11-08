@@ -96,18 +96,19 @@ Rollback: turn captcha off in Supabase first, then remove the key.
 
 ## Scripts
 
-| Script              | What it does                                                                      |
-| ------------------- | --------------------------------------------------------------------------------- |
-| `npm run dev`       | Dev server on http://localhost:4321, on the Cloudflare workerd runtime            |
-| `npm run build`     | Production build                                                                  |
-| `npm run preview`   | Serve the production build on the Cloudflare runtime                              |
-| `npm run lint`      | ESLint with type-checked rules (`lint:fix` to auto-fix)                           |
-| `npm run format`    | Prettier, with the Astro and Tailwind plugins                                     |
-| `npx astro check`   | Type check                                                                        |
-| `npm run test:unit` | Unit tests (`src/**/*.test.ts`) on Node's built-in `node:test`                    |
-| `npm run test:db`   | pgTAP suites in `supabase/tests/` against the local Supabase                      |
-| `npm run smoke`     | HTTP smoke test of the auth flow and access gates (see [Smoke test](#smoke-test)) |
-| `npm run db:types`  | Regenerate `src/db/database.types.ts` from the local database                     |
+| Script                 | What it does                                                                                              |
+| ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| `npm run dev`          | Dev server on http://localhost:4321, on the Cloudflare workerd runtime                                    |
+| `npm run build`        | Production build                                                                                          |
+| `npm run preview`      | Serve the production build on the Cloudflare runtime                                                      |
+| `npm run lint`         | ESLint with type-checked rules (`lint:fix` to auto-fix)                                                   |
+| `npm run format`       | Prettier, with the Astro and Tailwind plugins                                                             |
+| `npx astro check`      | Type check                                                                                                |
+| `npm run test:unit`    | Unit tests (`src/**/*.test.ts`) on Node's built-in `node:test`                                            |
+| `npm run test:db`      | pgTAP suites in `supabase/tests/` against the local Supabase                                              |
+| `npm run smoke`        | HTTP smoke test of the auth flow and access gates (see [Smoke test](#smoke-test))                         |
+| `npm run db:types`     | Regenerate `src/db/database.types.ts` from the local database                                             |
+| `npm run db:*:staging` | `status`, `push`, `seed` or `reset` on the staging database (reads `.staging-db-url`, refuses production) |
 
 A pre-commit hook (husky + lint-staged) runs `eslint --fix` and `prettier --write` on staged files.
 
@@ -213,7 +214,8 @@ select public.revoke_coordinator('jan@example.com', 'operator: pilot ended');
 SkillNet runs on [Cloudflare Workers](https://workers.cloudflare.com/) (Workers + static assets, not Pages) at **https://skillnet.barwy.workers.dev**.
 
 - **Production:** every push to `master` is built and deployed by Cloudflare Workers Builds. It doesn't wait for GitHub CI, so merge through PRs after `ci` and `smoke` pass.
-- **Previews:** other branches get `https://<branch>-skillnet.barwy.workers.dev`, behind Cloudflare Access. Previews carry no Supabase secrets, so auth is disabled there.
+- **Previews:** other branches get `https://<branch>-skillnet.barwy.workers.dev`, behind Cloudflare Access. They run against the staging Supabase project `skillnet-staging` (synthetic data, public sign-up off), never production.
+- **Migrations:** push to staging first (`npm run db:push:staging`), try the branch preview, merge, then `npx supabase db push` to production right after the merge.
 - **Manual deploy** (normally not needed):
 
 ```bash
