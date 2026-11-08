@@ -20,6 +20,10 @@
     "smoke": "node scripts/smoke.mjs",
     "test:db": "supabase test db",
     "db:types": "supabase gen types typescript --local > src/db/database.types.ts",
+    "db:status:staging": "node scripts/db-staging.mjs status",
+    "db:push:staging": "node scripts/db-staging.mjs push",
+    "db:seed:staging": "node scripts/db-staging.mjs seed",
+    "db:reset:staging": "node scripts/db-staging.mjs reset",
     "test:unit": "node --test \"src/**/*.test.ts\""
   },
   "dependencies": {
