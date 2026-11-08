@@ -6,6 +6,12 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "preview_urls": true,
+  // Production answers on skillnet.org.pl and www. The owner attached both custom domains in the
+  // dashboard before this landed, so a deploy only confirms them. Previews still use workers.dev.
+  "routes": [
+    { "pattern": "skillnet.org.pl", "custom_domain": true },
+    { "pattern": "www.skillnet.org.pl", "custom_domain": true },
+  ],
   "assets": {
     "binding": "ASSETS",
     "directory": "./dist",
