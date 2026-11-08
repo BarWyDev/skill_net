@@ -460,7 +460,7 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 #### Manual
 
-- [ ] 4.2 Staging push shows the staging label without a crisis lookup
+- [x] 4.2 Staging push shows the staging label without a crisis lookup — 2026-11-08
 
 ### Phase 5: Process and docs for staging
 
