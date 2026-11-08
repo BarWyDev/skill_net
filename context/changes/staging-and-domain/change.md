@@ -43,3 +43,19 @@ Fix: `PATCH /accounts/{account}/builds/triggers/18a1b4f0-…` with `deploy_comma
 Verified: build `b2db4cdc` (commit `5712ff6`) ran `wrangler preview`, printed `Preview: feat/staging-and-domain (updated)`, and created no new Worker version with `workers/alias`.
 
 Still to do: Previews Base command should get the `env -u WRANGLER_CI_MATCH_TAG` prefix back (new branches copy it); 3.2, 3.3, 4.2, 5.2; docs (step 5 above); Phases 6–7.
+
+## State on 2026-11-08 (paused in Phase 6)
+
+Done: PR BarWyDev/skill_net#114 (staging, phases 1–5) merged as `8209afd`; the `master` build `d764adc3` succeeded and read-only smoke on `workers.dev` passed. 3.2, 3.3 and 4.2 verified. The Previews Base command now starts with `env -u WRANGLER_CI_MATCH_TAG`; the new branch `feat/custom-domain` got a correct trigger (`8848974f`) on its first build.
+
+Phase 6 is in draft PR BarWyDev/skill_net#115 (branch `feat/custom-domain`): `routes` for `skillnet.org.pl` and `www.skillnet.org.pl` in `wrangler.jsonc`. Checks are green and the preview build ran `wrangler preview` (6.1 done).
+
+Owner, in progress: the custom domain `skillnet.org.pl` is attached and already answers 200 from the Worker. `www.skillnet.org.pl` is not attached yet (no DNS answer on 2026-11-08).
+
+Next steps:
+
+1. Owner: attach `www.skillnet.org.pl` (Workers → skillnet → Domains → Add Domain); wait for both certificates to be active.
+2. Owner: zone `skillnet.org.pl` → SSL/TLS → Edge Certificates: "Always Use HTTPS" off, HSTS off. Record both in `infrastructure.md`.
+3. Owner: production Supabase → Authentication → URL Configuration → Redirect URLs: add `https://skillnet.org.pl/**` (Site URL unchanged).
+4. Check `dig` and read-only smoke on `https://skillnet.org.pl` before the merge, then mark #115 ready and merge on the owner's yes (no active crisis). After the merge: 6.2, 6.3, 6.6–6.8.
+5. Then Phase 7 in a new PR. Afterwards delete `~/.cf-builds-token` and its user API token in Cloudflare (expires 2026-11-15).
