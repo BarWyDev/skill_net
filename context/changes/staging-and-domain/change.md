@@ -33,3 +33,13 @@ Next steps:
 3. If it still uploads a version: Workers Builds trigger via API (token with Workers Builds Configuration: Edit, or the Cloudflare MCP after `/mcp`), or a Cloudflare support ticket.
 4. Finish 3.2 (sign-up refused on the preview) and 3.3 (`/profil`; `select public.grant_coordinator('koordynator@staging.test', '…')` in the staging SQL Editor, then `/koordynator`), plus 4.2 and 5.2.
 5. Update `infrastructure.md` and CLAUDE.md with the Workers Builds finding, consider adding the rate-limit bindings to `previews` in `wrangler.jsonc` (wrangler warns they are missing), then Phases 6–7 (domain).
+
+## State on 2026-11-08 (blocker fixed)
+
+Cause of the blocker: Workers Builds creates a separate trigger per preview branch and copies the deploy command into it when the branch's Preview is created. Later edits to Settings → Build → Previews Base do not touch existing triggers, and the dashboard does not show them. The trigger for `feat/staging-and-domain` (`18a1b4f0-b6ac-4523-b19c-7ee5c1159ea0`, created 2026-11-02) still had `env -u WRANGLER_CI_MATCH_TAG npx wrangler versions upload`.
+
+Fix: `PATCH /accounts/{account}/builds/triggers/18a1b4f0-…` with `deploy_command` = `env -u WRANGLER_CI_MATCH_TAG npx wrangler preview --name "$WORKERS_CI_BRANCH"`. The Builds API needs a **user** API token (My Profile → API Tokens) with Workers CI: Edit; an account-owned token gets `12006 Invalid token`. List triggers with `GET /accounts/{account}/builds/workers/{script tag}/triggers` (production) or the preview script's tag from a build's `trigger.external_script_id`.
+
+Verified: build `b2db4cdc` (commit `5712ff6`) ran `wrangler preview`, printed `Preview: feat/staging-and-domain (updated)`, and created no new Worker version with `workers/alias`.
+
+Still to do: Previews Base command should get the `env -u WRANGLER_CI_MATCH_TAG` prefix back (new branches copy it); 3.2, 3.3, 4.2, 5.2; docs (step 5 above); Phases 6–7.
