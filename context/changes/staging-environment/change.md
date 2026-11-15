@@ -1,7 +1,7 @@
 ---
 change_id: staging-environment
 title: Stable staging at staging.skillnet.org.pl and production by promotion
-status: planned
+status: implementing
 created: 2026-11-15
 updated: 2026-11-15
 archived_at: null
