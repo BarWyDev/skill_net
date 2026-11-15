@@ -9,7 +9,7 @@ archived_at: null
 
 ## Notes
 
-Follows `context/changes/staging-and-domain/` (staging Supabase project, production on `skillnet.org.pl`). Decided by the owner on 2026-11-15:
+Follows `context/archive/2026-10-29-staging-and-domain/` (staging Supabase project, production on `skillnet.org.pl`). Decided by the owner on 2026-11-15:
 
 - Staging gets one stable address, `https://staging.skillnet.org.pl`, behind Cloudflare Access, on the staging Supabase project. Worker Previews can't carry a custom domain, so this is a second Worker, `skillnet-staging`.
 - A merge to `master` deploys staging only. Production deploys only from the `production` branch, through a promotion PR `master` → `production`.
