@@ -1,0 +1,28 @@
+name: Promotion
+
+# Production deploys only from the `production` branch, and code reaches it only by a promotion PR
+# from `master` (change staging-environment). `promotion-source` is a required check on `production`,
+# so a PR from any other branch can't merge there.
+on:
+  pull_request:
+    branches: [production]
+
+# Read-only token: the job only reads the event (security audit F-13).
+permissions:
+  contents: read
+
+jobs:
+  promotion-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Head branch must be master
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+        run: |
+          if [ "$HEAD_REF" != "master" ] || [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            echo "::error::A PR into production must come from master of this repository (got $HEAD_REPO:$HEAD_REF)."
+            exit 1
+          fi
+          echo "Promotion from master: OK."

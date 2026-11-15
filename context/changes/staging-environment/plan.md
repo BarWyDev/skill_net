@@ -246,9 +246,9 @@ No database migrations. The flip changes only where deploys come from. If someth
 
 ### Phase 1: Staging Worker and promotion guard in the repo
 
-- [ ] 1.1 Lint, type check and build pass
-- [ ] 1.2 `build:staging` produces the `skillnet-staging` config
-- [ ] 1.3 `build` still produces the `skillnet` config
+- [x] 1.1 Lint, type check and build pass — d48f3f1
+- [x] 1.2 `build:staging` produces the `skillnet-staging` config — d48f3f1
+- [x] 1.3 `build` still produces the `skillnet` config — d48f3f1
 - [ ] 1.4 Merged; production unchanged
 
 ### Phase 2: Create staging

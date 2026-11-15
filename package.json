@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:staging": "CLOUDFLARE_ENV=staging astro build",
     "preview": "astro preview",
     "astro": "astro",
     "auth:email-config": "node scripts/auth-email-config.mjs",
