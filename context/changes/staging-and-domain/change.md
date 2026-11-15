@@ -3,7 +3,7 @@ change_id: staging-and-domain
 title: Staging Supabase project and production on skillnet.org.pl
 status: implementing
 created: 2026-10-29
-updated: 2026-11-02
+updated: 2026-11-15
 archived_at: null
 ---
 
@@ -59,3 +59,15 @@ Next steps:
 3. Owner: production Supabase → Authentication → URL Configuration → Redirect URLs: add `https://skillnet.org.pl/**` (Site URL unchanged).
 4. Check `dig` and read-only smoke on `https://skillnet.org.pl` before the merge, then mark #115 ready and merge on the owner's yes (no active crisis). After the merge: 6.2, 6.3, 6.6–6.8.
 5. Then Phase 7 in a new PR. Afterwards delete `~/.cf-builds-token` and its user API token in Cloudflare (expires 2026-11-15).
+
+## State on 2026-11-15 (Phase 7 live)
+
+Phase 6 is ticked (verified 2026-11-08). Phase 7 merged as PR BarWyDev/skill_net#119 (`d8b9874`). On production: `skillnet.barwy.workers.dev` and `www.skillnet.org.pl` answer 301 to `https://skillnet.org.pl` with path and query kept, POST gets 308, `http://www…` reaches the HTTPS apex in one hop, and the branch preview is not redirected (it still asks for Access). Read-only smoke from `master` passed on `https://skillnet.org.pl`, including both redirect checks.
+
+Still to do:
+
+1. Owner: production Supabase → Authentication → URL Configuration → Site URL `https://skillnet.org.pl` (keep the old Redirect URLs).
+2. 7.6: a real sign-up gets an email linking to `https://skillnet.org.pl/auth/confirm…` that ends on `/profil`.
+3. 7.7: `npx wrangler tail skillnet --format json --status error` quiet during the checks.
+4. Regenerate `public/og-image.png` and `docs/images/` with `scripts/generate-brand-assets.mjs`; they still show the old host.
+5. Then archive this change. The stable staging Worker and promotion flow continue in `context/changes/staging-environment/`.
