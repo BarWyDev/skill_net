@@ -238,7 +238,7 @@ No database migrations. The flip changes only where deploys come from. If someth
 
 ## References
 
-- `context/changes/staging-and-domain/plan.md` (staging Supabase, custom domain, canonical host)
+- `context/archive/2026-10-29-staging-and-domain/plan.md` (staging Supabase, custom domain, canonical host)
 - `context/foundation/infrastructure.md` (Per-branch triggers, previews)
 - `CLAUDE.md` (Deploy)
 
