@@ -492,13 +492,13 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 #### Automated
 
-- [ ] 7.1 Unit tests pass
-- [ ] 7.2 Lint, type check and build pass
-- [ ] 7.3 Read-only smoke on `skillnet.org.pl` passes with the redirect check
+- [x] 7.1 Unit tests pass — #119
+- [x] 7.2 Lint, type check and build pass — #119
+- [x] 7.3 Read-only smoke on `skillnet.org.pl` passes with the redirect check — 2026-11-15
 
 #### Manual
 
-- [ ] 7.4 Old host and `www` answer 301 with path and query kept
-- [ ] 7.5 Preview URL is not redirected
-- [ ] 7.6 Confirmation email links to `skillnet.org.pl` and ends on `/profil`
-- [ ] 7.7 No errors in `wrangler tail` during the checks
+- [x] 7.4 Old host and `www` answer 301 with path and query kept — 2026-11-15
+- [x] 7.5 Preview URL is not redirected — 2026-11-15
+- [x] 7.6 Confirmation email links to `skillnet.org.pl` and ends on `/profil` — 2026-11-15
+- [x] 7.7 No errors in `wrangler tail` during the checks — 2026-11-15

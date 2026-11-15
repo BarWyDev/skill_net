@@ -1,10 +1,10 @@
 ---
 change_id: staging-and-domain
 title: Staging Supabase project and production on skillnet.org.pl
-status: implementing
+status: archived
 created: 2026-10-29
-updated: 2026-11-02
-archived_at: null
+updated: 2026-11-15
+archived_at: 2026-11-15T17:36:15Z
 ---
 
 ## Notes
@@ -59,3 +59,16 @@ Next steps:
 3. Owner: production Supabase → Authentication → URL Configuration → Redirect URLs: add `https://skillnet.org.pl/**` (Site URL unchanged).
 4. Check `dig` and read-only smoke on `https://skillnet.org.pl` before the merge, then mark #115 ready and merge on the owner's yes (no active crisis). After the merge: 6.2, 6.3, 6.6–6.8.
 5. Then Phase 7 in a new PR. Afterwards delete `~/.cf-builds-token` and its user API token in Cloudflare (expires 2026-11-15).
+
+## State on 2026-11-15 (Phase 7 live)
+
+Phase 6 is ticked (verified 2026-11-08). Phase 7 merged as PR BarWyDev/skill_net#119 (`d8b9874`). On production: `skillnet.barwy.workers.dev` and `www.skillnet.org.pl` answer 301 to `https://skillnet.org.pl` with path and query kept, POST gets 308, `http://www…` reaches the HTTPS apex in one hop, and the branch preview is not redirected (it still asks for Access). Read-only smoke from `master` passed on `https://skillnet.org.pl`, including both redirect checks.
+
+Finished later on 2026-11-15:
+
+- The owner set the production Site URL to `https://skillnet.org.pl` (old Redirect URLs kept).
+- 7.6: a real sign-up on production got an email linking to `https://skillnet.org.pl/auth/confirm…`, which ended on `/profil`. A first try with a `+` alias on onet.pl bounced in Resend: Onet does not accept plus addressing, so use another mailbox for such tests.
+- 7.7: `wrangler tail skillnet --status error` stayed empty through both sign-ups.
+- `public/og-image.png` and `docs/images/banner.png` regenerated with `skillnet.org.pl`. The README screenshots don't show the host and were left as they are.
+
+Left for the owner: delete the test accounts on production (including the bounced alias) if they're not needed, and delete `~/.cf-builds-token` and its expired user API token in Cloudflare. The stable staging Worker and promotion flow continue in `context/changes/staging-environment/`.
