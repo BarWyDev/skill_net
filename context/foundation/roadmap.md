@@ -78,7 +78,7 @@ Slices below assume these are present and do NOT re-scaffold them.
 - **Backend / API:** partial. Only the auth endpoints exist (`src/pages/api/auth/{signin,signup,signout}.ts`), with no domain API.
 - **Data:** absent. Supabase (Postgres 17) is configured in `supabase/config.toml`, but there are no migrations, domain tables, geospatial extension or seed data.
 - **Auth:** partial. Supabase email and password sign-in with cookie sessions (`src/lib/supabase.ts`); middleware protects `/dashboard` (`src/middleware.ts`). There are no roles, no SMS verification and no email confirmation (`enable_confirmations = false`), and Supabase's built-in SMTP blocks sign-ups from non-team addresses.
-- **Deploy / infra:** present. Cloudflare Workers (**Free** plan) at `https://skillnet.barwy.workers.dev`, auto-deployed by Workers Builds; previews sit behind Cloudflare Access; CI in `.github/workflows/ci.yml` (lint, type check, build, smoke). There is no background job or scheduled-task infrastructure yet, and the Paid plan is required before crisis alerts ship.
+- **Deploy / infra:** present. Cloudflare Workers (**Free** plan) at `https://skillnet.barwy.workers.dev` (since 2026-11 `https://skillnet.org.pl`), auto-deployed by Workers Builds; previews sit behind Cloudflare Access; CI in `.github/workflows/ci.yml` (lint, type check, build, smoke). There is no background job or scheduled-task infrastructure yet, and the Paid plan is required before crisis alerts ship.
 - **Observability:** partial. Workers Logs are enabled (`observability.enabled` in `wrangler.jsonc`), but there is no error tracking and no audit trail in the database.
 
 ## Foundations

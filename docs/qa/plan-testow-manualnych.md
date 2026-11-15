@@ -8,7 +8,7 @@ Poza zakresem: S-07, S-08, S-12 (niewdrożone) i S-16 (wysyłka maili poza zesp�
 | Środowisko | Adres                                | Co testujemy                                                                                    |
 | ---------- | ------------------------------------ | ----------------------------------------------------------------------------------------------- |
 | Lokalnie   | http://localhost:4321                | Wszystko. Konta testowe `@skillnet.test`, ok. 500 mieszkańców z seeda wokół Krakowa (31-001).   |
-| Produkcja  | https://skillnet.barwy.workers.dev   | Tylko część publiczna (sekcja P). Scenariusze z logowaniem wykonuje użytkownik na własnym koncie. |
+| Produkcja  | https://skillnet.org.pl              | Tylko część publiczna (sekcja P). Scenariusze z logowaniem wykonuje użytkownik na własnym koncie. |
 
 Na produkcji Claude nie zakłada kont, nie loguje się, nie nadaje roli koordynatora i nie aktywuje kryzysów.
 Każdy taki krok to zmiana danych produkcyjnych i decyzja użytkownika.
