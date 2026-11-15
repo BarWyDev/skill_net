@@ -52,8 +52,8 @@ Build staging alongside the current flow first, so nothing changes for productio
 
 ## Critical Implementation Details
 
-- **Order of the flip.** Create `production` at the current `master` commit and protect it *before* changing the production branch of `skillnet` in Workers Builds. Otherwise the next build of `skillnet` could deploy from a branch nobody protected, or from nothing.
-- **Migrations move earlier.** Production code now lags behind `master`, so expand-then-contract matters more, not less. Push a migration to production right *before* merging the promotion PR: the old production code must keep working on the expanded schema, and the new code needs it the moment it deploys. A contract migration (drop, rename) waits for the promotion after the code that stopped using the old shape.
+- **Order of the flip.** Create `production` at the current `master` commit and protect it _before_ changing the production branch of `skillnet` in Workers Builds. Otherwise the next build of `skillnet` could deploy from a branch nobody protected, or from nothing.
+- **Migrations move earlier.** Production code now lags behind `master`, so expand-then-contract matters more, not less. Push a migration to production right _before_ merging the promotion PR: the old production code must keep working on the expanded schema, and the new code needs it the moment it deploys. A contract migration (drop, rename) waits for the promotion after the code that stopped using the old shape.
 - **Access before DNS.** Create the Access application for `staging.skillnet.org.pl` before the first staging deploy attaches the custom domain, so the host is never public.
 - **Two Workers on one repository.** Workers Builds sets `WRANGLER_CI_OVERRIDE_NAME` and `WRANGLER_CI_MATCH_TAG` to the connected Worker. Both match `skillnet-staging` here, but the first staging build is the real test: if it refuses the flattened config or deploys under another name, stop and read the build log before retrying.
 - **`site` stays the production domain on staging.** Canonical links and the sitemap on staging point at `https://skillnet.org.pl`. That is harmless behind Access (no crawler reaches it) and keeps the build identical apart from Worker config.
@@ -249,14 +249,14 @@ No database migrations. The flip changes only where deploys come from. If someth
 - [x] 1.1 Lint, type check and build pass — d48f3f1
 - [x] 1.2 `build:staging` produces the `skillnet-staging` config — d48f3f1
 - [x] 1.3 `build` still produces the `skillnet` config — d48f3f1
-- [ ] 1.4 Merged; production unchanged
+- [x] 1.4 Merged; production unchanged — 50b8002
 
 ### Phase 2: Create staging
 
-- [ ] 2.1 Staging redirects to Access
+- [x] 2.1 Staging redirects to Access — 2026-11-15
 - [ ] 2.2 Staging version from a `master` build
-- [ ] 2.3 Staging sign-in and coordinator view work on staging data
-- [ ] 2.4 Map shows the synthetic seed
+- [x] 2.3 Staging sign-in and coordinator view work on staging data — 2026-11-15
+- [x] 2.4 Map shows the synthetic seed — 2026-11-15
 
 ### Phase 3: Production deploys from `production`
 
