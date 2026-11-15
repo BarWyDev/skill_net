@@ -1,10 +1,12 @@
 name: CI
 
+# `production` gets the same checks: a promotion PR (master → production) must pass them before it
+# deploys skillnet.org.pl (change staging-environment).
 on:
   push:
-    branches: [master]
+    branches: [master, production]
   pull_request:
-    branches: [master]
+    branches: [master, production]
 
 # Read-only token: no job writes to the repository (security audit F-13).
 permissions:
