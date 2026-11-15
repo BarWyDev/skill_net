@@ -8,6 +8,7 @@ import { latestConsentVersion } from "@/lib/services/consent";
 import { CURRENT_CONSENT_VERSION, isConsentGateExempt } from "@/lib/consent";
 import { RETURN_PARAM } from "@/lib/return-path";
 import { HSTS_HEADER, httpsRedirect, sendsHsts } from "@/lib/https";
+import { canonicalRedirect } from "@/lib/canonical-host";
 
 // Public data that never depends on who asks. The auth lookup is skipped, so no session cookie can
 // reach these responses and they may be cached publicly (context/foundation/lessons.md).
@@ -52,8 +53,16 @@ function withSecurityHeaders(response: Response, url: URL): Response {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  // First, so a plain-HTTP request never reaches Supabase or gets a cookie (security audit F-10).
-  // 308 keeps the method and body of a form POST.
+  // First, so a request on an old production host never reaches Supabase or gets a cookie there.
+  // It goes straight to the HTTPS apex, so plain HTTP on an old host costs one hop, not two.
+  const canonical = canonicalRedirect(context.url, context.request.method);
+  if (canonical) {
+    return withSecurityHeaders(
+      new Response(null, { status: canonical.status, headers: { Location: canonical.location } }),
+      context.url,
+    );
+  }
+  // Then plain HTTP on any other host (security audit F-10). 308 keeps the method and body of a form POST.
   const secure = httpsRedirect(context.url);
   if (secure) {
     return withSecurityHeaders(new Response(null, { status: 308, headers: { Location: secure } }), context.url);

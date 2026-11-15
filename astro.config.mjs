@@ -8,7 +8,7 @@ import cloudflare from "@astrojs/cloudflare";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://skillnet.barwy.workers.dev",
+  site: "https://skillnet.org.pl",
   output: "server",
   integrations: [react(), sitemap()],
   vite: {
