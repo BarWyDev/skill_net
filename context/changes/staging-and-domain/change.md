@@ -64,10 +64,11 @@ Next steps:
 
 Phase 6 is ticked (verified 2026-11-08). Phase 7 merged as PR BarWyDev/skill_net#119 (`d8b9874`). On production: `skillnet.barwy.workers.dev` and `www.skillnet.org.pl` answer 301 to `https://skillnet.org.pl` with path and query kept, POST gets 308, `http://www…` reaches the HTTPS apex in one hop, and the branch preview is not redirected (it still asks for Access). Read-only smoke from `master` passed on `https://skillnet.org.pl`, including both redirect checks.
 
-Still to do:
+Finished later on 2026-11-15:
 
-1. Owner: production Supabase → Authentication → URL Configuration → Site URL `https://skillnet.org.pl` (keep the old Redirect URLs).
-2. 7.6: a real sign-up gets an email linking to `https://skillnet.org.pl/auth/confirm…` that ends on `/profil`.
-3. 7.7: `npx wrangler tail skillnet --format json --status error` quiet during the checks.
-4. Regenerate `public/og-image.png` and `docs/images/` with `scripts/generate-brand-assets.mjs`; they still show the old host.
-5. Then archive this change. The stable staging Worker and promotion flow continue in `context/changes/staging-environment/`.
+- The owner set the production Site URL to `https://skillnet.org.pl` (old Redirect URLs kept).
+- 7.6: a real sign-up on production got an email linking to `https://skillnet.org.pl/auth/confirm…`, which ended on `/profil`. A first try with a `+` alias on onet.pl bounced in Resend: Onet does not accept plus addressing, so use another mailbox for such tests.
+- 7.7: `wrangler tail skillnet --status error` stayed empty through both sign-ups.
+- `public/og-image.png` and `docs/images/banner.png` regenerated with `skillnet.org.pl`. The README screenshots don't show the host and were left as they are.
+
+Left for the owner: delete the test accounts on production (including the bounced alias) if they're not needed, and delete `~/.cf-builds-token` and its expired user API token in Cloudflare. The stable staging Worker and promotion flow continue in `context/changes/staging-environment/`.
