@@ -28,7 +28,7 @@ Jeśli planu nie ma pod tą ścieżką, poszukaj go w `docs/` (`grep -rl "Plan t
 
 ## Zasady bezpieczeństwa (zawsze)
 
-1. **Produkcja** (`https://skillnet.barwy.workers.dev`): wykonujesz tylko P-01…P-06, czyli odczyt. Nie wysyłasz formularzy, nie zakładasz kont, nie logujesz się, nie nadajesz ról, nie aktywujesz kryzysów. P-07 i P-08 oznaczasz jako „POMINIĘTE — wykonuje użytkownik”.
+1. **Produkcja** (`https://skillnet.org.pl`): wykonujesz tylko P-01…P-06, czyli odczyt. Nie wysyłasz formularzy, nie zakładasz kont, nie logujesz się, nie nadajesz ról, nie aktywujesz kryzysów. P-07 i P-08 oznaczasz jako „POMINIĘTE — wykonuje użytkownik”.
 2. **Sekcja F** (usuwanie konta) jest nieodwracalna. Przed nią zapytaj o wyraźne potwierdzenie i wykonuj ją zawsze na końcu.
 3. **Hasła** kont testowych to lokalne wartości testowe. Trzymasz je w `docs/qa/.konta.local` (format `M1=...`, `K1=...`; plik jest w `.gitignore`). Jeśli pliku nie ma, przy U-01 wygeneruj losowe hasła (`openssl rand -base64 18`) i zapisz je tam. Nigdy nie wypisujesz ich w czacie, w `poprawki.md`, w zrzutach ani w opisach akcji. Nie proś użytkownika o wklejenie hasła do czatu. Nigdy nie używaj tych haseł poza `localhost`.
 4. Do `poprawki.md` nie wpisujesz danych osobowych: numerów telefonów, e-maili spoza `@skillnet.test`, współrzędnych. W dowodach zastępujesz je `[ukryte]`. Nie dotykasz kont innych niż M1 i K1 (w lokalnej bazie mogą być prawdziwe konta właściciela).
@@ -153,5 +153,5 @@ Przy każdym zapisie przelicz tabelę „Podsumowanie” i nadpisz wiersze w „
 
 - P-01…P-04: te same sprawdzenia co G-01, G-03…G-10, G-02, formularze bez wysyłania. Pusta mapa na produkcji jest oczekiwana (P-03) i nie jest znaleziskiem.
 - P-05: `curl -sI` na trasy chronione (`/profil`, `/dashboard`, `/koordynator`) i publiczne (`/`, `/mapa`, `/prywatnosc`, `/api/mapa`). Chronione: `Cache-Control: private, no-store` (anonimowo to 302 na `/auth/signin` — zapisz, co faktycznie wraca). Zapisz faktyczne nagłówki w dowodzie.
-- P-06: `BASE_URL=https://skillnet.barwy.workers.dev SMOKE_READONLY=1 npm run smoke`, wynik w dowodzie. Bez `BASE_URL` smoke idzie na localhost, a bez `SMOKE_READONLY=1` zakłada konta na produkcji: nigdy nie uruchamiaj go na produkcji bez obu zmiennych.
+- P-06: `BASE_URL=https://skillnet.org.pl SMOKE_READONLY=1 npm run smoke`, wynik w dowodzie. Bez `BASE_URL` smoke idzie na localhost, a bez `SMOKE_READONLY=1` zakłada konta na produkcji: nigdy nie uruchamiaj go na produkcji bez obu zmiennych.
 - P-07, P-08: `POMINIĘTE — wykonuje użytkownik na własnym koncie`.

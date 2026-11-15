@@ -4,7 +4,7 @@
 
 A local skills directory for crisis coordination. Residents register their skills (medical, technical, logistics, languages, equipment), an approximate location and when they are available. When a crisis hits, a municipal coordinator activates it and gets nearby residents ranked by distance, skill match and confirmed availability. Day to day, the same directory supports neighbour-to-neighbour help through a public skills density map.
 
-The UI is in Polish. Production runs at https://skillnet.barwy.workers.dev.
+The UI is in Polish. Production runs at https://skillnet.org.pl.
 
 Product source of truth: [`context/foundation/prd.md`](context/foundation/prd.md). Stack rationale: [`context/foundation/tech-stack.md`](context/foundation/tech-stack.md).
 
@@ -88,7 +88,7 @@ To see the widget locally, put Cloudflare's test key `TURNSTILE_SITE_KEY=1x00000
 
 Turning it on in production takes three steps, in this order. Enabling captcha in Supabase first would refuse every sign-in, because the forms would send no token yet:
 
-1. Cloudflare dashboard → Turnstile → add a widget (Managed) for `skillnet.barwy.workers.dev`.
+1. Cloudflare dashboard → Turnstile → add a widget (Managed) for `skillnet.org.pl`.
 2. Add the site key to `vars` in `wrangler.jsonc` and merge it, so the deploy renders the widget. Supabase ignores the token while captcha is off.
 3. Supabase dashboard → Authentication → Attack Protection → enable captcha, provider Turnstile, with the widget's secret key. Then sign in once on production.
 
@@ -211,7 +211,7 @@ select public.revoke_coordinator('jan@example.com', 'operator: pilot ended');
 
 ## Deployment
 
-SkillNet runs on [Cloudflare Workers](https://workers.cloudflare.com/) (Workers + static assets, not Pages) at **https://skillnet.barwy.workers.dev**.
+SkillNet runs on [Cloudflare Workers](https://workers.cloudflare.com/) (Workers + static assets, not Pages) at **https://skillnet.org.pl**. `www.skillnet.org.pl` and the original `skillnet.barwy.workers.dev` redirect there with a 301.
 
 - **Production:** every push to `master` is built and deployed by Cloudflare Workers Builds. It doesn't wait for GitHub CI, so merge through PRs after `ci` and `smoke` pass.
 - **Previews:** other branches get `https://<branch>-skillnet.barwy.workers.dev`, behind Cloudflare Access. They run against the staging Supabase project `skillnet-staging` (synthetic data, public sign-up off), never production.
@@ -264,10 +264,10 @@ It needs a reachable Supabase instance (local or cloud) with email confirmation 
 Against production, run only the read-only steps. They create no accounts:
 
 ```bash
-SMOKE_READONLY=1 BASE_URL=https://skillnet.barwy.workers.dev npm run smoke
+SMOKE_READONLY=1 BASE_URL=https://skillnet.org.pl npm run smoke
 ```
 
-It also checks the access gates (coordinator-only routes, consent gate, break-glass contact reveal) and security headers. It is a sanity check, not a substitute for the unit and pgTAP suites.
+Against `https://skillnet.org.pl` it also checks that `www` and the old `workers.dev` host answer 301 to it. It also checks the access gates (coordinator-only routes, consent gate, break-glass contact reveal) and security headers. It is a sanity check, not a substitute for the unit and pgTAP suites.
 
 ## CI
 
