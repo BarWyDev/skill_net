@@ -500,5 +500,5 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 
 - [x] 7.4 Old host and `www` answer 301 with path and query kept — 2026-11-15
 - [x] 7.5 Preview URL is not redirected — 2026-11-15
-- [ ] 7.6 Confirmation email links to `skillnet.org.pl` and ends on `/profil`
-- [ ] 7.7 No errors in `wrangler tail` during the checks
+- [x] 7.6 Confirmation email links to `skillnet.org.pl` and ends on `/profil` — 2026-11-15
+- [x] 7.7 No errors in `wrangler tail` during the checks — 2026-11-15
