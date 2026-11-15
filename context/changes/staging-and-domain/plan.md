@@ -477,16 +477,16 @@ Old hosts redirect, links and metadata use the new domain, and emails link to it
 #### Automated
 
 - [x] 6.1 Preview build succeeds with `routes` — PR #115
-- [ ] 6.2 Read-only smoke passes on `skillnet.org.pl`
-- [ ] 6.3 Read-only smoke still passes on `workers.dev`
+- [x] 6.2 Read-only smoke passes on `skillnet.org.pl` — 2026-11-08
+- [x] 6.3 Read-only smoke still passes on `workers.dev` — 2026-11-08
 
 #### Manual
 
-- [ ] 6.4 Both custom domains active with certificates, attached before the merge
-- [ ] 6.5 Zone "Always Use HTTPS" and HSTS are off
-- [ ] 6.6 `master` build after the merge succeeds
-- [ ] 6.7 DNS resolves and Email Routing still works
-- [ ] 6.8 Sign-in works on `skillnet.org.pl`
+- [x] 6.4 Both custom domains active with certificates, attached before the merge — 2026-11-08
+- [x] 6.5 Zone "Always Use HTTPS" and HSTS are off — 2026-11-08
+- [x] 6.6 `master` build after the merge succeeds — 2026-11-08
+- [x] 6.7 DNS resolves and Email Routing still works — 2026-11-08
+- [x] 6.8 Sign-in works on `skillnet.org.pl` — 2026-11-08
 
 ### Phase 7: Make skillnet.org.pl canonical
 
