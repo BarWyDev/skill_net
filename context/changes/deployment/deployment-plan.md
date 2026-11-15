@@ -223,9 +223,11 @@ The order matters. **Deploy first, then set secrets.** `wrangler secret put` aga
 - **Secret rotation:** `npx wrangler secret put <NAME>` (`[human]`). It deploys immediately, so treat it as a production change.
 - **Deploy freeze:** once crisis mode exists, no merges to `master` while a crisis is active.
 
-## Phase 8 — _(optional, later)_ Custom domain ⬜
+## Phase 8 — _(optional, later)_ Custom domain ✅
 
-When needed: the zone on Cloudflare DNS → Worker → Domains & Routes → **Custom Domain**. Then update the Supabase Site URL and redirect URLs, the `site` in `astro.config.mjs`, and the smoke `BASE_URL`, and decide whether `workers_dev` stays on.
+**Done 2026-11 in `context/changes/staging-and-domain/` (Phases 6–7):** production is `https://skillnet.org.pl`; `www` and `skillnet.barwy.workers.dev` answer 301 to it, and the Supabase Site URL points at it. `workers_dev` stays on, because the old host has to answer to redirect.
+
+Original note: the zone on Cloudflare DNS → Worker → Domains & Routes → **Custom Domain**. Then update the Supabase Site URL and redirect URLs, the `site` in `astro.config.mjs`, and the smoke `BASE_URL`, and decide whether `workers_dev` stays on.
 
 ---
 

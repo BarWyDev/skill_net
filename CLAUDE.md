@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SkillNet: a local skills directory for crisis coordination. A council coordinator activates a crisis and gets nearby residents ranked by distance, skill match and confirmed availability. The same directory is used day to day for neighbour-to-neighbour help. Product source of truth: @context/foundation/prd.md. Stack rationale: @context/foundation/tech-stack.md.
 
-The app was bootstrapped from the `10x-astro-starter` template and now implements resident profiles, the public skills map and the coordinator's crisis mode on its own Supabase schema. The package and the Worker are named `skillnet`. Production runs at https://skillnet.barwy.workers.dev (see **Deploy** below).
+The app was bootstrapped from the `10x-astro-starter` template and now implements resident profiles, the public skills map and the coordinator's crisis mode on its own Supabase schema. The package and the Worker are named `skillnet`. Production runs at https://skillnet.org.pl (see **Deploy** below).
 
 ## Commands
 
@@ -17,7 +17,7 @@ The app was bootstrapped from the `10x-astro-starter` template and now implement
 - `npm run format`: Prettier, with the Astro and Tailwind plugins
 - `npm run test:unit`: unit tests (`src/**/*.test.ts`) on Node's built-in `node:test`, with no build step. It needs Node ≥ 22.18, which strips TypeScript natively (`.nvmrc` pins 22.22.3, the minimum for the ESLint tooling), so tested modules may use only `import type` and relative imports, not the `@/` alias.
 - `npm run test:db`: pgTAP suites in `supabase/tests/` against the local Supabase.
-- `npm run smoke`: walks the full auth flow over HTTP (`scripts/smoke.mjs`) against a running server at `BASE_URL`, which defaults to `http://localhost:4321`. It needs a reachable Supabase with email confirmation disabled. There is no e2e test runner yet. Against production, always set `SMOKE_READONLY=1`: it skips every step that creates an account and runs only the read-only checks, plus the HTTPS checks (HSTS, the http→https redirect) when `BASE_URL` is HTTPS.
+- `npm run smoke`: walks the full auth flow over HTTP (`scripts/smoke.mjs`) against a running server at `BASE_URL`, which defaults to `http://localhost:4321`. It needs a reachable Supabase with email confirmation disabled. There is no e2e test runner yet. Against production, always set `SMOKE_READONLY=1`: it skips every step that creates an account and runs only the read-only checks, plus the HTTPS checks (HSTS, the http→https redirect) when `BASE_URL` is HTTPS, and the redirects from the old hosts when `BASE_URL` is `https://skillnet.org.pl`. Run it against `https://skillnet.org.pl`: the old hosts answer 301, so read-only smoke against them fails.
 - `npx supabase start` / `npx supabase stop`: local Supabase (needs Docker). Studio runs at http://localhost:54323.
 - `npm run db:status:staging` / `db:push:staging` / `db:seed:staging` / `db:reset:staging`: Supabase CLI against the staging project `skillnet-staging` (`scripts/db-staging.mjs`). They read the connection string from the gitignored `.staging-db-url` at the repo root (each worktree needs its own copy) and refuse to run when it points at production. Extra CLI flags pass through, e.g. `npm run db:push:staging -- --dry-run`.
 
@@ -57,7 +57,7 @@ GitHub Actions never deploys. The repo is https://github.com/BarWyDev/skill_net.
 
 ## Deploy
 
-Production is https://skillnet.barwy.workers.dev on the Workers **Free** plan. Upgrade to Paid before crisis mode ships: Free's 10 ms CPU and 50-subrequest limits silently truncate a fan-out. Details and risks are in @context/foundation/infrastructure.md; the run log is in `context/changes/deployment/deployment-plan.md`.
+Production is https://skillnet.org.pl on the Workers **Free** plan. `https://www.skillnet.org.pl` and the original `https://skillnet.barwy.workers.dev` answer 301 to it with the path and query kept (`src/lib/canonical-host.ts`, exact-host match, so previews are never redirected). Upgrade to Paid before crisis mode ships: Free's 10 ms CPU and 50-subrequest limits silently truncate a fan-out. Details and risks are in @context/foundation/infrastructure.md; the run log is in `context/changes/deployment/deployment-plan.md`.
 
 - **Auto-deploy**: Cloudflare Workers Builds deploys every push to `master` (`npm run build`, then `npx wrangler deploy`), **even when CI is red**. So change `master` only through PRs. Branch protection on `master` requires `ci` and `smoke` to pass before a PR can merge (admins can still push directly; don't).
 - **Migrations**: the deploy never touches the database. Production gets migrations only from `npx supabase db push` (the project is linked). Write them expand-then-contract so the code on `master` keeps working. A PR with a migration goes: `npm run db:push:staging` → try it on the branch preview → merge → `npx supabase migration list --linked`, then `npx supabase db push` right after the merge. Pushing a migration to production is a production change; staging is not.

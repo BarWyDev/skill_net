@@ -30,7 +30,7 @@ const SIGNAL = "#f2c230";
 
 // The line break follows the landing headline: "Lokalny katalog umiejętności / na czas kryzysu".
 const TAGLINE = "Lokalny katalog umiejętności<br>na czas kryzysu.";
-const SITE_HOST = "skillnet.barwy.workers.dev";
+const SITE_HOST = "skillnet.org.pl";
 
 function findChrome() {
   const candidates = [

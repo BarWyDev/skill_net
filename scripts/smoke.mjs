@@ -550,7 +550,38 @@ const httpsSteps = BASE_URL.startsWith("https://")
     ]
   : [];
 
-const steps = READONLY ? [...readonlySteps, ...httpsSteps] : [...readonlySteps, ...httpsSteps, ...writeSteps];
+// One production address (src/lib/canonical-host.ts). Only against production on its own domain:
+// the old workers.dev host and www must send every request there, keeping the path and query.
+const CANONICAL_ORIGIN = "https://skillnet.org.pl";
+const redirectFrom = (origin) => async () => {
+  const response = await fetch(`${origin}/mapa?x=1`, { redirect: "manual" });
+  return {
+    status: response.status,
+    location: response.headers.get("location") ?? "",
+    cacheControl: "",
+    headers: response.headers,
+    body: await response.text(),
+  };
+};
+const canonicalSteps =
+  BASE_URL === CANONICAL_ORIGIN
+    ? [
+        [
+          "old workers.dev host redirects to the apex",
+          redirectFrom("https://skillnet.barwy.workers.dev"),
+          { status: 301, location: `${CANONICAL_ORIGIN}/mapa?x=1`, exact: true },
+        ],
+        [
+          "www redirects to the apex",
+          redirectFrom("https://www.skillnet.org.pl"),
+          { status: 301, location: `${CANONICAL_ORIGIN}/mapa?x=1`, exact: true },
+        ],
+      ]
+    : [];
+
+const steps = READONLY
+  ? [...readonlySteps, ...httpsSteps, ...canonicalSteps]
+  : [...readonlySteps, ...httpsSteps, ...canonicalSteps, ...writeSteps];
 
 let failed = 0;
 for (const [name, run, expected] of steps) {
