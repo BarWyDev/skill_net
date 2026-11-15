@@ -1,10 +1,10 @@
 ---
 change_id: staging-and-domain
 title: Staging Supabase project and production on skillnet.org.pl
-status: implementing
+status: archived
 created: 2026-10-29
 updated: 2026-11-15
-archived_at: null
+archived_at: 2026-11-15T17:36:15Z
 ---
 
 ## Notes
