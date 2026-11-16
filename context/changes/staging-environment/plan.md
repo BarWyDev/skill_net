@@ -260,10 +260,10 @@ No database migrations. The flip changes only where deploys come from. If someth
 
 ### Phase 3: Production deploys from `production`
 
-- [ ] 3.1 `master` push deploys staging only
+- [x] 3.1 `master` push deploys staging only — 2026-11-16 (#123 → `skillnet-staging` 6b665de8, no `skillnet` version)
 - [x] 3.2 Read-only smoke on production passes — 2026-11-16
-- [ ] 3.3 `promotion-source` refuses a non-`master` head
-- [ ] 3.4 First promotion deploys production
+- [x] 3.3 `promotion-source` refuses a non-`master` head — 2026-11-16 (#124, closed unmerged)
+- [x] 3.4 First promotion deploys production — 2026-11-16 (#126, c4599cb → `skillnet` dbecd0c8, read-only smoke passed)
 
 ### Phase 4: Docs, dev-guard and lesson
 
