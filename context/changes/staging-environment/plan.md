@@ -267,5 +267,5 @@ No database migrations. The flip changes only where deploys come from. If someth
 
 ### Phase 4: Docs, dev-guard and lesson
 
-- [ ] 4.1 Prettier and dev-guard tests pass
-- [ ] 4.2 dev-guard blocks direct `production` pushes and checks crises before promotion
+- [x] 4.1 Prettier and dev-guard tests pass — 2026-11-16 (dev-guard 33/33)
+- [x] 4.2 dev-guard blocks direct `production` pushes and checks crises before promotion — 2026-11-16

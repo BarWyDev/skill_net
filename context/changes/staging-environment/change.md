@@ -56,6 +56,12 @@ Phase 3 passed:
 
 How to promote: `gh pr create --base production --head master`, then merge with a merge commit. `production` carries merge commits that `master` never gets, which is why the ruleset has no up-to-date requirement.
 
-Phase 4 (this PR): CLAUDE.md, README, `infrastructure.md`, the PR template and a lesson describe the new flow. The dev-guard part is the owner's (`~/.claude/mods/dev-guard`, outside the repo).
+Phase 4 (this PR): CLAUDE.md, README, `infrastructure.md`, the PR template and a lesson describe the new flow.
+
+dev-guard (`~/.claude/mods/dev-guard`, outside the repo; applied with the owner's OK on 2026-11-16, tests 33/33):
+
+- `production` is protected like `master`: pushes naming it (also `+x:production` and `git -C <dir> push`) and commits on it are denied, with a pointer to the promotion PR. `git -C <dir> push origin master` used to slip through; it is blocked now too.
+- A PR merge asks `gh pr view` for the PR's base: the crisis query runs only for a merge into `production` (or when the base can't be read); a merge into `master` is labelled "deploy tylko staging".
+- **Found while testing 4.2:** in the desktop app (auto mode) the mod's `$.ui.ask` showed no window and resolved to the first option, which was "Tak, wykonaj". So every "Produkcja" and "Na zewnątrz" confirmation had been passing silently in such sessions. "Nie" is now the first option in both, so an unattended answer refuses. Verified: merging #126 again was denied, and so was `git push --dry-run origin production`.
 
 Owner leftovers: delete the no-expiry Cloudflare token used to check Builds triggers ("Workers Builds Configuration: Edit") and the local `~/.cf-builds-token`.
