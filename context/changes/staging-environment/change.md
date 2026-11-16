@@ -3,7 +3,7 @@ change_id: staging-environment
 title: Stable staging at staging.skillnet.org.pl and production by promotion
 status: implementing
 created: 2026-11-15
-updated: 2026-11-15
+updated: 2026-11-16
 archived_at: null
 ---
 
@@ -31,3 +31,17 @@ Phase 2, done with the owner:
 Verified: `staging.skillnet.org.pl` answers 302 to Cloudflare Access; after Access, `koordynator@staging.test` signs in, `/koordynator` opens and `/mapa` shows the synthetic seed around Kraków; no errors in the tail.
 
 Left: 2.2 (a `master` build creates a `skillnet-staging` version; this PR's merge is that test), then Phase 3 (needs a new Cloudflare user token with Workers CI: Edit to check the `master` trigger of `skillnet`).
+
+## State on 2026-11-16 (Phase 3 switched, verification left)
+
+2.2 passed: the merge of PR BarWyDev/skill_net#122 (`a8e54b7`) built `skillnet-staging` version `61a3295d` from `master` and deployed it at 100%.
+
+Phase 3, done with the owner:
+
+- `production` created on GitHub at `a8e54b7`, the commit of the production deployment (`skillnet` version `02754d99`, built by Workers Builds from `master`).
+- Ruleset `production` (active, empty bypass list): restrict deletions, block force pushes, PR required with 0 approvals, required checks `ci`, `smoke` and `promotion-source`, no up-to-date requirement (merge commits on `production` never reach `master`, so it would block every promotion after the first).
+- `skillnet` Workers Builds: production branch `production` (`npm run build`, `npx wrangler deploy`); Previews Base stays on with `env -u WRANGLER_CI_MATCH_TAG npx wrangler preview`. The Builds API now shows one trigger, `branch_includes: ["production"]`. All 92 earlier `skillnet` builds came from `master`, so what a `master` push does now is confirmed only by 3.1.
+- The Cloudflare permission the plan calls "Workers CI: Edit" is named **Workers Builds Configuration: Edit** in the dashboard. The owner's check token has no expiry; delete it and `~/.cf-builds-token` when Phase 3 ends.
+- Read-only smoke on `https://skillnet.org.pl` passed after the switch (3.2).
+
+Left: 3.1 (this PR's merge must create a `skillnet-staging` version and no `skillnet` version), 3.3 (a PR into `production` from another branch fails `promotion-source`), 3.4 (first promotion `master` → `production` deploys `skillnet`; read-only smoke after it), then Phase 4.
