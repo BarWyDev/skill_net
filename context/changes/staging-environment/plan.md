@@ -254,14 +254,14 @@ No database migrations. The flip changes only where deploys come from. If someth
 ### Phase 2: Create staging
 
 - [x] 2.1 Staging redirects to Access — 2026-11-15
-- [ ] 2.2 Staging version from a `master` build
+- [x] 2.2 Staging version from a `master` build — 2026-11-15
 - [x] 2.3 Staging sign-in and coordinator view work on staging data — 2026-11-15
 - [x] 2.4 Map shows the synthetic seed — 2026-11-15
 
 ### Phase 3: Production deploys from `production`
 
 - [ ] 3.1 `master` push deploys staging only
-- [ ] 3.2 Read-only smoke on production passes
+- [x] 3.2 Read-only smoke on production passes — 2026-11-16
 - [ ] 3.3 `promotion-source` refuses a non-`master` head
 - [ ] 3.4 First promotion deploys production
 
