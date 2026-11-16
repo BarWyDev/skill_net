@@ -45,3 +45,17 @@ Phase 3, done with the owner:
 - Read-only smoke on `https://skillnet.org.pl` passed after the switch (3.2).
 
 Left: 3.1 (this PR's merge must create a `skillnet-staging` version and no `skillnet` version), 3.3 (a PR into `production` from another branch fails `promotion-source`), 3.4 (first promotion `master` → `production` deploys `skillnet`; read-only smoke after it), then Phase 4.
+
+## State on 2026-11-16 (Phase 3 done, Phase 4 in progress)
+
+Phase 3 passed:
+
+- 3.1: the merge of PR BarWyDev/skill_net#123 (`328e026`) built `skillnet-staging` version `6b665de8` and no `skillnet` version.
+- 3.3: test PR BarWyDev/skill_net#124 (`docs/staging-phase3` → `production`) failed `promotion-source`, so the PR was blocked; closed unmerged.
+- 3.4: the first promotion, PR BarWyDev/skill_net#126 (`master` → `production`, merge commit `c4599cb`), deployed `skillnet` version `dbecd0c8` at 100%. Read-only smoke on `https://skillnet.org.pl` passed after it.
+
+How to promote: `gh pr create --base production --head master`, then merge with a merge commit. `production` carries merge commits that `master` never gets, which is why the ruleset has no up-to-date requirement.
+
+Phase 4 (this PR): CLAUDE.md, README, `infrastructure.md`, the PR template and a lesson describe the new flow. The dev-guard part is the owner's (`~/.claude/mods/dev-guard`, outside the repo).
+
+Owner leftovers: delete the no-expiry Cloudflare token used to check Builds triggers ("Workers Builds Configuration: Edit") and the local `~/.cf-builds-token`.
