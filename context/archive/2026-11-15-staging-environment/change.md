@@ -1,10 +1,10 @@
 ---
 change_id: staging-environment
 title: Stable staging at staging.skillnet.org.pl and production by promotion
-status: implementing
+status: archived
 created: 2026-11-15
 updated: 2026-11-16
-archived_at: null
+archived_at: 2026-11-16T20:22:53Z
 ---
 
 ## Notes
@@ -45,3 +45,23 @@ Phase 3, done with the owner:
 - Read-only smoke on `https://skillnet.org.pl` passed after the switch (3.2).
 
 Left: 3.1 (this PR's merge must create a `skillnet-staging` version and no `skillnet` version), 3.3 (a PR into `production` from another branch fails `promotion-source`), 3.4 (first promotion `master` → `production` deploys `skillnet`; read-only smoke after it), then Phase 4.
+
+## State on 2026-11-16 (Phase 3 done, Phase 4 in progress)
+
+Phase 3 passed:
+
+- 3.1: the merge of PR BarWyDev/skill_net#123 (`328e026`) built `skillnet-staging` version `6b665de8` and no `skillnet` version.
+- 3.3: test PR BarWyDev/skill_net#124 (`docs/staging-phase3` → `production`) failed `promotion-source`, so the PR was blocked; closed unmerged.
+- 3.4: the first promotion, PR BarWyDev/skill_net#126 (`master` → `production`, merge commit `c4599cb`), deployed `skillnet` version `dbecd0c8` at 100%. Read-only smoke on `https://skillnet.org.pl` passed after it.
+
+How to promote: `gh pr create --base production --head master`, then merge with a merge commit. `production` carries merge commits that `master` never gets, which is why the ruleset has no up-to-date requirement.
+
+Phase 4 (this PR): CLAUDE.md, README, `infrastructure.md`, the PR template and a lesson describe the new flow.
+
+dev-guard (`~/.claude/mods/dev-guard`, outside the repo; applied with the owner's OK on 2026-11-16, tests 33/33):
+
+- `production` is protected like `master`: pushes naming it (also `+x:production` and `git -C <dir> push`) and commits on it are denied, with a pointer to the promotion PR. `git -C <dir> push origin master` used to slip through; it is blocked now too.
+- A PR merge asks `gh pr view` for the PR's base: the crisis query runs only for a merge into `production` (or when the base can't be read); a merge into `master` is labelled "deploy tylko staging".
+- **Found while testing 4.2:** in the desktop app (auto mode) the "Produkcja" question for a PR merge showed no window and resolved to the first option, which was "Tak, wykonaj", so it passed silently. The "Na zewnątrz" question (`git push`) did show its window. Cause not confirmed; the "Produkcja" path first runs `gh pr view` and the crisis query (`npx supabase db query`, up to 60 s). "Nie" is now the first option in both questions, so an unattended answer refuses. Verified: merging #126 again was denied, and so was `git push --dry-run origin production`.
+
+Owner leftovers: delete the no-expiry Cloudflare token used to check Builds triggers ("Workers Builds Configuration: Edit") and the local `~/.cf-builds-token`.

@@ -12,6 +12,7 @@ The app was bootstrapped from the `10x-astro-starter` template and now implement
 
 - `npm run dev`: dev server on http://localhost:4321, running on the Cloudflare workerd runtime
 - `npm run build` / `npm run preview`: production build, then serve it on the Cloudflare runtime
+- `npm run build:staging`: the same build with `CLOUDFLARE_ENV=staging`, which flattens `env.staging` from `wrangler.jsonc` into the `skillnet-staging` Worker config. Workers Builds runs it for staging; a plain `npx wrangler deploy` afterwards targets `skillnet-staging`.
 - `npm run lint` / `npm run lint:fix`: ESLint with type-checked rules
 - `npx astro check`: type check (CI runs `npx astro sync` first)
 - `npm run format`: Prettier, with the Astro and Tailwind plugins
@@ -48,10 +49,12 @@ The app is an Astro 7 SSR app (`output: "server"`) deployed to Cloudflare Worker
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes and PRs to `master`:
+`.github/workflows/ci.yml` runs on pushes and PRs to `master` and `production`:
 
 - **ci** job: lint, `astro check` and build. The build needs the `SUPABASE_URL` and `SUPABASE_KEY` repository secrets.
 - **smoke** job: starts a local Supabase, then runs `npm run smoke` against the production preview.
+
+`.github/workflows/promotion.yml` runs on PRs into `production`. Its **promotion-source** job fails unless the PR's head is `master` of this repository.
 
 GitHub Actions never deploys. The repo is https://github.com/BarWyDev/skill_net.
 
@@ -59,12 +62,16 @@ GitHub Actions never deploys. The repo is https://github.com/BarWyDev/skill_net.
 
 Production is https://skillnet.org.pl on the Workers **Free** plan. `https://www.skillnet.org.pl` and the original `https://skillnet.barwy.workers.dev` answer 301 to it with the path and query kept (`src/lib/canonical-host.ts`, exact-host match, so previews are never redirected). Upgrade to Paid before crisis mode ships: Free's 10 ms CPU and 50-subrequest limits silently truncate a fan-out. Details and risks are in @context/foundation/infrastructure.md; the run log is in `context/changes/deployment/deployment-plan.md`.
 
-- **Auto-deploy**: Cloudflare Workers Builds deploys every push to `master` (`npm run build`, then `npx wrangler deploy`), **even when CI is red**. So change `master` only through PRs. Branch protection on `master` requires `ci` and `smoke` to pass before a PR can merge (admins can still push directly; don't).
-- **Migrations**: the deploy never touches the database. Production gets migrations only from `npx supabase db push` (the project is linked). Write them expand-then-contract so the code on `master` keeps working. A PR with a migration goes: `npm run db:push:staging` → try it on the branch preview → merge → `npx supabase migration list --linked`, then `npx supabase db push` right after the merge. Pushing a migration to production is a production change; staging is not.
+- **Flow**: branch → PR to `master` → staging → promotion PR `master` → `production` → production. Cloudflare Workers Builds deploys from two branches, and **doesn't wait for CI**:
+  - A push to `master` deploys only the staging Worker `skillnet-staging` at https://staging.skillnet.org.pl (`npm run build:staging`, then `npx wrangler deploy`). It sits behind Cloudflare Access (owner only) and signs in against the staging Supabase project, so it has no automated smoke; check a change there by hand before promoting it.
+  - A push to `production` deploys `skillnet` at https://skillnet.org.pl (`npm run build`, then `npx wrangler deploy`). `master` is a preview branch of `skillnet` and builds only a preview of it.
+- **Branch protection**: `master` requires a PR with `ci` and `smoke` green. `production` (ruleset `production`) requires a PR with `ci`, `smoke` and `promotion-source` green, and refuses force pushes and deletion. Admins can still push directly to either; don't. Never push or commit to `production` at all: it changes only through promotion PRs.
+- **Promotion**: `gh pr create --base production --head master`, then merge it with a **merge commit** (not squash or rebase, so `production` keeps `master`'s history). The PR's list of commits is the release note. `production` carries merge commits that `master` never gets, so the ruleset has no up-to-date requirement; don't add one. Push pending migrations to production right before merging the promotion PR (see **Migrations**), then run read-only smoke against https://skillnet.org.pl once the deploy is at 100% (`npx wrangler deployments status`).
+- **Migrations**: the deploy never touches the database. Production code now lags `master`, so write migrations expand-then-contract: the code on `production` must keep working on the expanded schema. A PR with a migration goes: `npm run db:push:staging` → try it on the branch preview → merge to `master` (staging runs it on staging data) → right before the promotion PR merges, `npx supabase migration list --linked`, then `npx supabase db push` (the project is linked to production). A contract migration (drop, rename) waits for the promotion after the one that shipped the code that stopped using the old shape. Pushing a migration to production is a production change; staging is not.
 - **Previews**: other branches run `npx wrangler preview` and get `https://<branch>-skillnet.barwy.workers.dev` behind Cloudflare Access. They sign in against the staging Supabase project (`skillnet-staging`): its URL and publishable key are preview base-config secrets (`npx wrangler preview base-config secret put <NAME>`), which never reach production. Staging has public sign-up off; test accounts are created with the Admin API and carry `consent_version` (see **Admin-created accounts**). Previews use their own `SESSION` KV, pinned under `previews` in `wrangler.jsonc`. Keep that pin, or preview builds fail with error 10021. Workers Builds keeps a hidden per-branch trigger that copies the preview command when the branch's preview is created, so editing Previews Base doesn't fix an existing branch; see `infrastructure.md` (Per-branch triggers).
-- **Secrets**: `SUPABASE_URL` and `SUPABASE_KEY` (publishable key only). Set them with `npx wrangler secret put <NAME>` or `npx wrangler secret bulk .dev.vars --name skillnet`. Either one **deploys a new version immediately**, so treat it as a production change. Never pass secret values as command arguments.
-- **Live errors**: `npx wrangler tail skillnet --format json --status error`
-- **State**: `npx wrangler deployments status` and `npx wrangler versions list --json`
-- **Rollback**: `npx wrangler rollback <version-id> --message "<reason>"`. It takes seconds, but it doesn't undo migrations, KV data or secrets. The next push to `master` redeploys over a rollback, so revert the bad commit too.
+- **Secrets**: `SUPABASE_URL` and `SUPABASE_KEY` (publishable key only), per Worker. Production: `npx wrangler secret put <NAME>` or `npx wrangler secret bulk .dev.vars --name skillnet`. Staging: `npx wrangler secret put <NAME> --name skillnet-staging` with the **staging** values; a production value there would make staging write to production. Either command **deploys a new version immediately**, so treat it as a change to that environment. Never pass secret values as command arguments.
+- **Live errors**: `npx wrangler tail skillnet --format json --status error` (staging: `skillnet-staging`)
+- **State**: `npx wrangler deployments status` and `npx wrangler versions list --json` (add `--name skillnet-staging` for staging)
+- **Rollback**: `npx wrangler rollback <version-id> --message "<reason>"`. It takes seconds, but it doesn't undo migrations, KV data or secrets. The next promotion redeploys over a rollback, so also revert the bad commit on `master` (through a PR) and promote the revert.
 - **Admin-created accounts**: a database trigger refuses every email account without a published, unretired consent version. Creating a user in Studio or with `auth.admin.createUser` fails with `consent_required` unless the user metadata carries `{"consent_version": "<CURRENT_CONSENT_VERSION from src/lib/consent.ts>"}`.
-- **Human-only**: deleting the Worker, KV namespaces or named previews, rotating Supabase keys, changing the Workers plan, and granting or revoking the coordinator role on production. Once crisis mode exists, don't merge to `master` while a crisis is active.
+- **Human-only**: deleting either Worker, KV namespaces or named previews, rotating Supabase keys, changing the Workers plan, and granting or revoking the coordinator role on production. Don't merge into `production` (promote) while a crisis is active; merges to `master` only reach staging.
