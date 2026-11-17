@@ -4,6 +4,7 @@ import StatusLine from "@/components/StatusLine.astro";
 import DeleteAccount from "@/components/profile/DeleteAccount.astro";
 import NumberReveals from "@/components/profile/NumberReveals.astro";
 import PauseAvailability from "@/components/profile/PauseAvailability.astro";
+import PhoneVerification from "@/components/profile/PhoneVerification.astro";
 import ProfileForm from "@/components/profile/ProfileForm";
 import { formatPauseUntil } from "@/lib/pause";
 import { createClient } from "@/lib/supabase";
@@ -17,6 +18,8 @@ const SUCCESS_MESSAGES: [param: string, message: string][] = [
   ["zapisano", "Zapisano."],
   ["wstrzymano", "Dostępność wstrzymana."],
   ["wznowiono", "Dostępność wznowiona."],
+  ["kod-wyslany", "Wysłaliśmy kod SMS-em. Wpisz go poniżej."],
+  ["numer-potwierdzony", "Numer telefonu potwierdzony."],
 ];
 const success = SUCCESS_MESSAGES.find(([param]) => Astro.url.searchParams.has(param))?.[1] ?? null;
 // Left by the endpoint that redirected here; never read from the URL (security audit F-06).
@@ -87,6 +90,17 @@ if (!supabase) {
           <p>Bez numeru telefonu nie otrzymasz alertów kryzysowych.</p>
         </StatusLine>
       )}
+      {profile.phone !== null && !profile.phoneVerified && (
+        <StatusLine tone="attention">
+          <p>
+            Numer telefonu jest niepotwierdzony, więc nie dostaniesz alertu kryzysowego.{" "}
+            <a href="#potwierdz-numer" class="font-bold underline underline-offset-4">
+              Potwierdź numer
+            </a>
+            .
+          </p>
+        </StatusLine>
+      )}
     </div>
   )}
 
@@ -118,6 +132,8 @@ if (!supabase) {
       </p>
     </ProfileForm>
   )}
+
+  {profile?.phone && <PhoneVerification phone={profile.phone} verified={profile.phoneVerified} />}
 
   {profile?.complete && <PauseAvailability paused={profile.paused} pausedUntil={profile.pausedUntil} />}
   {profile && !profile.complete && (

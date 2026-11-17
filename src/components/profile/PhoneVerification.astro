@@ -1,0 +1,65 @@
+---
+// "Potwierdź numer telefonu" (S-07): two plain form POSTs, so it works without JS. The first sends
+// a 6-digit code to the saved number, the second checks it. Crisis alerts go only to a confirmed
+// number. Errors come back as a one-shot alert at the top of /profil (src/lib/flash.ts).
+import StatusLine from "@/components/StatusLine.astro";
+import { CODE_LENGTH } from "@/lib/phone-code";
+import { formatPhone } from "@/lib/phone";
+import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  /** The saved number, `+48XXXXXXXXX`. */
+  phone: string;
+  verified: boolean;
+}
+
+const { phone, verified } = Astro.props;
+---
+
+<section id="potwierdz-numer" aria-labelledby="phone-verification-title" class="border-seam mt-16 border-t pt-10">
+  <h2 id="phone-verification-title" class:list={SECTION_TITLE}>
+    {verified ? "Numer telefonu potwierdzony" : "Potwierdź numer telefonu"}
+  </h2>
+  {verified ? (
+    <StatusLine tone="done" class="mt-4">
+      <p>
+        Alerty kryzysowe wyślemy SMS-em na numer <span class="font-bold tabular-nums">{formatPhone(phone)}</span>. Jeśli
+        zmienisz numer, potwierdzisz go od nowa.
+      </p>
+    </StatusLine>
+  ) : (
+    <>
+      <p id="phone-verification-help" class="text-ash mt-4 leading-relaxed">
+        Alerty kryzysowe wysyłamy tylko na potwierdzony numer, żeby SMS nie trafił do obcej osoby. Wyślemy 6-cyfrowy kod
+        na zapisany numer <span class="text-chalk font-bold tabular-nums">{formatPhone(phone)}</span>. Kod jest ważny 10
+        minut.
+      </p>
+      <form method="post" action="/api/profile/telefon/wyslij-kod" class="mt-6">
+        <button type="submit" class:list={cn(BUTTON, "btn-secondary w-full cursor-pointer sm:w-auto")}>
+          Wyślij kod SMS-em
+        </button>
+      </form>
+      <form method="post" action="/api/profile/telefon/potwierdz" class="mt-8">
+        <label for="phone-code" class="mb-2 block font-bold">
+          Kod z SMS-a
+        </label>
+        <input
+          id="phone-code"
+          name="code"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          pattern="[0-9 \-]*"
+          maxlength={CODE_LENGTH + 2}
+          required
+          aria-describedby="phone-verification-help"
+          class="field block h-12 w-full max-w-40 px-3 text-lg tracking-widest tabular-nums"
+        />
+        <button type="submit" class:list={cn(BUTTON, "btn-secondary mt-6 w-full cursor-pointer sm:w-auto")}>
+          Potwierdź numer
+        </button>
+      </form>
+    </>
+  )}
+</section>

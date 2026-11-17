@@ -22,13 +22,16 @@ export interface AuthLimiters {
   account?: RateLimiter;
 }
 
-/** The POST endpoints the throttle covers. Each takes credentials, sends an email or spends a token. */
+/** The POST endpoints the throttle covers. Each takes credentials, sends an email or an SMS, or spends a token. */
 export const THROTTLED_AUTH_PATHS: readonly string[] = [
   "/api/auth/signin",
   "/api/auth/signup",
   "/api/auth/resend",
   "/api/auth/unregister",
   "/auth/confirm",
+  // Phone verification (S-07): the first sends a paid SMS, the second guesses a 6-digit code.
+  "/api/profile/telefon/wyslij-kod",
+  "/api/profile/telefon/potwierdz",
 ];
 
 /** Where a throttled request is sent: a page that explains the wait. */
