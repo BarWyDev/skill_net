@@ -1,14 +1,15 @@
 -- Crisis alert replies, delivery reports and the confirmed-first order (S-07, Phase 4): a TAK
 -- moves a person to the top and a later NIE to the bottom (the last answer wins), auto-replies are
 -- limited per number and by the daily budget, a stranger gets nothing, delivery reports are
--- idempotent and never downgrade `delivered`, teams prefer confirmed people, and the recreated
--- list functions kept their privileges.
+-- idempotent and never downgrade `delivered` or an answered alert, a resident keeps one open alert
+-- across crises, teams prefer confirmed people, and the recreated list functions kept their
+-- privileges.
 -- Run with `npm run test:db`. Everything is rolled back at the end.
 
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(58);
+select plan(69);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as postgres: bypasses RLS, triggers still apply)
@@ -97,10 +98,12 @@ reset role;
 
 select ok(
   has_function_privilege('anon', 'public.record_sms_status(text, text, uuid, text)', 'EXECUTE')
-  and has_function_privilege('anon', 'public.record_sms_reply(text, text, text)', 'EXECUTE')
+  and has_function_privilege('anon', 'public.record_sms_reply(text, text, text, timestamptz)', 'EXECUTE')
   and not has_function_privilege('authenticated', 'public.record_sms_status(text, text, uuid, text)', 'EXECUTE')
-  and not has_function_privilege('authenticated', 'public.record_sms_reply(text, text, text)', 'EXECUTE'),
-  'worker_rpcs: only the Worker (anon with the token) can call the webhook RPCs'
+  and not has_function_privilege('authenticated', 'public.record_sms_reply(text, text, text, timestamptz)', 'EXECUTE')
+  and has_function_privilege('anon', 'public.mark_crisis_alert_failed(text, uuid)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.mark_crisis_alert_failed(text, uuid)', 'EXECUTE'),
+  'worker_rpcs: only the Worker (anon with the token) can call the webhook RPCs and the replaced mark_crisis_alert_failed'
 );
 select ok(
   has_function_privilege('authenticated', 'public.get_crisis_matches(uuid, integer)', 'EXECUTE')
@@ -120,8 +123,10 @@ select ok(
   not has_table_privilege('anon', 'private.sms_autoreply_log', 'SELECT')
   and not has_table_privilege('authenticated', 'private.sms_autoreply_log', 'SELECT')
   and not has_function_privilege('anon', 'private.take_autoreply(text, text)', 'EXECUTE')
-  and not has_function_privilege('authenticated', 'private.take_autoreply(text, text)', 'EXECUTE'),
-  'autoreply_closed: no client can read the auto-reply log or call its helper'
+  and not has_function_privilege('authenticated', 'private.take_autoreply(text, text)', 'EXECUTE')
+  and not has_function_privilege('anon', 'private.prune_autoreply_log()', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'private.prune_autoreply_log()', 'EXECUTE'),
+  'autoreply_closed: no client can read the auto-reply log or call its helpers'
 );
 
 -- ---------------------------------------------------------------------------
@@ -441,6 +446,16 @@ select is(
   'autoreply_cleanup: log rows older than an hour are deleted'
 );
 
+-- Any callback clears old rows, also one that sends no auto-reply.
+update private.sms_autoreply_log set sent_at = now() - interval '61 minutes';
+set local role anon;
+select public.record_sms_status('test-token', 'nobody', null, 'delivered');
+reset role;
+select is(
+  (select count(*) from private.sms_autoreply_log), 0::bigint,
+  'autoreply_prune_on_report: a delivery report also deletes log rows older than an hour'
+);
+
 -- ---------------------------------------------------------------------------
 -- A new crisis: the reply goes to the open alert
 -- ---------------------------------------------------------------------------
@@ -449,9 +464,15 @@ set local role authenticated;
 insert into crisis_ids
 select 'b', public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 10, 'Druga awaria prądu w centrum');
 select is(
-  (select queued from public.queue_crisis_alerts(pg_temp.crisis('b'), 1)), 1,
-  'new_crisis: R1 is alerted in crisis B'
+  (select queued from public.queue_crisis_alerts(pg_temp.crisis('b'), 3)), 3,
+  'new_crisis: R1, R2 and R3 are alerted in crisis B'
 );
+reset role;
+
+insert into alert_ids
+select 'b_r' || right(a.user_id::text, 1), a.id
+from public.crisis_alerts a where a.crisis_id = pg_temp.crisis('b');
+
 set local role anon;
 select is(
   public.record_sms_reply('test-token', '48600000001', 'no'), 'recorded',
@@ -462,6 +483,88 @@ select ok(
   (select a.answer = 'no' and a.status = 'queued' and a.crisis_id = pg_temp.crisis('b')
    from public.crisis_alerts a where a.user_id = pg_temp.resident(1)),
   'new_crisis_state: the answer is on the alert of crisis B, which stays queued for the consumer'
+);
+
+-- The provider repeats an older callback after a newer answer was stored.
+set local role anon;
+select is(
+  public.record_sms_reply('test-token', '48600000001', 'yes', now() - interval '1 hour'), 'stale',
+  'reply_stale: a reply sent before the stored answer is ignored'
+);
+select is(
+  public.record_sms_reply('test-token', '48600000001', 'no', now() + interval '1 day'), 'recorded',
+  'reply_future: a send time in the future is read as now, so it cannot lock later answers out'
+);
+select is(
+  public.record_sms_reply('test-token', '48600000001', 'no'), 'recorded',
+  'reply_after_future: the next answer is still accepted'
+);
+
+-- An answered alert is never called undelivered or failed.
+select public.record_sms_status('test-token', null, pg_temp.alert('b_r1'), 'failed');
+select public.record_sms_status('test-token', null, pg_temp.alert('b_r1'), 'undelivered');
+select public.mark_crisis_alert_failed('test-token', pg_temp.alert('b_r1'));
+reset role;
+select ok(
+  (select a.status = 'queued' and a.answer = 'no' from public.crisis_alerts a where a.id = pg_temp.alert('b_r1')),
+  'answered_kept: a bad report or the dead-letter queue does not move an alert that has an answer'
+);
+
+-- R2's alert was sent as pb2. A report naming pb2 and R3's alert id goes to R2 only.
+set local role anon;
+select public.mark_crisis_alert_sent('test-token', pg_temp.alert('b_r2'), 'pb2');
+select public.record_sms_status('test-token', 'pb2', pg_temp.alert('b_r3'), 'undelivered');
+reset role;
+select ok(
+  (select a.status = 'undelivered' from public.crisis_alerts a where a.id = pg_temp.alert('b_r2'))
+  and (select a.status = 'queued' and a.provider_id is null from public.crisis_alerts a where a.id = pg_temp.alert('b_r3')),
+  'status_guard: an alert id is not used when another alert already has that provider id'
+);
+
+-- A failed report with no provider id at all.
+set local role anon;
+select public.record_sms_status('test-token', null, pg_temp.alert('b_r3'), 'failed');
+reset role;
+select ok(
+  (select a.status = 'failed' and a.provider_id is null and a.sent_at is null
+   from public.crisis_alerts a where a.id = pg_temp.alert('b_r3')),
+  'status_failed: a failed report found by alert id alone marks the alert as not sent'
+);
+
+-- ---------------------------------------------------------------------------
+-- Two active crises: one open alert per resident
+-- ---------------------------------------------------------------------------
+
+-- R2 (undelivered in B) and R3 (failed in B) have no open alert, so crisis C may alert them.
+set local role authenticated;
+insert into crisis_ids
+select 'c', public.activate_crisis('awaria-pradu', 'pin', null, 50.0614, 19.9366, 10, 'Trzecia awaria prądu w centrum');
+select is(
+  (select queued from public.queue_crisis_alerts(pg_temp.crisis('c'), 2)), 2,
+  'two_crises: R2 and R3 are alerted in crisis C; R1 has an open alert in B'
+);
+
+-- A late delivered report for B must not give R2 a second open alert.
+set local role anon;
+select public.record_sms_status('test-token', 'pb2', null, 'delivered');
+reset role;
+select is(
+  (select status from public.crisis_alerts where id = pg_temp.alert('b_r2')), 'undelivered',
+  'late_delivered_guard: a late delivered report does not reopen an alert while the resident has an open one elsewhere'
+);
+
+-- R2's reply goes to the open alert in C, not to the undelivered one in B.
+set local role anon;
+select is(
+  public.record_sms_reply('test-token', '48600000002', 'yes'), 'recorded',
+  'two_crises_reply: R2 answers TAK'
+);
+reset role;
+select ok(
+  (select a.answer = 'yes' from public.crisis_alerts a
+   where a.user_id = pg_temp.resident(2) and a.crisis_id = pg_temp.crisis('c'))
+  and (select a.answer is null and a.status = 'undelivered' from public.crisis_alerts a where a.id = pg_temp.alert('b_r2')),
+  'two_crises_routing: the answer is on the open alert of crisis C; the undelivered alert of B is untouched'
 );
 
 select * from finish();

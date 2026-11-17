@@ -9,6 +9,7 @@ import {
   readIncomingReply,
   readParams,
   readReportStatus,
+  readSmsDate,
   secretMatches,
 } from "./webhook.ts";
 
@@ -111,19 +112,48 @@ test("normaliseSender refuses anything that is not a Polish number", () => {
   }
 });
 
-test("readIncomingReply returns the sender and the text", () => {
-  const params = new URLSearchParams({ sms_from: "48600123456", sms_text: "Tak, będę", sms_to: "48500500500" });
-  assert.deepEqual(readIncomingReply(params), { from: "+48600123456", text: "Tak, będę" });
+test("readIncomingReply returns the sender, the text and when it was sent", () => {
+  const params = new URLSearchParams({
+    sms_from: "48600123456",
+    sms_text: "Tak, będę",
+    sms_to: "48500500500",
+    sms_date: "1794941526",
+  });
+  assert.deepEqual(readIncomingReply(params), {
+    from: "+48600123456",
+    text: "Tak, będę",
+    sentAt: "2026-11-17T18:52:06.000Z",
+  });
   assert.deepEqual(readIncomingReply(new URLSearchParams({ sms_from: "48600123456" })), {
     from: "+48600123456",
     text: "",
+    sentAt: null,
   });
   assert.equal(readIncomingReply(new URLSearchParams({ sms_from: "Info", sms_text: "TAK" })), null);
   assert.equal(readIncomingReply(new URLSearchParams({ sms_text: "TAK" })), null);
 });
 
+test("readSmsDate reads Unix seconds and nothing else", () => {
+  assert.equal(readSmsDate("1794941526"), "2026-11-17T18:52:06.000Z");
+  assert.equal(readSmsDate(" 1794941526 "), "2026-11-17T18:52:06.000Z");
+  for (const raw of [null, "", "abc", "2026-11-17 19:52", "17949", "1794941526000000", "-1794941526"]) {
+    assert.equal(readSmsDate(raw), null, String(raw));
+  }
+});
+
+test("readDeliveryReports does not pair idx with MsgId when the lists differ in length", () => {
+  // If empty idx entries were dropped, the second alert id would land on the first message.
+  const params = new URLSearchParams({ MsgId: "A1,B2,C3", status: "404,404,405", idx: `${ALERT_A},${ALERT_B}` });
+  assert.deepEqual(readDeliveryReports(params), [
+    { providerId: "A1", alertId: null, status: "delivered" },
+    { providerId: "B2", alertId: null, status: "delivered" },
+    { providerId: "C3", alertId: null, status: "undelivered" },
+  ]);
+});
+
 test("readParams reads a GET's query string", async () => {
   const params = await readParams(new Request("https://example.test/hook/x?MsgId=A1&status=404"));
+  assert.ok(params);
   assert.equal(params.get("MsgId"), "A1");
   assert.equal(params.get("status"), "404");
 });
@@ -135,6 +165,7 @@ test("readParams reads a POST's form body over the query string", async () => {
     body: "sms_from=48600123456&sms_text=Tak%2C+b%C4%99d%C4%99",
   });
   const params = await readParams(urlencoded);
+  assert.ok(params);
   assert.equal(params.get("sms_from"), "48600123456");
   assert.equal(params.get("sms_text"), "Tak, będę");
   assert.equal(params.get("extra"), "q");
@@ -143,14 +174,23 @@ test("readParams reads a POST's form body over the query string", async () => {
   form.set("sms_from", "48600123456");
   form.set("sms_text", "NIE");
   const multipart = await readParams(new Request("https://example.test/hook/x", { method: "POST", body: form }));
-  assert.equal(multipart.get("sms_text"), "NIE");
+  assert.equal(multipart?.get("sms_text"), "NIE");
 });
 
-test("readParams survives a body it cannot read", async () => {
+test("readParams ignores a body that is not a form", async () => {
   const request = new Request("https://example.test/hook/x?MsgId=A1", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: '{"MsgId":"B2"}',
   });
-  assert.equal((await readParams(request)).get("MsgId"), "A1");
+  assert.equal((await readParams(request))?.get("MsgId"), "A1");
+});
+
+test("readParams returns null when a form body cannot be read", async () => {
+  const request = new Request("https://example.test/hook/x?MsgId=A1", {
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data; boundary=x" },
+    body: "this is not multipart",
+  });
+  assert.equal(await readParams(request), null);
 });

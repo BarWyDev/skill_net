@@ -12,6 +12,12 @@ import { createPublicClient } from "@/lib/supabase";
 
 type RecordStatusArgs = Database["public"]["Functions"]["record_sms_status"]["Args"];
 
+// Every `raise exception` in the RPCs has the code P0001 and a fixed message with nothing personal
+// in it (worker_token_unset, invalid_status, …), so the message is what tells failures apart.
+function errorLabel(error: { code: string; message: string }): string {
+  return error.code === "P0001" ? error.message : error.code;
+}
+
 /**
  * `false` means the callback was not processed and SMSAPI should send it again (the route answers
  * with an error instead of `OK`).
@@ -40,8 +46,8 @@ export async function recordDeliveryReports(reports: readonly DeliveryReport[]):
     } as RecordStatusArgs;
     const { error } = await db.supabase.rpc("record_sms_status", args);
     if (error) {
-      // eslint-disable-next-line no-console -- an error code only; a failing webhook is otherwise invisible
-      console.error("sms report webhook: record_sms_status failed", error.code);
+      // eslint-disable-next-line no-console -- an error label only; a failing webhook is otherwise invisible
+      console.error("sms report webhook: record_sms_status failed", errorLabel(error));
       ok = false;
     }
   }
@@ -61,10 +67,11 @@ export async function recordIncomingReply(reply: IncomingReply): Promise<Webhook
     p_token: db.token,
     p_phone: reply.from,
     p_answer: parseReply(reply.text) ?? "unclear",
+    ...(reply.sentAt ? { p_sent_at: reply.sentAt } : {}),
   });
   if (error) {
-    // eslint-disable-next-line no-console -- an error code only; a failing webhook is otherwise invisible
-    console.error("sms reply webhook: record_sms_reply failed", error.code);
+    // eslint-disable-next-line no-console -- an error label only; a failing webhook is otherwise invisible
+    console.error("sms reply webhook: record_sms_reply failed", errorLabel(error));
     return false;
   }
 

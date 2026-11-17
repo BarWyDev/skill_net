@@ -13,7 +13,10 @@ export function webhookNotFound(): Response {
   return new Response("Not found", { status: 404, headers: HEADERS });
 }
 
-/** The callback could not be processed now (the database is down or not configured): SMSAPI retries. */
+/**
+ * The callback could not be processed now (its body was unreadable, or the database is down or not
+ * configured). Not `OK`, so SMSAPI sends it again; reports and replies are idempotent.
+ */
 export function webhookError(): Response {
   return new Response("Error", { status: 503, headers: HEADERS });
 }

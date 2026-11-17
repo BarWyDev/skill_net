@@ -10,7 +10,9 @@
 --   * `get_crisis_matches` and `get_team_candidates` gain `alert_status` and `answer`, and list
 --     people who answered TAK first, then people with no answer, then NIE. Inside each group the
 --     snapshot's `position` order holds. The score is not touched: this is a read-time order;
---   * `get_crisis_alert_summary` also counts the answers.
+--   * `get_crisis_alert_summary` also counts the answers;
+--   * an alert that has an answer is never moved to undelivered or failed: not by a delivery
+--     report, and not by the dead-letter queue (`mark_crisis_alert_failed` is replaced).
 --
 -- Expand only: both list functions keep every existing column, so the code on `master` and on
 -- `production` keeps working and ignores the new ones. Their return types change, so they are
@@ -32,7 +34,17 @@ revoke all on private.sms_autoreply_log from public, anon, authenticated;
 
 comment on table private.sms_autoreply_log is
   'Auto-replies of the last hour, by a peppered hash of the number (S-07 cost guard). Rows older '
-  'than an hour are deleted on the next reply.';
+  'than an hour are deleted on the next reply or delivery report.';
+
+-- Deletes log rows older than an hour. Called by every webhook RPC, so a row outlives its hour
+-- only until the next SMS callback of any kind.
+create function private.prune_autoreply_log()
+returns void
+language sql
+set search_path = ''
+as $$ delete from private.sms_autoreply_log l where l.sent_at <= now() - interval '1 hour' $$;
+
+revoke execute on function private.prune_autoreply_log() from public, anon, authenticated;
 
 -- Whether an auto-reply may go to p_phone now: at most one per number per hour, and only while
 -- today's SMS budget has room. A true answer has already recorded the reply and taken the budget.
@@ -44,7 +56,7 @@ as $$
 declare
   v_hash text := encode(sha256(convert_to(p_token || ':' || p_phone, 'UTF8')), 'hex');
 begin
-  delete from private.sms_autoreply_log l where l.sent_at <= now() - interval '1 hour';
+  perform private.prune_autoreply_log();
 
   -- A refused budget rolls this block back, so the log row goes with it.
   begin
@@ -76,8 +88,12 @@ revoke execute on function private.take_autoreply(text, text) from public, anon,
 -- a retried send the provider refused as a duplicate, or a report that overtook
 -- `mark_crisis_alert_sent`.
 --   * idempotent: a repeated report changes nothing;
---   * `delivered` is never downgraded, and a late `delivered` wins over an earlier bad report;
---   * `undelivered` and `failed` only move an alert that is still queued or sent.
+--   * `delivered` is never downgraded;
+--   * a late `delivered` wins over an earlier bad report, unless the resident has an open alert
+--     in another active crisis by now: one resident has one open alert, and the newer one keeps
+--     the replies;
+--   * `undelivered` and `failed` only move an alert that is still queued or sent and has no
+--     answer: an answer proves the message arrived.
 -- A report for an alert that is gone (the crisis ended) is dropped.
 -- Raises: worker_token_unset, worker_token_invalid, invalid_status.
 create function public.record_sms_status(p_token text, p_provider_id text, p_alert_id uuid, p_status text)
@@ -92,6 +108,8 @@ begin
   if p_status is null or p_status not in ('delivered', 'undelivered', 'failed') then
     raise exception 'invalid_status';
   end if;
+
+  perform private.prune_autoreply_log();
 
   update public.crisis_alerts a
   set
@@ -108,8 +126,21 @@ begin
       )
     )
     and (
-      (p_status = 'delivered' and a.status <> 'delivered')
-      or (p_status in ('undelivered', 'failed') and a.status in ('queued', 'sent'))
+      (p_status = 'delivered' and a.status in ('queued', 'sent'))
+      or (
+        p_status = 'delivered'
+        and a.status in ('undelivered', 'failed')
+        and not exists (
+          select 1
+          from public.crisis_alerts o
+          join public.crises oc on oc.id = o.crisis_id
+          where o.user_id = a.user_id
+            and o.crisis_id <> a.crisis_id
+            and oc.status = 'active'
+            and o.status in ('queued', 'sent', 'delivered')
+        )
+      )
+      or (p_status in ('undelivered', 'failed') and a.status in ('queued', 'sent') and a.answer is null)
     );
 end;
 $$;
@@ -119,9 +150,13 @@ $$;
 -- ---------------------------------------------------------------------------
 
 -- Records a resident's SMS reply. p_phone is the sender as the provider gives it (`48…`, `+48…`,
--- `0048…` or nine digits); p_answer is the Worker's reading of the text: 'yes', 'no' or 'unclear'.
--- The text itself never reaches the database. Returns what the Worker should do:
---   * 'recorded': the answer is stored on the sender's open alert (the last answer wins);
+-- `0048…` or nine digits); p_answer is the Worker's reading of the text: 'yes', 'no' or 'unclear';
+-- p_sent_at is when the provider received the SMS (null: now). The text itself never reaches the
+-- database. Returns what the Worker should do:
+--   * 'recorded': the answer is stored on the sender's open alert. The last answer wins, by when
+--     the SMS was sent, not by when its callback arrived;
+--   * 'stale': a newer answer is already stored (the provider repeated an old callback): nothing
+--     changes;
 --   * 'unclear': the sender has an open alert but the text was neither TAK nor NIE: ask again;
 --   * 'ended': the sender has a verified number but no open alert: say the action is over;
 --   * 'unclear_silent', 'ended_silent': as above, but send nothing (this number got an auto-reply
@@ -131,7 +166,12 @@ $$;
 -- An alert the provider reported as undelivered still takes the answer when the sender has no open
 -- alert: the reply proves the message arrived.
 -- Raises: worker_token_unset, worker_token_invalid, invalid_answer.
-create function public.record_sms_reply(p_token text, p_phone text, p_answer text)
+create function public.record_sms_reply(
+  p_token text,
+  p_phone text,
+  p_answer text,
+  p_sent_at timestamptz default null
+)
 returns text
 language plpgsql
 security definer
@@ -142,12 +182,17 @@ declare
   v_phone text;
   v_user uuid;
   v_alert uuid;
+  v_answered_at timestamptz;
+  -- Never in the future, so a wrong clock at the provider cannot lock later answers out.
+  v_sent_at timestamptz := least(coalesce(p_sent_at, now()), now());
 begin
   perform private.check_worker_token(p_token);
 
   if p_answer is null or p_answer not in ('yes', 'no', 'unclear') then
     raise exception 'invalid_answer';
   end if;
+
+  perform private.prune_autoreply_log();
 
   v_digits := regexp_replace(coalesce(p_phone, ''), '\D', '', 'g');
   v_digits := regexp_replace(v_digits, '^(0048|48)(?=\d{9}$)', '');
@@ -163,7 +208,7 @@ begin
     return 'unknown';
   end if;
 
-  select a.id into v_alert
+  select a.id, a.answered_at into v_alert, v_answered_at
   from public.crisis_alerts a
   join public.crises c on c.id = a.crisis_id
   where a.user_id = v_user
@@ -181,10 +226,14 @@ begin
     return case when private.take_autoreply(p_token, v_phone) then 'unclear' else 'unclear_silent' end;
   end if;
 
+  if v_answered_at is not null and v_sent_at < v_answered_at then
+    return 'stale';
+  end if;
+
   update public.crisis_alerts a
   set
     answer = p_answer,
-    answered_at = now(),
+    answered_at = v_sent_at,
     -- An answer proves the message arrived, whatever the delivery report said (or has yet to say).
     -- A queued alert stays queued, so the consumer still sends it.
     status = case when a.status in ('sent', 'undelivered') then 'delivered' else a.status end,
@@ -196,12 +245,34 @@ end;
 $$;
 
 alter function public.record_sms_status(text, text, uuid, text) owner to postgres;
-alter function public.record_sms_reply(text, text, text) owner to postgres;
+alter function public.record_sms_reply(text, text, text, timestamptz) owner to postgres;
 
 revoke execute on function public.record_sms_status(text, text, uuid, text) from public, authenticated;
-revoke execute on function public.record_sms_reply(text, text, text) from public, authenticated;
+revoke execute on function public.record_sms_reply(text, text, text, timestamptz) from public, authenticated;
 grant execute on function public.record_sms_status(text, text, uuid, text) to anon;
-grant execute on function public.record_sms_reply(text, text, text) to anon;
+grant execute on function public.record_sms_reply(text, text, text, timestamptz) to anon;
+
+-- ---------------------------------------------------------------------------
+-- mark_crisis_alert_failed: an answered alert stays
+-- ---------------------------------------------------------------------------
+
+-- mark_crisis_alert_failed from 20261030130000. A resident can answer an alert the consumer never
+-- managed to mark as sent; a late dead-letter message must not call that alert "not sent".
+-- Same signature and return type, so the privileges stay.
+create or replace function public.mark_crisis_alert_failed(p_token text, p_alert_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform private.check_worker_token(p_token);
+
+  update public.crisis_alerts a
+  set status = 'failed', status_at = now()
+  where a.id = p_alert_id and a.status = 'queued' and a.answer is null;
+end;
+$$;
 
 -- ---------------------------------------------------------------------------
 -- get_crisis_matches: alert status, answer, confirmed people first

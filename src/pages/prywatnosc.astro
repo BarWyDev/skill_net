@@ -163,8 +163,9 @@ const [year, month, day] = CURRENT_CONSENT_VERSION.split("-");
       <p class="mt-3">
         Informacje o alercie SMS (czy został wysłany, czy dotarł i jak na niego odpowiadasz) usuwamy w chwili
         zakończenia kryzysu. Zostaje zapis kontrolny bez Twoich danych: który koordynator wysłał alert, do ilu osób i
-        kiedy. Żeby nie wysyłać automatycznych odpowiedzi zbyt często, przez godzinę przechowujemy zaszyfrowany skrót
-        numeru, na który taka odpowiedź poszła; numeru nie da się z niego odczytać.
+        kiedy. Żeby nie wysyłać automatycznych odpowiedzi zbyt często, przez około godzinę przechowujemy skrót numeru,
+        na który taka odpowiedź poszła, a nie sam numer. Po godzinie usuwamy go przy najbliższym SMS-ie, który obsługuje
+        serwis.
       </p>
       <p class="mt-3">
         Zostają zapisy kontrolne. Zawierają identyfikator konta, ale nie e-mail ani dane profilu: kiedy wyrażono zgodę,

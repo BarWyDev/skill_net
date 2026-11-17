@@ -1253,7 +1253,12 @@ export type Database = {
       profile_is_matchable: { Args: { p_user_id: string }; Returns: boolean }
       record_my_consent: { Args: { p_version: string }; Returns: undefined }
       record_sms_reply: {
-        Args: { p_answer: string; p_phone: string; p_token: string }
+        Args: {
+          p_answer: string
+          p_phone: string
+          p_sent_at?: string
+          p_token: string
+        }
         Returns: string
       }
       record_sms_status: {

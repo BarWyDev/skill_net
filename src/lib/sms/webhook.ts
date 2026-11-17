@@ -1,7 +1,8 @@
 // Reading SMSAPI's callbacks (S-07). Checked against https://www.smsapi.pl/docs/ on 2026-11-17:
 //   * a delivery report is a GET with `MsgId`, `status`, `status_name`, `idx` (and more). One
 //     request can carry several reports: each parameter then holds up to 5 comma-separated values;
-//   * an incoming SMS is a POST with `sms_from`, `sms_to`, `sms_text`, `sms_date`, `MsgId`;
+//   * an incoming SMS is a POST with `sms_from`, `sms_to`, `sms_text`, `sms_date` (Unix time),
+//     `MsgId`;
 //   * both must be answered with the string `OK`, or SMSAPI sends the request again.
 // SMSAPI cannot sign callbacks, so the only gate is a secret in the URL path. Never log a number,
 // a reply's text or that secret.
@@ -27,10 +28,11 @@ export async function secretMatches(given: string | undefined, expected: string 
 }
 
 /**
- * The callback's fields: the query string, then a form body's fields over them. Both are read
- * because the method SMSAPI uses is a setting of theirs, not ours.
+ * The callback's fields: the query string, then a form body's fields over them. Null when the
+ * body could not be read: the callback must then be refused, so SMSAPI sends it again, instead of
+ * being answered `OK` with its content lost.
  */
-export async function readParams(request: Request): Promise<URLSearchParams> {
+export async function readParams(request: Request): Promise<URLSearchParams | null> {
   const params = new URLSearchParams(new URL(request.url).search);
   if (request.method !== "POST") return params;
 
@@ -44,7 +46,7 @@ export async function readParams(request: Request): Promise<URLSearchParams> {
       }
     }
   } catch {
-    // An unreadable body: whatever the query string carried is all there is.
+    return null;
   }
   return params;
 }
@@ -93,7 +95,9 @@ function list(params: URLSearchParams, name: string): string[] {
 /**
  * The reports of one callback that say something final about a message SkillNet can find: one per
  * position of the comma-separated lists. A report that is not final, or that names neither a
- * message id nor an alert id, is left out.
+ * message id nor an alert id, is left out. `idx` is paired with `MsgId` by position, so it is used
+ * only when both lists have the same length: a list with its empty entries dropped would pair an
+ * alert with another message's status.
  */
 export function readDeliveryReports(params: URLSearchParams): DeliveryReport[] {
   const ids = list(params, "MsgId");
@@ -101,13 +105,14 @@ export function readDeliveryReports(params: URLSearchParams): DeliveryReport[] {
   const names = list(params, "status_name");
   const idxs = list(params, "idx");
 
-  const count = Math.min(Math.max(ids.length, idxs.length), MAX_REPORTS);
+  const aligned = ids.length === 0 || ids.length === idxs.length;
+  const count = Math.min(ids.length === 0 ? idxs.length : ids.length, MAX_REPORTS);
   const reports: DeliveryReport[] = [];
   for (let i = 0; i < count; i += 1) {
     const status = readReportStatus(codes.at(i), names.at(i));
     const id = ids.at(i);
     const providerId = id === undefined || id === "" ? null : id;
-    const idx = idxs.at(i);
+    const idx = aligned ? idxs.at(i) : undefined;
     const alertId = idx && UUID_RE.test(idx) ? idx.toLowerCase() : null;
     if (status && (providerId || alertId)) reports.push({ providerId, alertId, status });
   }
@@ -128,10 +133,22 @@ export interface IncomingReply {
   from: string;
   /** What the resident wrote. Parsed and dropped; never stored or logged. */
   text: string;
+  /**
+   * When SMSAPI received the SMS (`sms_date`, Unix seconds), as ISO 8601; null when it is missing
+   * or unreadable. Orders answers by when they were sent, not by when a retried callback arrived.
+   */
+  sentAt: string | null;
+}
+
+/** Reads `sms_date`: Unix seconds. Null for anything else. */
+export function readSmsDate(raw: string | null): string | null {
+  if (!raw || !/^\d{9,11}$/.test(raw.trim())) return null;
+  return new Date(Number(raw.trim()) * 1000).toISOString();
 }
 
 /** Reads an incoming SMS. Null when the sender is not a Polish number. */
 export function readIncomingReply(params: URLSearchParams): IncomingReply | null {
   const from = normaliseSender(params.get("sms_from") ?? "");
-  return from ? { from, text: params.get("sms_text") ?? "" } : null;
+  if (!from) return null;
+  return { from, text: params.get("sms_text") ?? "", sentAt: readSmsDate(params.get("sms_date")) };
 }
