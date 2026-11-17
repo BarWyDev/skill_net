@@ -496,16 +496,16 @@ All three migrations are additive. The functions whose return types change are d
 
 #### Automated
 
-- [x] 4.1 DB tests pass: `npm run test:db`
-- [x] 4.2 Unit tests pass: `npm run test:unit`
-- [x] 4.3 Type check, lint, build and smoke pass: `npx astro check`, `npm run lint`, `npm run build`, `npm run smoke`
+- [x] 4.1 DB tests pass: `npm run test:db` — 130a89e
+- [x] 4.2 Unit tests pass: `npm run test:unit` — 130a89e
+- [x] 4.3 Type check, lint, build and smoke pass: `npx astro check`, `npm run lint`, `npm run build`, `npm run smoke` — 130a89e
 
 #### Manual
 
-- [x] 4.4 Locally, a curl to the reply webhook (no `Origin`, POST and GET) with `Tak` moves that person to the top, and a second curl with `nie` moves them to the bottom
-- [x] 4.5 A curl after ending the crisis triggers the "akcja zakończona" fake send; an unknown number triggers nothing
-- [x] 4.6 A wrong secret returns 404
-- [x] 4.7 `/prywatnosc` reads correctly
+- [x] 4.4 Locally, a curl to the reply webhook (no `Origin`, POST and GET) with `Tak` moves that person to the top, and a second curl with `nie` moves them to the bottom — 130a89e
+- [x] 4.5 A curl after ending the crisis triggers the "akcja zakończona" fake send; an unknown number triggers nothing — 130a89e
+- [x] 4.6 A wrong secret returns 404 — 130a89e
+- [x] 4.7 `/prywatnosc` reads correctly — 130a89e
 
 ### Phase 5: Production rollout
 
