@@ -326,6 +326,96 @@ export type Database = {
           },
         ]
       }
+      crisis_alert_batches: {
+        Row: {
+          created_at: string
+          crisis_id: string
+          id: number
+          queued: number
+          requested: number
+          sent_by: string
+          simulated: boolean
+          skipped: Json
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          crisis_id: string
+          id?: never
+          queued: number
+          requested: number
+          sent_by: string
+          simulated: boolean
+          skipped?: Json
+        }
+        Update: {
+          created_at?: string
+          crisis_id?: string
+          id?: never
+          queued?: number
+          requested?: number
+          sent_by?: string
+          simulated?: boolean
+          skipped?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crisis_alert_batches_crisis_id_fkey"
+            columns: ["crisis_id"]
+            isOneToOne: false
+            referencedRelation: "crises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crisis_alerts: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          crisis_id: string
+          id: string
+          provider_id: string | null
+          queued_at: string
+          sent_at: string | null
+          status: string
+          status_at: string
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          crisis_id: string
+          id?: string
+          provider_id?: string | null
+          queued_at?: string
+          sent_at?: string | null
+          status?: string
+          status_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          crisis_id?: string
+          id?: string
+          provider_id?: string | null
+          queued_at?: string
+          sent_at?: string | null
+          status?: string
+          status_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crisis_alerts_crisis_id_user_id_fkey"
+            columns: ["crisis_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "crisis_matches"
+            referencedColumns: ["crisis_id", "user_id"]
+          },
+        ]
+      }
       crisis_list_views: {
         Row: {
           crisis_id: string
@@ -947,6 +1037,14 @@ export type Database = {
         Returns: string
       }
       check_reason: { Args: { p_reason: string }; Returns: string }
+      claim_crisis_alert: {
+        Args: { p_alert_id: string; p_token: string }
+        Returns: {
+          crisis_type: string
+          epicentre_postcode: string
+          phone: string
+        }[]
+      }
       coarsen_point: { Args: { p: unknown }; Returns: unknown }
       confirm_phone_verification: {
         Args: { p_code_hash: string; p_token: string; p_user_id: string }
@@ -1018,6 +1116,10 @@ export type Database = {
           eligibility: string
           eligible_on: string
         }[]
+      }
+      get_crisis_alert_summary: {
+        Args: { p_crisis_id: string }
+        Returns: Json
       }
       get_crisis_coverage: {
         Args: { p_crisis_id: string }
@@ -1133,6 +1235,14 @@ export type Database = {
         Args: { p_at: string; p_paused_at: string; p_paused_until: string }
         Returns: boolean
       }
+      mark_crisis_alert_failed: {
+        Args: { p_alert_id: string; p_token: string }
+        Returns: undefined
+      }
+      mark_crisis_alert_sent: {
+        Args: { p_alert_id: string; p_provider_id: string; p_token: string }
+        Returns: undefined
+      }
       pause_my_availability: { Args: { p_until: string }; Returns: undefined }
       profile_counts_on_map: { Args: { p_user_id: string }; Returns: boolean }
       profile_is_complete: { Args: { p_user_id: string }; Returns: boolean }
@@ -1143,6 +1253,16 @@ export type Database = {
         Returns: undefined
       }
       renew_course: { Args: { p_id: string }; Returns: undefined }
+      queue_crisis_alerts: {
+        Args: { p_count?: number; p_crisis_id: string }
+        Returns: {
+          alert_ids: string[]
+          estimated_cost_pln: number
+          queued: number
+          simulated: boolean
+          skipped: Json
+        }[]
+      }
       resume_my_availability: {
         Args: Record<PropertyKey, never>
         Returns: undefined

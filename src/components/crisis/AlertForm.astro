@@ -1,0 +1,74 @@
+---
+// "Alert SMS" on the coordinator's crisis page (S-07): a plain form POST that sends an SMS alert to
+// the next N people on the list, then the batches sent so far. In an exercise the same button only
+// simulates: it shows who would be alerted and what it would cost, and nobody gets an SMS.
+// Counts only: no resident is named here.
+import { ALERT_COUNT_DEFAULT, ALERT_COUNT_MAX, batchSummary, formatStatuses } from "@/lib/alert-format";
+import { formatActivatedAt } from "@/lib/crisis-format";
+import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
+import { cn } from "@/lib/utils";
+import type { CrisisAlertSummaryDTO, CrisisDTO } from "@/types";
+
+interface Props {
+  crisis: CrisisDTO;
+  /** Null when the summary failed to load: the form still works. */
+  summary: CrisisAlertSummaryDTO | null;
+  class?: string;
+}
+
+const { crisis, summary, class: className } = Astro.props;
+const statuses = summary ? formatStatuses(summary.statuses) : null;
+---
+
+<section id="alerty" aria-labelledby="alert-heading" class:list={className}>
+  <h2 id="alert-heading" class:list={SECTION_TITLE}>
+    Alert SMS
+  </h2>
+  <p id="alert-help" class="text-ash mt-3 max-w-[64ch] leading-relaxed">
+    {crisis.isExercise
+      ? "To jest ćwiczenie: nikt nie dostanie SMS-a. Zobaczysz, do ilu osób trafiłby alert i ile by kosztował."
+      : "Alert dostaną kolejne osoby z listy, od najlepiej dopasowanej, które mają potwierdzony numer i nie dostały jeszcze alertu w tym kryzysie. Każda odpowiada SMS-em TAK albo NIE."}
+  </p>
+
+  <form method="post" action={`/api/koordynator/kryzysy/${crisis.id}/alert`} class="mt-6">
+    <label for="alert-count" class="mb-2 block font-bold">
+      Do ilu osób
+    </label>
+    <input
+      id="alert-count"
+      name="count"
+      type="number"
+      inputmode="numeric"
+      min="1"
+      max={ALERT_COUNT_MAX}
+      step="1"
+      value={ALERT_COUNT_DEFAULT}
+      required
+      aria-describedby="alert-help"
+      class="field block h-12 w-full max-w-32 px-3 text-lg tabular-nums"
+    />
+    <button type="submit" class:list={cn(BUTTON, "btn-secondary mt-6 w-full cursor-pointer md:w-auto")}>
+      {crisis.isExercise ? "Symuluj alert (ćwiczenie)" : "Wyślij alert SMS"}
+    </button>
+  </form>
+
+  {summary === null && <p class="mt-8">Nie udało się wczytać wysłanych alertów. Odśwież stronę.</p>}
+
+  {statuses && (
+    <p class="mt-8 max-w-[64ch] leading-relaxed">
+      <span class="font-bold">Stan alertów w tym kryzysie:</span> {statuses}.
+    </p>
+  )}
+
+  {summary && summary.batches.length > 0 && (
+    <ul class="mt-6 max-w-[64ch] space-y-3">
+      {summary.batches.map((batch) => (
+        <li class="border-seam border-l-2 pl-4 leading-relaxed">
+          <span class="font-bold tabular-nums">{formatActivatedAt(batch.createdAt)}</span>
+          <span class="text-ash"> · </span>
+          {batchSummary(batch)}
+        </li>
+      ))}
+    </ul>
+  )}
+</section>

@@ -482,15 +482,15 @@ All three migrations are additive. The functions whose return types change are d
 
 #### Automated
 
-- [ ] 3.1 DB tests pass: `npm run test:db`
-- [ ] 3.2 Unit tests pass: `npm run test:unit`
-- [ ] 3.3 Type check, lint and build pass: `npx astro check`, `npm run lint`, `npm run build`
+- [x] 3.1 DB tests pass: `npm run test:db`
+- [x] 3.2 Unit tests pass: `npm run test:unit`
+- [x] 3.3 Type check, lint and build pass: `npx astro check`, `npm run lint`, `npm run build`
 
 #### Manual
 
-- [ ] 3.4 On `npm run dev`, a coordinator sends a batch on a real seeded crisis, and statuses move from queued to sent with the fake provider
-- [ ] 3.5 In an exercise, the button simulates the send, and no `crisis_alerts` rows exist
-- [ ] 3.6 Ending the crisis removes the alerts; the batch audit remains
+- [x] 3.4 On `npm run dev`, a coordinator sends a batch on a real seeded crisis, and statuses move from queued to sent with the fake provider
+- [x] 3.5 In an exercise, the button simulates the send, and no `crisis_alerts` rows exist
+- [x] 3.6 Ending the crisis removes the alerts; the batch audit remains
 
 ### Phase 4: Replies, delivery reports and ranking
 

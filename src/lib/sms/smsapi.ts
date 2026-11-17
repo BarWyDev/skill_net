@@ -5,11 +5,13 @@
 //   * `notify_url` overrides the account's delivery-report callback for this message;
 //   * `nounicode=1` makes SMSAPI refuse (error 11) a text with special characters instead of
 //     sending it as UCS-2, and `max_parts=1` refuses (error 12) a text longer than one segment.
-//     Both are cost guards behind the local `isGsm7` and length checks.
+//     Both are cost guards behind the local `isGsm7` and length checks;
+//   * `idx` with `check_idx=1` makes SMSAPI refuse (error 53) a second message with the same `idx`
+//     within a few days, which is how a retried alert is kept from being sent twice.
 // Never log the number, the text or the token.
 // Relative imports only, so `node:test` can load it.
 
-import type { SmsMessage, SmsProvider, SmsResult } from "./provider.ts";
+import { DUPLICATE, type SmsMessage, type SmsProvider, type SmsResult } from "./provider.ts";
 import { SMS_MAX_LENGTH, isGsm7 } from "./text.ts";
 
 export const SMSAPI_URL = "https://api.smsapi.pl/sms.do";
@@ -18,6 +20,8 @@ export const SMSAPI_URL = "https://api.smsapi.pl/sms.do";
 // concurrent requests) and 203 (too many requests). 201 and 999 are internal errors the docs say
 // to report, not repeat, so a message that may already be on its way is not sent twice.
 const RETRYABLE_ERRORS = new Set([200, 202, 203]);
+// "Duplicate idx": SMSAPI already took a message with this idempotency key.
+const DUPLICATE_IDX_ERROR = 53;
 
 const TIMEOUT_MS = 10_000;
 
@@ -41,6 +45,7 @@ export function readSmsapiResponse(status: number, body: unknown): SmsResult {
     const { error, list } = body as { error?: unknown; list?: unknown };
     if (typeof error === "number" || typeof error === "string") {
       const code = Number(error);
+      if (code === DUPLICATE_IDX_ERROR) return failure(DUPLICATE, false);
       return failure(`smsapi_${String(error)}`, RETRYABLE_ERRORS.has(code));
     }
     if (Array.isArray(list)) {
@@ -62,7 +67,7 @@ export function createSmsapiProvider(options: SmsapiOptions): SmsProvider {
 
   return {
     name: "smsapi",
-    async sendSms({ to, text }: SmsMessage): Promise<SmsResult> {
+    async sendSms({ to, text, idempotencyKey }: SmsMessage): Promise<SmsResult> {
       // Refused here, before any cost: a non-GSM-7 or over-long text is a bug in the caller.
       if (!isGsm7(text)) return failure("not_gsm7", false);
       if (text.length === 0 || text.length > SMS_MAX_LENGTH) return failure("bad_length", false);
@@ -75,6 +80,10 @@ export function createSmsapiProvider(options: SmsapiOptions): SmsProvider {
         nounicode: "1",
         max_parts: "1",
       });
+      if (idempotencyKey) {
+        body.set("idx", idempotencyKey);
+        body.set("check_idx", "1");
+      }
       if (options.sender) body.set("from", options.sender);
       if (options.notifyUrl) body.set("notify_url", options.notifyUrl);
 

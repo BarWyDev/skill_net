@@ -34,3 +34,15 @@ SMSAPI's API was checked against https://www.smsapi.pl/docs/ on 2026-11-17: deli
 - **Both routes are in the visitor throttle** (`THROTTLED_AUTH_PATHS`), as the plan's `AUTH_IP_LIMITER` asks.
 - **`src/db/database.types.ts` was edited by hand.** `npm run db:types` with the installed CLI rewrites the whole file in another format (2000 changed lines), so only the new table and the two functions were added.
 - `get_my_profile` already returned `phone_verified`, so the read model needed no change.
+
+## Phase 3 adaptations (2026-11-17)
+
+- **A fifth skip reason, `hidden`.** A resident who took their skills out of crises (or lost matchability) after activation is not on the coordinator's list, so they are not alerted either. The plan listed four reasons and had nowhere to count them.
+- **`skipped` counts only the people passed over on the way to the last one queued.** When fewer than N were eligible, the whole remaining list was walked and everyone left is counted.
+- **Retries cannot double-send.** The alert id goes to SMSAPI as `idx` with `check_idx=1`; a second send answers error 53, which the consumer records as sent (with no provider id). So a retry after a lost answer, or after `mark_crisis_alert_sent` failed, never texts a resident twice. Phase 4's delivery report must therefore match by `idx` as well as by `MsgId`.
+- **`claim_crisis_alert` marks an alert failed** when the resident stopped being eligible since queueing. Otherwise the alert would stay "queued" for the rest of the crisis and block that resident in other crises.
+- **A global advisory lock in `queue_crisis_alerts`** keeps two coordinators in two crises from alerting the same resident at once.
+- **`get_crisis_alert_summary`** (coordinator RPC, counts only) feeds the crisis page: status counts and the batch list. The plan's "flash summary" is read from the batch audit instead, because the flash cookie is an error notice and success text never travels in the URL (F-06).
+- **Without the queue binding the route sends in the request** (previews, `astro preview`). Local `npm run dev` has the binding, so it runs the real consumer through the local queue.
+- **The cost estimate uses 0.17 zł per SMS**, the upper end of the range in the plan.
+- `database.types.ts` was again edited by hand (see Phase 2).

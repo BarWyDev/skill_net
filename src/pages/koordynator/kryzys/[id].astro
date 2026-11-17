@@ -1,17 +1,24 @@
 ---
 import PageShell from "@/components/PageShell.astro";
 import StatusLine from "@/components/StatusLine.astro";
+import AlertForm from "@/components/crisis/AlertForm.astro";
 import CrisisFacts from "@/components/crisis/CrisisFacts.astro";
 import EndCrisisDialog from "@/components/crisis/EndCrisisDialog.astro";
 import PersonStatus from "@/components/crisis/PersonStatus.astro";
 import SkillList from "@/components/crisis/SkillList.astro";
 import CrisisCoverage from "@/components/crisis/CrisisCoverage.astro";
 import { createClient } from "@/lib/supabase";
-import { getCrisis, getCrisisCoverage, getCrisisMatches, MATCHES_PAGE_SIZE } from "@/lib/services/crisis";
+import {
+  getCrisis,
+  getCrisisAlertSummary,
+  getCrisisCoverage,
+  getCrisisMatches,
+  MATCHES_PAGE_SIZE,
+} from "@/lib/services/crisis";
 import { formatDistanceKm, formatPeople } from "@/lib/crisis-format";
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
-import type { CrisisCoverageDTO, CrisisDTO, CrisisMatchDTO } from "@/types";
+import type { CrisisAlertSummaryDTO, CrisisCoverageDTO, CrisisDTO, CrisisMatchDTO } from "@/types";
 import { takeFlashError } from "@/lib/flash";
 
 // The middleware gates this route (coordinators only) and sends Cache-Control: private, no-store.
@@ -30,7 +37,11 @@ let crisis: CrisisDTO | null = null;
 let matches: CrisisMatchDTO[] = [];
 // Null when it failed to load: the list matters more, so a coverage error only hides the section.
 let coverage: CrisisCoverageDTO[] | null = null;
+// Null when it failed to load: the alert form still works, and says the history is missing.
+let alerts: CrisisAlertSummaryDTO | null = null;
 let loadError: string | null = null;
+// Set by the alert endpoint's redirect. The batch itself is read from the database below.
+const alertSent = Astro.url.searchParams.has("alert");
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (!supabase) {
@@ -39,9 +50,10 @@ if (!supabase) {
   try {
     crisis = await getCrisis(supabase, id);
     if (crisis?.status === "active") {
-      [matches, coverage] = await Promise.all([
+      [matches, coverage, alerts] = await Promise.all([
         getCrisisMatches(supabase, id),
         getCrisisCoverage(supabase, id).catch(() => null),
+        getCrisisAlertSummary(supabase, id).catch(() => null),
       ]);
     }
   } catch {
@@ -86,6 +98,20 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
         </StatusLine>
       )}
 
+      {alertSent && !error && (
+        <StatusLine tone="done" data-page-notice role="status" class="mb-8 font-bold">
+          {crisis.isExercise ? "Symulacja alertu gotowa." : "Alert przyjęty do wysyłki."}{" "}
+          <a href="#alerty" class="underline underline-offset-4">
+            Zobacz szczegóły
+          </a>
+          .
+        </StatusLine>
+      )}
+      {alertSent && <script is:inline>
+        // The notice is for this page load only: a refresh must not show it again.
+        history.replaceState(history.state, "", location.pathname + location.hash);
+      </script>}
+
       <CrisisFacts crisis={crisis} />
 
       <!-- Destructive, so it stands alone under the facts, in the alarm outline, and asks first. -->
@@ -126,6 +152,8 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
           </li>
         )}
       </ul>
+
+      <AlertForm crisis={crisis} summary={alerts} class="mt-16 sm:mt-20" />
 
       {coverage && coverage.length > 0 && <CrisisCoverage coverage={coverage} class="mt-16 sm:mt-20" />}
 

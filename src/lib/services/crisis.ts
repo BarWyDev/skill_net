@@ -5,6 +5,7 @@ import { REASON_REQUIRED_MESSAGE, REASON_TOO_LONG_MESSAGE } from "@/lib/reason";
 import { assembleTeams } from "@/lib/team-assembly";
 import type {
   ActivateCrisisInput,
+  CrisisAlertSummaryDTO,
   CrisisContactDTO,
   CrisisCoverageDTO,
   CrisisDTO,
@@ -331,6 +332,90 @@ export async function revealCrisisContacts(
         availableNow: now.success ? now.data : null,
       };
     }),
+  };
+}
+
+const GENERIC_ALERT_ERROR = "Nie udało się wysłać alertu. Spróbuj ponownie.";
+
+// Messages raised by queue_crisis_alerts in the crisis alerts migration.
+const ALERT_DB_ERROR_MESSAGES: Record<string, string> = {
+  not_coordinator: "Tylko koordynator może wysłać alert.",
+  unknown_crisis: "Nie znaleziono kryzysu.",
+  crisis_not_active: "Ten kryzys został już zakończony — alertu nie można wysłać.",
+  alert_cap_reached: "Limit alertów: najwyżej 500 w jednym kryzysie. Ten kryzys wykorzystał już wszystkie.",
+  sms_budget_exhausted:
+    "Dzienny limit SMS-ów nie pomieści tej partii. Wyślij alert do mniejszej liczby osób albo spróbuj jutro.",
+};
+
+const alertSkipsSchema = z
+  .object({
+    unverified: z.number().int(),
+    no_phone: z.number().int(),
+    paused: z.number().int(),
+    hidden: z.number().int(),
+    other_crisis: z.number().int(),
+  })
+  .partial();
+
+export type QueueAlertsResult =
+  { ok: true; alertIds: string[]; queued: number; simulated: boolean } | { ok: false; message: string };
+
+/**
+ * Queues an SMS alert for the next `count` eligible people on the crisis's list. Returns the new
+ * alert ids for the caller to put on the queue; an exercise returns none. The batch itself is
+ * recorded in the database, so the page reads its summary from there.
+ */
+export async function queueCrisisAlerts(
+  supabase: SupabaseClient,
+  id: string,
+  count: number,
+): Promise<QueueAlertsResult> {
+  const { data, error } = await supabase.rpc("queue_crisis_alerts", { p_crisis_id: id, p_count: count });
+  if (error) return { ok: false, message: ALERT_DB_ERROR_MESSAGES[error.message] ?? GENERIC_ALERT_ERROR };
+
+  const row = data.at(0);
+  if (!row) return { ok: false, message: GENERIC_ALERT_ERROR };
+  return { ok: true, alertIds: row.alert_ids, queued: row.queued, simulated: row.simulated };
+}
+
+const alertSummarySchema = z.object({
+  statuses: z
+    .object({
+      queued: z.number().int(),
+      sent: z.number().int(),
+      delivered: z.number().int(),
+      undelivered: z.number().int(),
+      failed: z.number().int(),
+    })
+    .partial(),
+  batches: z.array(
+    z.object({
+      created_at: z.string(),
+      requested: z.number().int(),
+      queued: z.number().int(),
+      skipped: alertSkipsSchema,
+      simulated: z.boolean(),
+      estimated_cost_pln: z.number(),
+    }),
+  ),
+});
+
+/** The alert batches of a crisis, newest first, and how many alerts are in each status now. */
+export async function getCrisisAlertSummary(supabase: SupabaseClient, id: string): Promise<CrisisAlertSummaryDTO> {
+  const { data, error } = await supabase.rpc("get_crisis_alert_summary", { p_crisis_id: id });
+  if (error) throw new Error(`getCrisisAlertSummary: ${error.code}`);
+
+  const summary = alertSummarySchema.parse(data);
+  return {
+    statuses: summary.statuses,
+    batches: summary.batches.map((b) => ({
+      createdAt: b.created_at,
+      requested: b.requested,
+      queued: b.queued,
+      skipped: b.skipped,
+      simulated: b.simulated,
+      estimatedCostPln: b.estimated_cost_pln,
+    })),
   };
 }
 

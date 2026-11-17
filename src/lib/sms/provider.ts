@@ -6,7 +6,16 @@ export interface SmsMessage {
   to: string;
   /** GSM-7 only, at most one segment (see text.ts). */
   text: string;
+  /**
+   * Makes a repeated send safe: the provider takes a message with a given key once, and answers a
+   * second one with `code: "duplicate"`. Alerts pass their id, so a queue retry after a lost answer
+   * never texts a resident twice.
+   */
+  idempotencyKey?: string;
 }
+
+/** The provider already took a message with this `idempotencyKey`. */
+export const DUPLICATE = "duplicate";
 
 export type SmsResult =
   | { ok: true; providerId: string }
