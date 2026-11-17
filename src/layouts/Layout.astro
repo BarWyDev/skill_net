@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 import Banner from "@/components/Banner.astro";
-import { missingConfigs } from "@/lib/config-status";
+import { missingConfigsFor } from "@/lib/config-status";
 import { EMAIL_STORAGE_KEY } from "@/components/auth/SignInForm";
 import { SIGNUP_EMAIL_STORAGE_KEY } from "@/components/auth/SignUpForm";
 
@@ -57,8 +57,8 @@ const staleEmailKeys = [
     </script>
   </head>
   <body>
-    {missingConfigs.map((cfg) => (
-      <Banner variant="error">
+    {missingConfigsFor(Astro.locals.isCoordinator).map((cfg) => (
+      <Banner variant={cfg.variant}>
         <strong>Uwaga:</strong> {cfg.message}
         {cfg.docsUrl && (
           <>
