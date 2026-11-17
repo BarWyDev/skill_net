@@ -3,7 +3,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { batchSummary, formatCost, formatSkips, formatStatuses, parseAlertCount } from "./alert-format.ts";
+import {
+  batchSummary,
+  formatAnswers,
+  formatCost,
+  formatSkips,
+  formatStatuses,
+  parseAlertCount,
+  personAlertStatus,
+  undeliveredShare,
+} from "./alert-format.ts";
 
 test("formatSkips lists the reasons that have someone, in a fixed order", () => {
   assert.equal(formatSkips({}), null);
@@ -73,4 +82,34 @@ test("parseAlertCount accepts 1 to 200 only", () => {
   for (const raw of ["0", "201", "-1", "1.5", "abc", "", "1000", null, undefined, 5]) {
     assert.equal(parseAlertCount(raw), null, String(raw));
   }
+});
+
+test("formatAnswers lists TAK before NIE and leaves out the empty ones", () => {
+  assert.equal(formatAnswers({}), null);
+  assert.equal(formatAnswers({ yes: 0, no: 0 }), null);
+  assert.equal(formatAnswers({ yes: 12 }), "TAK: 12");
+  assert.equal(formatAnswers({ no: 3 }), "NIE: 3");
+  assert.equal(formatAnswers({ no: 3, yes: 12 }), "TAK: 12, NIE: 3");
+});
+
+test("personAlertStatus shows the answer when there is one, otherwise where the SMS is", () => {
+  assert.equal(personAlertStatus(null, null), null);
+  assert.deepEqual(personAlertStatus("delivered", "yes"), { label: "Odpowiedź: TAK", tone: "done" });
+  assert.deepEqual(personAlertStatus("delivered", "no"), { label: "Odpowiedź: NIE", tone: "attention" });
+  // An answer can arrive before the consumer recorded the send.
+  assert.deepEqual(personAlertStatus("queued", "yes"), { label: "Odpowiedź: TAK", tone: "done" });
+  assert.deepEqual(personAlertStatus("queued", null), { label: "Alert: w kolejce", tone: "neutral" });
+  assert.deepEqual(personAlertStatus("sent", null), { label: "Alert: wysłano", tone: "neutral" });
+  assert.deepEqual(personAlertStatus("delivered", null), { label: "Alert: dostarczono", tone: "neutral" });
+  assert.deepEqual(personAlertStatus("undelivered", null), { label: "Alert: nie doręczono", tone: "attention" });
+  assert.deepEqual(personAlertStatus("failed", null), { label: "Alert: nie wysłano", tone: "attention" });
+});
+
+test("undeliveredShare speaks up from a quarter of the alerts", () => {
+  assert.equal(undeliveredShare({}), null);
+  assert.equal(undeliveredShare({ delivered: 10, sent: 2 }), null);
+  assert.equal(undeliveredShare({ delivered: 10, undelivered: 2, failed: 1 }), null);
+  assert.deepEqual(undeliveredShare({ delivered: 9, undelivered: 2, failed: 1 }), { undelivered: 3, total: 12 });
+  assert.deepEqual(undeliveredShare({ failed: 1 }), { undelivered: 1, total: 1 });
+  assert.deepEqual(undeliveredShare({ queued: 1, sent: 1, undelivered: 2 }), { undelivered: 2, total: 4 });
 });

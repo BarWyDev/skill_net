@@ -200,7 +200,8 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
           </p>
           <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">
             Zespoły składamy z listy dopasowanych do tego kryzysu, według aktualnych umiejętności mieszkańców: najpierw
-            jak najwięcej pełnych zespołów, potem osoby wyżej na liście. Deklarowana dostępność nie wpływa na wybór.
+            jak najwięcej pełnych zespołów, potem osoby, które na alert SMS odpowiedziały TAK, i osoby wyżej na liście.
+            Deklarowana dostępność nie wpływa na wybór.
           </p>
 
           {teams.length === 0 ? (
@@ -239,6 +240,8 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
                               <span class="sr-only"> od epicentrum</span>
                             </p>
                             <PersonStatus
+                              alertStatus={slot.member.alertStatus}
+                              answer={slot.member.answer}
                               availableNow={slot.member.availableNow}
                               availabilitySlots={slot.member.availabilitySlots}
                               hasPhone={slot.member.hasPhone}

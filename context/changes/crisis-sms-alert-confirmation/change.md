@@ -46,3 +46,19 @@ SMSAPI's API was checked against https://www.smsapi.pl/docs/ on 2026-11-17: deli
 - **Without the queue binding the route sends in the request** (previews, `astro preview`). Local `npm run dev` has the binding, so it runs the real consumer through the local queue.
 - **The cost estimate uses 0.17 zł per SMS**, the upper end of the range in the plan.
 - `database.types.ts` was again edited by hand (see Phase 2).
+
+## Phase 4 adaptations (2026-11-17)
+
+- **The Worker reads SMSAPI's statuses, not the database.** `record_sms_status` takes `delivered`, `undelivered` or `failed`; the mapping from SMSAPI's codes lives next to the client (`src/lib/sms/webhook.ts`) with unit tests. SMSAPI's status table was read from the docs on 2026-11-17: 404 DELIVERED; 402 EXPIRED, 405 UNDELIVERED and 407 REJECTED count as undelivered; 406 FAILED as failed. 403 SENT, 408 UNKNOWN, 409 QUEUE, 410 ACCEPTED and the rest change nothing. One callback can carry up to 5 comma-separated reports, and the route reads them all.
+- **`record_sms_status` takes the alert id too** (`p_alert_id`, SMSAPI's `idx`), as Phase 3 required: an alert with no provider id is found by its own id and then keeps the provider id.
+- **A late `delivered` wins** over an earlier `undelivered` or `failed`. Nothing downgrades `delivered`.
+- **An answer proves delivery.** A reply moves a `sent` or `undelivered` alert to `delivered`. A reply also reaches an `undelivered` alert when the sender has no open alert, so a willing resident is not told "akcja zakończona" during an active crisis because of a wrong report. A `queued` alert stays queued, so the consumer still sends it.
+- **The auto-reply hash is peppered** with the worker token (`sha256(token:number)`), like the code hash in Phase 2. Rows older than an hour are deleted on the next reply.
+- **Three older pgTAP suites changed.** The plan expected them to keep working, but `crisis_ranking_test` pins the RPC's column list, and `resident_contact_availability_test` and `crisis_team_templates_test` insert `select *` into fixed-shape temp tables. Each gained the two new columns; no assertion was weakened.
+- **Teams.** `get_team_candidates` keeps the top people per role in the confirmed-first order, and `assembleCrisisTeams` hands the solver each row's place in that order instead of the snapshot position. `team-assembly.ts` itself is unchanged.
+- **`get_crisis_alert_summary` also counts answers** (`answers: {yes, no}`), shown as "Odpowiedzi: TAK: 2, NIE: 1" under the alert form. The list shows at most 200 people, so the page had no other total.
+- **Break-glass hint.** It appears when a quarter or more of the crisis's alerts are "nie doręczono" or "nie wysłano".
+- **No middleware change.** The webhook paths need no exclusion: a callback carries no cookie, and Astro's origin check lets a POST without `Origin` through (confirmed with curl).
+- **The app code tolerates a database without the new columns** (`alert_status`, `answer`, `answers` parse as null or empty), so the deploy and the migration push can happen in either order.
+- **Privacy notice.** It names SMSAPI.pl as a processor and says what is stored and when it is deleted. It does not describe how long SMSAPI itself keeps messages: that needs the DPO and SMSAPI's terms (Phase 5, owner question 9).
+- `database.types.ts` was again edited by hand (see Phase 2).

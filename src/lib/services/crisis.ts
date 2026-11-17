@@ -213,6 +213,16 @@ const matchedSkillsSchema = z.array(
 // The generated types mark these non-null, but the RPC returns null when availability is not declared.
 const availabilitySlotsSchema = z.number().int().nullable();
 const availableNowSchema = z.boolean().nullable();
+// Null when no alert was sent, or no answer came. A database that does not have the alert columns
+// yet (the migration is pushed separately from the deploy) returns neither, which reads as null.
+const alertStatusSchema = z
+  .enum(["queued", "sent", "delivered", "undelivered", "failed"])
+  .nullish()
+  .transform((status) => status ?? null);
+const alertAnswerSchema = z
+  .enum(["yes", "no"])
+  .nullish()
+  .transform((answer) => answer ?? null);
 
 type MatchedSkills = CrisisMatchDTO["skills"];
 
@@ -226,7 +236,10 @@ function toSkills(raw: unknown, names: Map<string, string>): MatchedSkills {
   return matchedSkillsSchema.parse(raw).map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug }));
 }
 
-/** The first page of the ranked list, in position order, with skill names for display. */
+/**
+ * The first page of the ranked list, with skill names for display: people who answered TAK to an
+ * alert first, then people with no answer, then NIE, each group in position order.
+ */
 export async function getCrisisMatches(supabase: SupabaseClient, id: string): Promise<CrisisMatchDTO[]> {
   const [matches, names] = await Promise.all([
     supabase.rpc("get_crisis_matches", { p_crisis_id: id, p_limit: MATCHES_PAGE_SIZE }),
@@ -242,6 +255,8 @@ export async function getCrisisMatches(supabase: SupabaseClient, id: string): Pr
     hasPhone: row.has_phone,
     availabilitySlots: availabilitySlotsSchema.parse(row.availability_slots),
     availableNow: availableNowSchema.parse(row.available_now),
+    alertStatus: alertStatusSchema.parse(row.alert_status),
+    answer: alertAnswerSchema.parse(row.answer),
   }));
 }
 
@@ -388,6 +403,8 @@ const alertSummarySchema = z.object({
       failed: z.number().int(),
     })
     .partial(),
+  // Missing until the replies migration is pushed.
+  answers: z.object({ yes: z.number().int(), no: z.number().int() }).partial().default({}),
   batches: z.array(
     z.object({
       created_at: z.string(),
@@ -408,6 +425,7 @@ export async function getCrisisAlertSummary(supabase: SupabaseClient, id: string
   const summary = alertSummarySchema.parse(data);
   return {
     statuses: summary.statuses,
+    answers: summary.answers,
     batches: summary.batches.map((b) => ({
       createdAt: b.created_at,
       requested: b.requested,
@@ -466,7 +484,8 @@ export type AssembleTeamsResult =
 
 /**
  * Assembles up to `count` teams of `template` from the crisis's ranked list: as many complete
- * teams as possible, then the best-ranked people, then at most one partial team. Computed per
+ * teams as possible, then people who confirmed by SMS and the best-ranked, then at most one
+ * partial team. Computed per
  * request from the snapshot and the residents' current skills; nothing is stored.
  */
 export async function assembleCrisisTeams(
@@ -486,7 +505,10 @@ export async function assembleCrisisTeams(
     };
   }
 
-  const pool = candidates.data.map((row) => {
+  // The RPC returns the candidates confirmed-first (TAK, no answer, NIE), each group in position
+  // order. The solver prefers a lower `position`, so it gets the row's place in that order; the
+  // snapshot position, which names the person on the page, stays in `base`.
+  const pool = candidates.data.map((row, index) => {
     const roleSkills = roleSkillsSchema.parse(row.role_skills);
     const base = {
       rank: row.rank,
@@ -495,8 +517,10 @@ export async function assembleCrisisTeams(
       hasPhone: row.has_phone,
       availabilitySlots: availabilitySlotsSchema.parse(row.availability_slots),
       availableNow: availableNowSchema.parse(row.available_now),
+      alertStatus: alertStatusSchema.parse(row.alert_status),
+      answer: alertAnswerSchema.parse(row.answer),
     };
-    return { position: row.position, roles: Object.keys(roleSkills), roleSkills, base };
+    return { position: index + 1, roles: Object.keys(roleSkills), roleSkills, base };
   });
 
   const { teams, completeCount } = assembleTeams(template.roles, pool, count);
