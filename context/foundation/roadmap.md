@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-10-25
+updated: 2026-10-29
 prd_version: 2
 main_goal: market-feedback
 top_blocker: decisions
@@ -47,7 +47,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | done     |
 | S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | done     |
 | S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | done     |
-| S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | blocked  |
+| S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | planning |
 | S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | proposed |
 | S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | done     |
 | S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | done     |
@@ -186,7 +186,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
   - Which SMS provider, and is push in v1 or SMS only? Planning the alert path depends on this answer. — Owner: user. Block: yes.
   - Is there a cap on how many top-ranked people get alerted (PRD Open Question 9)? — Owner: user. Block: no for the pilot.
 - **Risk:** The most expensive and most failure-prone integration in the MVP (fan-out limits, the provider's rate limits, the confirmation path crossing three vendors). It sits right after the north star to surface that risk early, which fits the feedback-first goal.
-- **Status:** blocked
+- **Status:** planning
 
 ### S-08: Coordinator watches the operational list fill up
 
