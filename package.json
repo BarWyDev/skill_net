@@ -19,6 +19,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
+    "prepare": "husky || true",
     "smoke": "node scripts/smoke.mjs",
     "test:db": "supabase test db",
     "db:types": "supabase gen types typescript --local > src/db/database.types.ts",
