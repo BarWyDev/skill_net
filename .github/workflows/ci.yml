@@ -77,7 +77,8 @@ jobs:
         run: supabase stop --no-backup
 
   # Advisories in the dependencies the Worker ships. Not a required check, so a new advisory does not
-  # block an unrelated merge; a red run here means `npm audit fix` (security audit F-13).
+  # block an unrelated merge; a red run here means `npm audit fix` (security audit F-13). Advisories with
+  # no patched release are allowlisted one by one in scripts/audit.mjs.
   audit:
     runs-on: ubuntu-latest
     steps:
@@ -85,4 +86,4 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run audit
