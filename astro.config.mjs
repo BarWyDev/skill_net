@@ -22,6 +22,16 @@ export default defineConfig({
       SUPABASE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
       // Public by design: it only identifies the widget. The secret lives in Supabase Auth.
       TURNSTILE_SITE_KEY: envField.string({ context: "server", access: "public", optional: true }),
+      // SMS alerts and phone verification (S-07). Without SMSAPI_TOKEN the app uses the fake provider
+      // and sends nothing. SMS_WEBHOOK_SECRET is the path secret of SMSAPI's callbacks, and
+      // SMS_WORKER_TOKEN opens the token-gated database functions (its hash is in the database).
+      SMSAPI_TOKEN: envField.string({ context: "server", access: "secret", optional: true }),
+      SMS_WEBHOOK_SECRET: envField.string({ context: "server", access: "secret", optional: true }),
+      SMS_WORKER_TOKEN: envField.string({ context: "server", access: "secret", optional: true }),
+      // "fake" forces the fake provider even when the token is set.
+      SMS_PROVIDER: envField.string({ context: "server", access: "public", optional: true }),
+      // A sender name registered in the SMSAPI panel; empty means the account's default.
+      SMSAPI_SENDER: envField.string({ context: "server", access: "public", optional: true }),
     },
   },
 });
