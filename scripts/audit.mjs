@@ -8,16 +8,9 @@
 
 import { spawnSync } from "node:child_process";
 
-const ALLOWED = [
-  {
-    id: "GHSA-fc5q-39xc-vjpf",
-    // ReDoS in picomatch, reached through astro, vite and tinyglobby. It covers every release up to the
-    // latest (4.0.7), so there is nothing to upgrade to. Accepted by the owner on the date below; whether
-    // any glob can come from request input was not analysed. Remove this entry once a patched picomatch
-    // is installed.
-    added: "2026-11-18",
-  },
-];
+// Each entry: { id: "GHSA-…", added: "YYYY-MM-DD" }, with a comment saying why there is no upgrade
+// and who accepted it.
+const ALLOWED = [];
 
 const FAILING = new Set(["high", "critical"]);
 
