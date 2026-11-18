@@ -147,6 +147,30 @@ export interface CrisisCoverageDTO {
   availableNow: number;
 }
 
+/** Why a resident on the list was passed over by an alert batch. */
+export type AlertSkipReason = "unverified" | "no_phone" | "paused" | "hidden" | "other_crisis";
+
+/** How many residents an alert batch passed over, by reason. Reasons with no one are left out. */
+export type AlertSkips = Partial<Record<AlertSkipReason, number>>;
+
+export type AlertStatus = "queued" | "sent" | "delivered" | "undelivered" | "failed";
+
+/** One alert batch a coordinator sent (or, in an exercise, simulated). Counts only, no resident. */
+export interface CrisisAlertBatchDTO {
+  createdAt: string;
+  requested: number;
+  queued: number;
+  skipped: AlertSkips;
+  simulated: boolean;
+  estimatedCostPln: number;
+}
+
+/** The alerts of one crisis: how many are in each status now, and its batches, newest first. */
+export interface CrisisAlertSummaryDTO {
+  statuses: Partial<Record<AlertStatus, number>>;
+  batches: CrisisAlertBatchDTO[];
+}
+
 /** One ranked row. No identity, no coordinates and no score: only what the coordinator needs. */
 export interface CrisisMatchDTO {
   rank: number;

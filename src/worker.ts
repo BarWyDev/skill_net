@@ -3,18 +3,24 @@
 // entry cannot carry.
 import { handle } from "@astrojs/cloudflare/handler";
 
+import { createAlertRuntime, type AlertRuntimeEnv } from "@/lib/sms/alert-runtime";
 import { handleSmsBatch, type QueueBatch } from "@/lib/sms/queue";
 
 export default {
   fetch: handle,
 
-  // Phase 1 of S-07 binds the queues but nothing produces messages yet. The handlers that claim an
-  // alert, send it and mark it arrive with the `crisis_alerts` RPCs (Phase 3); until then a message
-  // can only come from a manual `wrangler queues` send, and it is acked.
-  async queue(batch: QueueBatch): Promise<void> {
-    await handleSmsBatch(batch, {
-      dispatch: () => Promise.resolve("ack"),
-      deadLetter: () => Promise.resolve("ack"),
-    });
+  // Consumes `skillnet-sms-alerts` and its dead-letter queue. The main queue claims each alert,
+  // sends it and records the result; the dead-letter queue records alerts whose retries ran out.
+  // The settings come from the Worker's own `env`: `astro:env` belongs to a request, and a queue
+  // batch has none.
+  async queue(batch: QueueBatch, env: AlertRuntimeEnv): Promise<void> {
+    const runtime = createAlertRuntime(env);
+    if (!runtime) {
+      // Not configured (no database or no worker token): nothing can be sent or recorded now.
+      // Retrying keeps the messages until the retries run out; nothing is lost silently.
+      for (const message of batch.messages) message.retry();
+      return;
+    }
+    await handleSmsBatch(batch, runtime);
   },
 };

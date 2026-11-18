@@ -85,12 +85,37 @@ test("SMSAPI: the request carries the token, the number without +, and the cost 
   assert.equal(body.get("notify_url"), "https://example.test/api/sms/raport/s");
 });
 
+test("the fake takes an idempotency key once", async () => {
+  const fake = createFakeProvider();
+  const keyed = { ...MESSAGE, idempotencyKey: "alert-1" };
+  assert.deepEqual(await fake.sendSms(keyed), { ok: true, providerId: "fake-1" });
+  assert.deepEqual(await fake.sendSms(keyed), { ok: false, retryable: false, code: "duplicate" });
+  assert.deepEqual(await fake.sendSms({ ...MESSAGE, idempotencyKey: "alert-2" }), { ok: true, providerId: "fake-2" });
+  assert.equal(fake.sent.length, 2);
+});
+
+test("SMSAPI: an idempotency key is sent as idx with check_idx, and error 53 is a duplicate", async () => {
+  const { calls, impl } = fakeFetch(() => json({ count: 1, list: [{ id: "x" }] }));
+  await createSmsapiProvider({ token: "t", fetch: impl }).sendSms({ ...MESSAGE, idempotencyKey: "alert-1" });
+  const body = calls[0].init.body as URLSearchParams;
+  assert.equal(body.get("idx"), "alert-1");
+  assert.equal(body.get("check_idx"), "1");
+
+  assert.deepEqual(readSmsapiResponse(200, { error: 53, message: "x" }), {
+    ok: false,
+    retryable: false,
+    code: "duplicate",
+  });
+});
+
 test("SMSAPI: sender and notify_url are left out when not set", async () => {
   const { calls, impl } = fakeFetch(() => json({ count: 1, list: [{ id: "x" }] }));
   await createSmsapiProvider({ token: "t", fetch: impl }).sendSms(MESSAGE);
   const body = calls[0].init.body as URLSearchParams;
   assert.equal(body.has("from"), false);
   assert.equal(body.has("notify_url"), false);
+  assert.equal(body.has("idx"), false);
+  assert.equal(body.has("check_idx"), false);
 });
 
 test("SMSAPI: a text that is not GSM-7 or not one segment never leaves the Worker", async () => {
