@@ -38,3 +38,11 @@ docs/qa/.konta.local
 
 # staging database connection string for scripts/db-staging.mjs (never committed)
 .staging-db-url
+
+# course material (10xDevs skills, prompts and CLI metadata): lives in ~/.claude/skills/, never in
+# this repository. scripts/check-no-course-material.sh enforces it in pre-commit and CI.
+.claude/skills/10x-*
+.agents/skills/10x-*
+.claude/prompts/
+.claude/.10x-cli-manifest.json
+.10x-cli.json
