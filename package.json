@@ -30,8 +30,8 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.12",
-    "@astrojs/cloudflare": "^14.4.6",
-    "@astrojs/react": "^7.1.5",
+    "@astrojs/cloudflare": "^14.4.8",
+    "@astrojs/react": "^7.1.9",
     "@astrojs/sitemap": "^3.7.5",
     "@fontsource/atkinson-hyperlegible-next": "^5.3.0",
     "@fontsource/big-shoulders-display": "^5.3.0",
@@ -41,11 +41,11 @@
     "@tailwindcss/vite": "^4.3.5",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "astro": "^7.3.8",
+    "astro": "^7.4.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",
-    "lucide-react": "^1.70.0",
+    "lucide-react": "^1.72.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-leaflet": "^5.0.0",
@@ -72,7 +72,7 @@
     "supabase": "^2.120.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.2",
-    "wrangler": "^4.131.1"
+    "wrangler": "^4.160.0"
   },
   "lint-staged": {
     "*.{ts,tsx,astro}": [
