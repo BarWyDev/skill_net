@@ -24,6 +24,8 @@ jobs:
           # 24 strips TypeScript natively, which `npm run test:unit` relies on.
           node-version: 24
           cache: npm
+      # Course material must never be published in this repository; the same script runs in pre-commit.
+      - run: bash scripts/check-no-course-material.sh
       - run: npm ci
       - run: npx astro sync
       - run: npm run lint
