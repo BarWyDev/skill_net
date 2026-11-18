@@ -32,6 +32,7 @@ export function PhoneField({ value, invalid, onChange }: Props) {
           pomocy.
         </li>
         <li>Bez numeru nie otrzymasz alertów kryzysowych.</li>
+        <li>Alerty wysyłamy tylko na potwierdzony numer. Po zapisaniu potwierdzisz go kodem z SMS-a.</li>
       </ul>
     </div>
   );

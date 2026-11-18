@@ -470,13 +470,13 @@ All three migrations are additive. The functions whose return types change are d
 
 #### Automated
 
-- [ ] 2.1 DB tests pass: `npm run test:db`
-- [ ] 2.2 Unit tests pass: `npm run test:unit`
-- [ ] 2.3 Type check and lint pass: `npx astro check`, `npm run lint`
+- [x] 2.1 DB tests pass: `npm run test:db` — fd606d1
+- [x] 2.2 Unit tests pass: `npm run test:unit` — fd606d1
+- [x] 2.3 Type check and lint pass: `npx astro check`, `npm run lint` — fd606d1
 
 #### Manual
 
-- [ ] 2.4 On `npm run dev` with the fake provider, a resident sends a code, confirms it, and `/profil` shows the number as verified; changing the number shows it as unverified again
+- [x] 2.4 On `npm run dev` with the fake provider, a resident sends a code, confirms it, and `/profil` shows the number as verified; changing the number shows it as unverified again — fd606d1
 
 ### Phase 3: Sending alerts
 

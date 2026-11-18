@@ -92,6 +92,14 @@ SMS goes through SMSAPI.pl, but only when `SMSAPI_TOKEN` is set and `SMS_PROVIDE
 | `SMS_PROVIDER`       | `fake` forces the fake provider even with a token                              |
 | `SMSAPI_SENDER`      | A sender name registered in the SMSAPI panel; empty uses the account's default |
 
+Residents confirm their number on `/profil` with a 6-digit code. The database functions behind it only answer to the Worker's token, and no migration or seed creates one, so locally you set it up once:
+
+```bash
+TOKEN=$(openssl rand -hex 32); echo "SMS_WORKER_TOKEN=$TOKEN" >> .dev.vars; echo "SMS_WORKER_TOKEN=$TOKEN" >> .env; printf %s "$TOKEN" | shasum -a 256
+```
+
+Then store the printed hash in the local database (Studio → SQL editor): `insert into private.worker_tokens (name, token_hash) values ('sms_worker', '<hash>');`. On `npm run dev` with the fake provider the code is shown on the page instead of being sent. A deployed build never shows it.
+
 Alerts are sent through a Cloudflare Queue (`SMS_ALERTS` in `wrangler.jsonc`), consumed by `src/worker.ts`. Queues need the Workers Paid plan, and each Worker's two queues must exist before its deploy: `skillnet-sms-alerts` and `skillnet-sms-alerts-dlq` for production, `skillnet-sms-alerts-staging` and `skillnet-sms-alerts-staging-dlq` for staging (`npx wrangler queues create <name>`).
 
 ### Turnstile (bot check on the auth forms)

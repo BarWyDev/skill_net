@@ -519,6 +519,48 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_verification_codes: {
+        Row: {
+          attempts: number
+          code_hash: string | null
+          expires_at: string | null
+          phone: string | null
+          sent_at: string | null
+          user_id: string
+          window_sends: number
+          window_started_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          attempts?: number
+          code_hash?: string | null
+          expires_at?: string | null
+          phone?: string | null
+          sent_at?: string | null
+          user_id: string
+          window_sends?: number
+          window_started_at?: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string | null
+          expires_at?: string | null
+          phone?: string | null
+          sent_at?: string | null
+          user_id?: string
+          window_sends?: number
+          window_started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phone_verification_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       postcodes: {
         Row: {
           address_count: number
@@ -896,12 +938,20 @@ export type Database = {
         Args: { p_at: string; p_slots: number }
         Returns: boolean
       }
+      begin_phone_verification: {
+        Args: { p_code_hash: string; p_token: string; p_user_id: string }
+        Returns: string
+      }
       check_course_text: {
         Args: { p_field: string; p_max: number; p_min: number; p_text: string }
         Returns: string
       }
       check_reason: { Args: { p_reason: string }; Returns: string }
       coarsen_point: { Args: { p: unknown }; Returns: unknown }
+      confirm_phone_verification: {
+        Args: { p_code_hash: string; p_token: string; p_user_id: string }
+        Returns: boolean
+      }
       course_active_signups: { Args: { p_course_id: string }; Returns: number }
       course_eligible_on: { Args: { p_user_id: string }; Returns: string }
       course_hidden_reason: {
