@@ -22,7 +22,7 @@ The app was bootstrapped from the `10x-astro-starter` template and now implement
 - `npx supabase start` / `npx supabase stop`: local Supabase (needs Docker). Studio runs at http://localhost:54323.
 - `npm run db:status:staging` / `db:push:staging` / `db:seed:staging` / `db:reset:staging`: Supabase CLI against the staging project `skillnet-staging` (`scripts/db-staging.mjs`). They read the connection string from the gitignored `.staging-db-url` at the repo root (each worktree needs its own copy) and refuse to run when it points at production. Extra CLI flags pass through, e.g. `npm run db:push:staging -- --dry-run`.
 
-A pre-commit hook (husky + lint-staged) runs `eslint --fix` on `*.{ts,tsx,astro}` files and `prettier --write` on `*.{json,css,md}` files.
+A pre-commit hook (husky + lint-staged) runs `eslint --fix` on `*.{ts,tsx,astro}` files and `prettier --write` on `*.{json,css,md}` files. Before that it runs `scripts/check-no-course-material.sh`, which refuses a commit that tracks 10xDevs course material (skills, prompts, CLI metadata). That material lives in `~/.claude/skills/`, never in this public repository; the `ci` job runs the same script.
 
 ## Architecture
 

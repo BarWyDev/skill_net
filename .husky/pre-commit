@@ -1,1 +1,2 @@
+bash scripts/check-no-course-material.sh
 npx lint-staged
