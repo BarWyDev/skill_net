@@ -155,6 +155,9 @@ export type AlertSkips = Partial<Record<AlertSkipReason, number>>;
 
 export type AlertStatus = "queued" | "sent" | "delivered" | "undelivered" | "failed";
 
+/** A resident's SMS reply to an alert: TAK or NIE. The last one wins. */
+export type AlertAnswer = "yes" | "no";
+
 /** One alert batch a coordinator sent (or, in an exercise, simulated). Counts only, no resident. */
 export interface CrisisAlertBatchDTO {
   createdAt: string;
@@ -168,6 +171,8 @@ export interface CrisisAlertBatchDTO {
 /** The alerts of one crisis: how many are in each status now, and its batches, newest first. */
 export interface CrisisAlertSummaryDTO {
   statuses: Partial<Record<AlertStatus, number>>;
+  /** How many alerted people answered TAK and NIE. Answers with no one are left out. */
+  answers: Partial<Record<AlertAnswer, number>>;
   batches: CrisisAlertBatchDTO[];
 }
 
@@ -185,13 +190,17 @@ export interface CrisisMatchDTO {
   availabilitySlots: number | null;
   /** The declaration checked against the Warsaw clock when the page is viewed; null = not declared. */
   availableNow: boolean | null;
+  /** The person's SMS alert in this crisis; null when none was sent. */
+  alertStatus: AlertStatus | null;
+  /** Their reply to it; null while there is none. People who answered TAK are listed first. */
+  answer: AlertAnswer | null;
 }
 
 /**
  * One row of a break-glass reveal. It exists only in the response to a reveal that wrote an audit
  * row; it is never stored, cached or put in a URL.
  */
-export interface CrisisContactDTO extends Omit<CrisisMatchDTO, "hasPhone"> {
+export interface CrisisContactDTO extends Omit<CrisisMatchDTO, "hasPhone" | "alertStatus" | "answer"> {
   /** The resident's current number, normalised `+48XXXXXXXXX`. */
   phone: string;
   phoneVerified: boolean;
@@ -217,6 +226,9 @@ export interface TeamMemberDTO {
   hasPhone: boolean;
   availabilitySlots: number | null;
   availableNow: boolean | null;
+  /** As in CrisisMatchDTO: the person's SMS alert in this crisis and their reply. */
+  alertStatus: AlertStatus | null;
+  answer: AlertAnswer | null;
 }
 
 /** An assembled team. It is computed per request and never stored. */

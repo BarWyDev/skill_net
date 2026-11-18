@@ -1,7 +1,7 @@
 ---
 change_id: crisis-sms-alert-confirmation
 title: Crisis SMS alert with YES/NO confirmation
-status: implementing
+status: impl_reviewed
 created: 2026-10-29
 updated: 2026-11-17
 ---
@@ -46,3 +46,37 @@ SMSAPI's API was checked against https://www.smsapi.pl/docs/ on 2026-11-17: deli
 - **Without the queue binding the route sends in the request** (previews, `astro preview`). Local `npm run dev` has the binding, so it runs the real consumer through the local queue.
 - **The cost estimate uses 0.17 zł per SMS**, the upper end of the range in the plan.
 - `database.types.ts` was again edited by hand (see Phase 2).
+
+## Phase 4 adaptations (2026-11-17)
+
+- **The Worker reads SMSAPI's statuses, not the database.** `record_sms_status` takes `delivered`, `undelivered` or `failed`; the mapping from SMSAPI's codes lives next to the client (`src/lib/sms/webhook.ts`) with unit tests. SMSAPI's status table was read from the docs on 2026-11-17: 404 DELIVERED; 402 EXPIRED, 405 UNDELIVERED and 407 REJECTED count as undelivered; 406 FAILED as failed. 403 SENT, 408 UNKNOWN, 409 QUEUE, 410 ACCEPTED and the rest change nothing. One callback can carry up to 5 comma-separated reports, and the route reads them all.
+- **`record_sms_status` takes the alert id too** (`p_alert_id`, SMSAPI's `idx`), as Phase 3 required: an alert with no provider id is found by its own id and then keeps the provider id.
+- **A late `delivered` wins** over an earlier `undelivered` or `failed`. Nothing downgrades `delivered`.
+- **An answer proves delivery.** A reply moves a `sent` or `undelivered` alert to `delivered`. A reply also reaches an `undelivered` alert when the sender has no open alert, so a willing resident is not told "akcja zakończona" during an active crisis because of a wrong report. A `queued` alert stays queued, so the consumer still sends it.
+- **The auto-reply hash is peppered** with the worker token (`sha256(token:number)`), like the code hash in Phase 2. Rows older than an hour are deleted on the next reply.
+- **Three older pgTAP suites changed.** The plan expected them to keep working, but `crisis_ranking_test` pins the RPC's column list, and `resident_contact_availability_test` and `crisis_team_templates_test` insert `select *` into fixed-shape temp tables. Each gained the two new columns; no assertion was weakened.
+- **Teams.** `get_team_candidates` keeps the top people per role in the confirmed-first order, and `assembleCrisisTeams` hands the solver each row's place in that order instead of the snapshot position. `team-assembly.ts` itself is unchanged.
+- **`get_crisis_alert_summary` also counts answers** (`answers: {yes, no}`), shown as "Odpowiedzi: TAK: 2, NIE: 1" under the alert form. The list shows at most 200 people, so the page had no other total.
+- **Break-glass hint.** It appears when a quarter or more of the crisis's alerts are "nie doręczono" or "nie wysłano".
+- **No middleware change.** The webhook paths need no exclusion: a callback carries no cookie, and Astro's origin check lets a POST without `Origin` through (confirmed with curl).
+- **The app code tolerates a database without the new columns** (`alert_status`, `answer`, `answers` parse as null or empty), so the deploy and the migration push can happen in either order.
+- **Privacy notice.** It names SMSAPI.pl as a processor and says what is stored and when it is deleted. It does not describe how long SMSAPI itself keeps messages: that needs the DPO and SMSAPI's terms (Phase 5, owner question 9).
+- `database.types.ts` was again edited by hand (see Phase 2).
+
+## Phase 4 review fixes (2026-11-17)
+
+From `reviews/impl-review-phase-4.md`; all ten findings were fixed. The Phase 4 migration was edited in place, because it had not left the local database.
+
+- **Replies are POST-only** (F2). SMSAPI's docs say replies arrive as POST, and a GET would put the sender's number and the text in the request URL, which Workers Logs record. Reports still accept GET, so the recipient's number (`to`) and the path secret are in that URL: the owner decides about invocation logs in Phase 5 (`follow-ups/review-fixes.md`). Manual row 4.4 was walked with a GET for the second reply; that request now gets a 404.
+- **An answered alert is never downgraded** (F3): not by an `undelivered` or `failed` report, and not by `mark_crisis_alert_failed`, which the Phase 4 migration replaces. Such an alert can stay "queued" with an answer for the rest of the crisis; the page shows the answer.
+- **A late `delivered` does not reopen an alert** while the resident has an open alert in another active crisis (F4). One narrow race remains: `record_sms_reply` does not take the advisory lock of `queue_crisis_alerts`, so a reply that reopens an undelivered alert can interleave with a batch in another crisis. Replies then go to the newest alert.
+- **The last answer wins by send time** (F8). `record_sms_reply` takes `p_sent_at` (SMSAPI's `sms_date`) and answers `stale` for a reply older than the stored one. A time in the future is read as now.
+- **The auto-reply log is pruned by every webhook call** (F1), and the privacy notice says "około godziny" and "skrót". With no SMS traffic at all a row still outlives its hour; a hard bound needs a scheduled job.
+- **An unreadable form body gets a 503** (F5), so SMSAPI repeats the callback. A body that is not a form is ignored, as before.
+- **`idx` is used only when it lines up with `MsgId`** (F6).
+- **Not in the adaptations above, now recorded** (F9):
+  - a callback that cannot be processed is answered 503, not `OK`, so SMSAPI retries; both RPCs are idempotent;
+  - an auto-reply whose send fails still uses that number's hourly slot and one SMS of the daily budget;
+  - a late reply to an ended crisis is recorded on the resident's queued alert of a newer crisis, if there is one: SMS has no threading, and accepting `queued` is what makes a lost `mark_crisis_alert_sent` harmless;
+  - auto-replies share the 1000-a-day budget with alerts, so many late replies after a large crisis leave less for the next one that day.
+- **Reports depend on the callback set in the SMSAPI panel** (F7): no caller passes `notify_url`. Staging and production therefore need separate SMSAPI accounts or subusers (`follow-ups/review-fixes.md`).

@@ -15,6 +15,8 @@ import {
   getCrisisMatches,
   MATCHES_PAGE_SIZE,
 } from "@/lib/services/crisis";
+import StatusMark from "@/components/StatusMark.astro";
+import { undeliveredShare } from "@/lib/alert-format";
 import { formatDistanceKm, formatPeople } from "@/lib/crisis-format";
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
@@ -24,6 +26,7 @@ import { takeFlashError } from "@/lib/flash";
 // The middleware gates this route (coordinators only) and sends Cache-Control: private, no-store.
 // The list is a snapshot from activation: no identity, coordinates or score reach this page.
 // Availability and phone presence are read live and are display-only: they never change the order.
+// An SMS answer does: people who answered TAK come first, then no answer, then NIE (S-07).
 // No phone number reaches this page, only whether one exists. Numbers are shown only on the
 // break-glass page (kontakty), in the response to a logged reveal.
 // Ending a crisis deletes the snapshot, so an ended crisis shows only its summary.
@@ -63,6 +66,8 @@ if (!supabase) {
 
 if (!crisis && !loadError) Astro.response.status = 404;
 const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - matches.length) : 0;
+// Set when a quarter or more of the alerts never reached anyone: calling may be the only way.
+const undelivered = alerts ? undeliveredShare(alerts.statuses) : null;
 const panel = { href: "/koordynator", label: "Panel koordynatora" };
 const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
 ---
@@ -120,7 +125,8 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
       </div>
 
       <p class="text-ash mt-14 max-w-[64ch] leading-relaxed">
-        Kolejność i umiejętności to stan z chwili aktywacji. Dostępność to aktualna deklaracja mieszkańca, sprawdzana
+        Miejsce na liście i umiejętności to stan z chwili aktywacji. Osoby, które na alert SMS odpowiedziały TAK, są na
+        górze listy, a te, które odpowiedziały NIE, na dole. Dostępność to aktualna deklaracja mieszkańca, sprawdzana
         względem bieżącej godziny, i nie wpływa na kolejność. Numery telefonów są domyślnie ukryte. „Bez telefonu”
         oznacza, że ta osoba nie otrzyma alertu.
       </p>
@@ -148,6 +154,14 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
             <p class="max-w-[52ch] leading-relaxed">
               Nikt nie potwierdza? Możesz ujawnić numery wszystkich dopasowanych osób. Każde ujawnienie jest zapisywane
               razem z Twoim kontem i powodem.
+              {undelivered && (
+                <span class="mt-2 block">
+                  <StatusMark tone="attention" class="font-bold">
+                    Alert nie dotarł do {undelivered.undelivered} z {undelivered.total} osób, do których został wysłany.
+                    Do nich można tylko zadzwonić.
+                  </StatusMark>
+                </span>
+              )}
             </p>
           </li>
         )}
@@ -167,7 +181,8 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
         ) : (
           <>
             <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">
-              Od najlepiej dopasowanej. Pogrubione umiejętności są priorytetowe dla tego rodzaju kryzysu.
+              Najpierw osoby, które odpowiedziały TAK, potem bez odpowiedzi, na końcu NIE; w każdej grupie od najlepiej
+              dopasowanej. Pogrubione umiejętności są priorytetowe dla tego rodzaju kryzysu.
             </p>
             <ol class="border-seam mt-6 border-b">
               {matches.map((m) => (
@@ -183,6 +198,8 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
                   </p>
                   <SkillList skills={m.skills} class="col-span-2 col-start-2 md:col-span-1" />
                   <PersonStatus
+                    alertStatus={m.alertStatus}
+                    answer={m.answer}
                     availableNow={m.availableNow}
                     availabilitySlots={m.availabilitySlots}
                     hasPhone={m.hasPhone}
