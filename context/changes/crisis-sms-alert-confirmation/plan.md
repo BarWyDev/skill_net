@@ -456,14 +456,14 @@ All three migrations are additive. The functions whose return types change are d
 
 #### Automated
 
-- [ ] 1.1 Unit tests pass: `npm run test:unit`
-- [ ] 1.2 Type check passes: `npx astro sync && npx astro check`
-- [ ] 1.3 Lint passes: `npm run lint`
-- [ ] 1.4 Build passes and the generated config carries the queue bindings: `npm run build`
+- [x] 1.1 Unit tests pass: `npm run test:unit` — 24f0baf
+- [x] 1.2 Type check passes: `npx astro sync && npx astro check` — 24f0baf
+- [x] 1.3 Lint passes: `npm run lint` — 24f0baf
+- [x] 1.4 Build passes and the generated config carries the queue bindings: `npm run build` — 24f0baf
 
 #### Manual
 
-- [ ] 1.5 `npm run preview` serves `/`, `/profil` and a coordinator crisis page exactly as before the entry change
+- [x] 1.5 `npm run preview` serves `/`, `/profil` and a coordinator crisis page exactly as before the entry change — 24f0baf
 - [ ] 1.6 Pre-merge gate: Workers Paid on, and both queues created
 
 ### Phase 2: Phone verification

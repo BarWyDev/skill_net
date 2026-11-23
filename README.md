@@ -80,6 +80,20 @@ Both are declared in the `env.schema` of `astro.config.mjs` as optional server-o
 
 Locally, email confirmation is turned off in `supabase/config.toml`, so new accounts can sign in right away. Studio runs at http://localhost:54323. Stop the stack with `npx supabase stop`.
 
+### SMS (crisis alerts and phone verification)
+
+SMS goes through SMSAPI.pl, but only when `SMSAPI_TOKEN` is set and `SMS_PROVIDER` is not `fake`. Without the token (local dev, CI, previews) the app uses a fake provider that keeps sends in memory and never sends a real SMS, and coordinators see a banner saying so. Leave the SMS variables out of `.dev.vars` locally.
+
+| Variable             | Description                                                                    |
+| -------------------- | ------------------------------------------------------------------------------ |
+| `SMSAPI_TOKEN`       | SMSAPI OAuth token limited to sending (secret)                                 |
+| `SMS_WEBHOOK_SECRET` | Path secret in the delivery-report and reply callback URLs (secret)            |
+| `SMS_WORKER_TOKEN`   | Opens the token-gated database functions; only its SHA-256 is in the database  |
+| `SMS_PROVIDER`       | `fake` forces the fake provider even with a token                              |
+| `SMSAPI_SENDER`      | A sender name registered in the SMSAPI panel; empty uses the account's default |
+
+Alerts are sent through a Cloudflare Queue (`SMS_ALERTS` in `wrangler.jsonc`), consumed by `src/worker.ts`. Queues need the Workers Paid plan, and each Worker's two queues must exist before its deploy: `skillnet-sms-alerts` and `skillnet-sms-alerts-dlq` for production, `skillnet-sms-alerts-staging` and `skillnet-sms-alerts-staging-dlq` for staging (`npx wrangler queues create <name>`).
+
 ### Turnstile (bot check on the auth forms)
 
 Sign-in, sign-up, both "send the link again" forms and account deletion carry a Cloudflare Turnstile widget. Supabase Auth checks the token with the widget's secret, so the Worker only needs the public `TURNSTILE_SITE_KEY` (optional, server, public). Without it no widget renders, which is how local dev, previews and CI run: local Supabase has captcha off.

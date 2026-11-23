@@ -1,7 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "skillnet",
-  "main": "@astrojs/cloudflare/entrypoints/server",
+  // A custom entry: the adapter's fetch handler plus the queue consumer for SMS alerts (S-07).
+  "main": "src/worker.ts",
   "compatibility_date": "2026-05-08",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
@@ -41,6 +42,24 @@
       "simple": { "limit": 5, "period": 60 },
     },
   ],
+  // SMS alerts (S-07). The coordinator's request puts alert ids on the queue; the consumer in
+  // src/worker.ts sends each one, retries three times, then hands it to the dead-letter queue, whose
+  // consumer marks the alert as failed. Queues need the Workers Paid plan, and both queues must exist
+  // before a deploy (`npx wrangler queues create <name>`), or the deploy fails. Previews get no queue
+  // binding: there the app sends through the fake provider in the request instead.
+  "queues": {
+    "producers": [{ "binding": "SMS_ALERTS", "queue": "skillnet-sms-alerts" }],
+    "consumers": [
+      {
+        "queue": "skillnet-sms-alerts",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "max_retries": 3,
+        "dead_letter_queue": "skillnet-sms-alerts-dlq",
+      },
+      { "queue": "skillnet-sms-alerts-dlq", "max_batch_size": 10, "max_batch_timeout": 5 },
+    ],
+  },
   // Previews don't inherit bindings, and the adapter would inject an ID-less SESSION here (error 10021).
   // A separate namespace keeps previews from writing to production KV.
   "previews": {
@@ -80,6 +99,20 @@
           "simple": { "limit": 5, "period": 60 },
         },
       ],
+      // Staging has its own pair of queues, so a test send on staging never lands in production's.
+      "queues": {
+        "producers": [{ "binding": "SMS_ALERTS", "queue": "skillnet-sms-alerts-staging" }],
+        "consumers": [
+          {
+            "queue": "skillnet-sms-alerts-staging",
+            "max_batch_size": 10,
+            "max_batch_timeout": 2,
+            "max_retries": 3,
+            "dead_letter_queue": "skillnet-sms-alerts-staging-dlq",
+          },
+          { "queue": "skillnet-sms-alerts-staging-dlq", "max_batch_size": 10, "max_batch_timeout": 5 },
+        ],
+      },
     },
   },
 }
