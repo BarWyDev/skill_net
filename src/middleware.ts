@@ -1,7 +1,7 @@
 import type { APIContext, MiddlewareNext } from "astro";
 import { defineMiddleware } from "astro:middleware";
 import { env } from "cloudflare:workers";
-import { authThrottled, THROTTLED_PAGE } from "@/lib/auth-throttle";
+import { authThrottled, routePath, THROTTLED_PAGE } from "@/lib/auth-throttle";
 import { createClient } from "@/lib/supabase";
 import { isCoordinator } from "@/lib/services/roles";
 import { latestConsentVersion } from "@/lib/services/consent";
@@ -85,7 +85,7 @@ async function route(context: APIContext, next: MiddlewareNext): Promise<Respons
   context.locals.isCoordinator = false;
   context.locals.needsConsent = false;
 
-  if (PUBLIC_DATA_ROUTES.includes(context.url.pathname)) {
+  if (PUBLIC_DATA_ROUTES.includes(routePath(context.url.pathname))) {
     return next();
   }
 

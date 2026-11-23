@@ -55,10 +55,20 @@ async function allowed(limiter: RateLimiter | undefined, key: string): Promise<b
 }
 
 /**
+ * The path as the lists here and in the middleware spell it. Astro routes `/api/auth/signin/` to
+ * the same endpoint as `/api/auth/signin` (`trailingSlash: "ignore"`), so an exact match on the raw
+ * pathname would let the slash form skip the check.
+ */
+export function routePath(pathname: string): string {
+  return pathname.replace(/\/+$/, "") || "/";
+}
+
+/**
  * Whether this request is over a limit. Reads the email from a clone of the body, so the endpoint
  * still gets the original.
  */
-export async function authThrottled(request: Request, path: string, limiters: AuthLimiters): Promise<boolean> {
+export async function authThrottled(request: Request, pathname: string, limiters: AuthLimiters): Promise<boolean> {
+  const path = routePath(pathname);
   if (request.method !== "POST" || !THROTTLED_AUTH_PATHS.includes(path)) return false;
 
   const visitor = request.headers.get("cf-connecting-ip");
