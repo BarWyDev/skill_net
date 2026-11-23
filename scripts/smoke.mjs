@@ -353,6 +353,18 @@ const writeSteps = [
     () => request(`${TEAMS_PATH}?szablon=ewakuacyjny&liczba=3`),
     { status: 403, bodyIncludes: "Brak dostępu", cacheControlIncludes: "no-store" },
   ],
+  // Security audit 2026-11-23: a signed-in browser never spends a link's token, so a link sent by
+  // someone else cannot swap the session for another account.
+  [
+    "confirm link asks a signed-in user to sign out first",
+    () => request("/auth/confirm?token_hash=smoke-not-a-token&type=magiclink"),
+    { status: 200, bodyIncludes: 'action="/api/auth/signout"', bodyExcludes: 'action="/auth/confirm"' },
+  ],
+  [
+    "confirm button spends nothing for a signed-in user",
+    () => request("/auth/confirm", { method: "POST", form: { token_hash: "smoke-not-a-token", type: "magiclink" } }),
+    { status: 200, bodyIncludes: 'action="/api/auth/signout"', cacheControlIncludes: "no-store" },
+  ],
   [
     "profil hides koordynator link from resident",
     () => request("/profil"),

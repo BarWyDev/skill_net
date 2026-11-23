@@ -14,7 +14,10 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-  adapter: cloudflare(),
+  // No page uses astro:assets. The default ("cloudflare-binding") would leave a public /_image
+  // route that resizes through the billable IMAGES binding on anyone's request; passthrough serves
+  // only the site's own static images, unchanged (security audit 2026-11-23, lead 3).
+  adapter: cloudflare({ imageService: "passthrough" }),
   devToolbar: { enabled: false },
   env: {
     schema: {
