@@ -10,6 +10,11 @@ import { cn } from "@/lib/utils";
 // them in. Mail scanners (Outlook Safe Links, council gateways) fetch every link in an email, and the
 // token works once, so GET only shows a button and never calls Supabase. Only the button's POST spends
 // the token. The token sits in this page's URL and form: load nothing from third parties here.
+//
+// verifyOtp signs the browser in as the token's owner and replaces any session already there. A
+// link sent by someone else would silently move a signed-in resident onto that person's account,
+// where they would then save their own phone and location. So a signed-in browser never spends a
+// token: the page asks the resident to sign out first (security audit 2026-11-23, lead 2).
 
 const NO_STORE = { "Cache-Control": "private, no-store" };
 
@@ -23,7 +28,9 @@ if (!params) {
   return redirect("/auth/link-wygasl");
 }
 
-if (isPost) {
+const signedIn = Astro.locals.user;
+
+if (isPost && !signedIn) {
   const supabase = createClient(Astro.request.headers, Astro.cookies);
   if (!supabase) {
     return redirect("/auth/link-wygasl");
@@ -35,32 +42,49 @@ if (isPost) {
 Astro.response.headers.set("Cache-Control", NO_STORE["Cache-Control"]);
 
 const isSignIn = params.type === "magiclink";
-const content = isSignIn
+const content = signedIn
   ? {
-      heading: "Zaloguj się",
-      text: "Kliknij przycisk, aby zalogować się do SkillNet.",
-      button: "Zaloguj się",
+      heading: "Jesteś już zalogowany",
+      text: signedIn.email
+        ? `W tej przeglądarce trwa sesja konta ${signedIn.email}. Link z wiadomości działa tylko po wylogowaniu: wyloguj się i otwórz go jeszcze raz.`
+        : "W tej przeglądarce trwa już sesja. Link z wiadomości działa tylko po wylogowaniu: wyloguj się i otwórz go jeszcze raz.",
+      button: "Wyloguj się",
     }
-  : {
-      heading: "Potwierdź adres e-mail",
-      text: "Ostatni krok: kliknij przycisk, aby potwierdzić adres e-mail i dokończyć zakładanie konta w SkillNet.",
-      button: "Potwierdzam",
-    };
+  : isSignIn
+    ? {
+        heading: "Zaloguj się",
+        text: "Kliknij przycisk, aby zalogować się do SkillNet.",
+        button: "Zaloguj się",
+      }
+    : {
+        heading: "Potwierdź adres e-mail",
+        text: "Ostatni krok: kliknij przycisk, aby potwierdzić adres e-mail i dokończyć zakładanie konta w SkillNet.",
+        button: "Potwierdzam",
+      };
 ---
 
 <AuthShell title={`${content.heading} — SkillNet`} heading={content.heading}>
   <p class="text-lg leading-relaxed sm:text-xl">{content.text}</p>
 
-  <form method="POST" action="/auth/confirm" class="mt-10">
-    <input type="hidden" name="token_hash" value={params.tokenHash} />
-    <input type="hidden" name="type" value={params.type} />
-    <button type="submit" class:list={cn(BUTTON, "btn-primary w-full cursor-pointer sm:w-auto")}>
-      {content.button}
-    </button>
-  </form>
+  {signedIn ? (
+    <form method="POST" action="/api/auth/signout" class="mt-10">
+      <button type="submit" class:list={cn(BUTTON, "btn-primary w-full cursor-pointer sm:w-auto")}>
+        {content.button}
+      </button>
+    </form>
+  ) : (
+    <form method="POST" action="/auth/confirm" class="mt-10">
+      <input type="hidden" name="token_hash" value={params.tokenHash} />
+      <input type="hidden" name="type" value={params.type} />
+      <button type="submit" class:list={cn(BUTTON, "btn-primary w-full cursor-pointer sm:w-auto")}>
+        {content.button}
+      </button>
+    </form>
+  )}
 
   <p slot="aside">
-    Pytamy o kliknięcie, bo programy pocztowe same otwierają linki z wiadomości, żeby sprawdzić, czy są bezpieczne. Bez
-    tego kroku link mógłby się zużyć, zanim do niego zajrzysz.
+    {signedIn
+      ? "Link loguje na konto, do którego został wysłany. Dopóki trwa inna sesja, nie używamy go, żeby nikt nie podmienił Ci konta bez Twojej wiedzy."
+      : "Pytamy o kliknięcie, bo programy pocztowe same otwierają linki z wiadomości, żeby sprawdzić, czy są bezpieczne. Bez tego kroku link mógłby się zużyć, zanim do niego zajrzysz."}
   </p>
 </AuthShell>

@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { type RateLimiter, accountKey, authThrottled } from "./auth-throttle.ts";
+import { type RateLimiter, THROTTLED_AUTH_PATHS, accountKey, authThrottled, routePath } from "./auth-throttle.ts";
 
 // A counting limiter like Cloudflare's: `limit` calls per key, then refusals.
 function fakeLimiter(limit: number) {
@@ -149,4 +149,27 @@ test("a body that is not a form skips the account limit but keeps the address li
     false,
   );
   assert.equal(account.keys.length, 0);
+});
+
+test("a trailing slash does not skip the throttle", async () => {
+  // Astro routes the slash form to the same endpoint, so it must count the same.
+  for (const path of THROTTLED_AUTH_PATHS) {
+    const ip = fakeLimiter(0);
+    assert.equal(await authThrottled(post(`${path}/`, {}), `${path}/`, { ip: ip.limiter }), true, path);
+  }
+});
+
+test("both spellings of a path share one account limit", async () => {
+  const account = fakeLimiter(1);
+  const limiters = { account: account.limiter };
+  const form = { email: "anna@example.com" };
+  assert.equal(await authThrottled(post("/api/auth/signin", form), "/api/auth/signin", limiters), false);
+  assert.equal(await authThrottled(post("/api/auth/signin/", form), "/api/auth/signin/", limiters), true);
+  assert.equal(new Set(account.keys).size, 1);
+});
+
+test("routePath drops trailing slashes and keeps the root", () => {
+  assert.equal(routePath("/api/mapa/"), "/api/mapa");
+  assert.equal(routePath("/api/mapa"), "/api/mapa");
+  assert.equal(routePath("/"), "/");
 });

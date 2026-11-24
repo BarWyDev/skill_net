@@ -7,7 +7,7 @@ hints:
   team_size: solo
   deployment_target: cloudflare-workers
   ci_provider: github-actions
-  ci_default_flow: auto-deploy-on-merge
+  ci_default_flow: manual-promotion
   bootstrapper_confidence: first-class
   path_taken: standard
   quality_override: false

@@ -24,6 +24,8 @@ jobs:
           # 24 strips TypeScript natively, which `npm run test:unit` relies on.
           node-version: 24
           cache: npm
+      # Course material must never be published in this repository; the same script runs in pre-commit.
+      - run: bash scripts/check-no-course-material.sh
       - run: npm ci
       - run: npx astro sync
       - run: npm run lint
@@ -43,7 +45,7 @@ jobs:
           # Same Node as Cloudflare Workers Builds, which reads .nvmrc.
           node-version-file: .nvmrc
           cache: npm
-      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+      - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
         with:
           # Pinned, like the actions: `latest` let a new CLI change a run without a commit.
           version: 2.120.0
@@ -77,7 +79,8 @@ jobs:
         run: supabase stop --no-backup
 
   # Advisories in the dependencies the Worker ships. Not a required check, so a new advisory does not
-  # block an unrelated merge; a red run here means `npm audit fix` (security audit F-13).
+  # block an unrelated merge; a red run here means `npm audit fix` (security audit F-13). Advisories with
+  # no patched release are allowlisted one by one in scripts/audit.mjs.
   audit:
     runs-on: ubuntu-latest
     steps:
@@ -85,4 +88,4 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run audit
