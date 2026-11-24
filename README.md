@@ -100,6 +100,16 @@ TOKEN=$(openssl rand -hex 32); echo "SMS_WORKER_TOKEN=$TOKEN" >> .dev.vars; echo
 
 Then store the printed hash in the local database (Studio → SQL editor): `insert into private.worker_tokens (name, token_hash) values ('sms_worker', '<hash>');`. On `npm run dev` with the fake provider the code is shown on the page instead of being sent. A deployed build never shows it.
 
+SMSAPI calls two webhooks, both gated by `SMS_WEBHOOK_SECRET` in the path: delivery reports at `/api/sms/raport/<secret>` and residents' replies at `/api/sms/odpowiedz/<secret>`. Both answer the string `OK`, and a wrong or unset secret is a 404. Reports accept GET and POST; replies accept POST only, so a number and a reply's text never travel in a URL. A callback that cannot be processed gets a 503, and SMSAPI sends it again. To try them locally, add `SMS_WEBHOOK_SECRET` to `.dev.vars` and `.env`, then:
+
+```bash
+curl --data-urlencode "sms_from=48600123456" --data-urlencode "sms_text=Tak" http://localhost:4321/api/sms/odpowiedz/<secret>
+```
+
+```bash
+curl "http://localhost:4321/api/sms/raport/<secret>?MsgId=fake-1&status=404&status_name=DELIVERED"
+```
+
 Alerts are sent through a Cloudflare Queue (`SMS_ALERTS` in `wrangler.jsonc`), consumed by `src/worker.ts`. Queues need the Workers Paid plan, and each Worker's two queues must exist before its deploy: `skillnet-sms-alerts` and `skillnet-sms-alerts-dlq` for production, `skillnet-sms-alerts-staging` and `skillnet-sms-alerts-staging-dlq` for staging (`npx wrangler queues create <name>`).
 
 ### Turnstile (bot check on the auth forms)

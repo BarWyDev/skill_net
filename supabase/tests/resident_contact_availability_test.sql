@@ -54,7 +54,8 @@ where user_id = 'cccccccc-0000-0000-0000-000000000003';
 create temp table crisis_ids (name text primary key, id uuid);
 create temp table rpc_rows (
   rank integer, "position" integer, distance_km_rounded numeric, matched_skills jsonb,
-  has_phone boolean, availability_slots integer, available_now boolean
+  has_phone boolean, availability_slots integer, available_now boolean,
+  alert_status text, answer text
 );
 grant select, insert on crisis_ids, rpc_rows to authenticated;
 

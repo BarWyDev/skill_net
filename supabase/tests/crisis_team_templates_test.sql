@@ -61,7 +61,8 @@ create temp table crisis_ids (name text primary key, id uuid);
 create temp table candidate_rows (
   ord bigint generated always as identity,
   rank integer, "position" integer, distance_km_rounded numeric, role_skills jsonb,
-  has_phone boolean, availability_slots integer, available_now boolean
+  has_phone boolean, availability_slots integer, available_now boolean,
+  alert_status text, answer text
 );
 grant select, insert on crisis_ids, candidate_rows to authenticated;
 
@@ -145,7 +146,9 @@ select throws_ok(
 );
 
 -- K reads one evacuation team's candidates.
-insert into candidate_rows (rank, "position", distance_km_rounded, role_skills, has_phone, availability_slots, available_now)
+insert into candidate_rows (
+  rank, "position", distance_km_rounded, role_skills, has_phone, availability_slots, available_now, alert_status, answer
+)
 select * from public.get_team_candidates((select id from crisis_ids where name = 'live'), 'ewakuacyjny', 1);
 
 reset role;

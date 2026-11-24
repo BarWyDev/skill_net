@@ -1,12 +1,18 @@
 ---
-// A matched person's live status: declared availability now, the declared hours and, when known, a
-// missing phone number. Display-only: none of it changes the order of the list.
+// A matched person's live status: their SMS alert (the answer, or where the SMS is), declared
+// availability now, the declared hours and, when known, a missing phone number. Only the answer
+// changes the order of the list (TAK first, NIE last); the rest is display-only.
 import StatusMark from "@/components/StatusMark.astro";
+import { personAlertStatus } from "@/lib/alert-format";
 import { formatAvailabilitySummary } from "@/lib/availability";
 import { availabilityStatus } from "@/lib/crisis-format";
 import { cn } from "@/lib/utils";
+import type { AlertAnswer, AlertStatus } from "@/types";
 
 interface Props {
+  /** Omitted where alerts are not shown (the revealed contacts). */
+  alertStatus?: AlertStatus | null;
+  answer?: AlertAnswer | null;
   availableNow: boolean | null;
   availabilitySlots: number | null;
   /** Omitted where every person shown has a number (the revealed contacts). */
@@ -14,12 +20,18 @@ interface Props {
   class?: string;
 }
 
-const { availableNow, availabilitySlots, hasPhone, class: className } = Astro.props;
+const { alertStatus = null, answer = null, availableNow, availabilitySlots, hasPhone, class: className } = Astro.props;
+const alert = personAlertStatus(alertStatus, answer);
 const availability = availabilityStatus(availableNow);
 const hours = formatAvailabilitySummary(availabilitySlots);
 ---
 
 <div class:list={cn("space-y-1 text-[0.9375rem] leading-snug", className)}>
+  {alert && (
+    <p class:list={answer ? "font-bold" : undefined}>
+      <StatusMark tone={alert.tone}>{alert.label}</StatusMark>
+    </p>
+  )}
   <p>
     <StatusMark tone={availability.tone}>{availability.label}</StatusMark>
   </p>

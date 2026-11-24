@@ -1133,6 +1133,8 @@ export type Database = {
       get_crisis_matches: {
         Args: { p_crisis_id: string; p_limit?: number }
         Returns: {
+          alert_status: string
+          answer: string
           availability_slots: number
           available_now: boolean
           distance_km_rounded: number
@@ -1205,6 +1207,8 @@ export type Database = {
       get_team_candidates: {
         Args: { p_crisis_id: string; p_teams: number; p_template: string }
         Returns: {
+          alert_status: string
+          answer: string
           availability_slots: number
           available_now: boolean
           distance_km_rounded: number
@@ -1248,6 +1252,24 @@ export type Database = {
       profile_is_complete: { Args: { p_user_id: string }; Returns: boolean }
       profile_is_matchable: { Args: { p_user_id: string }; Returns: boolean }
       record_my_consent: { Args: { p_version: string }; Returns: undefined }
+      record_sms_reply: {
+        Args: {
+          p_answer: string
+          p_phone: string
+          p_sent_at?: string
+          p_token: string
+        }
+        Returns: string
+      }
+      record_sms_status: {
+        Args: {
+          p_alert_id: string
+          p_provider_id: string
+          p_status: string
+          p_token: string
+        }
+        Returns: undefined
+      }
       refresh_skills_density: {
         Args: { p_category: string }
         Returns: undefined

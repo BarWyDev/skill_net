@@ -205,6 +205,21 @@ const readonlySteps = [
   ["density map filters by category", () => request("/api/mapa?kategoria=medyczne"), { status: 200 }],
   ["density map rejects unknown category", () => request("/api/mapa?kategoria=nie-ma"), { status: 400 }],
   ["privacy page renders", () => request("/prywatnosc"), { status: 200, cacheControlIncludes: "private" }],
+  // S-07: SMSAPI's callbacks are closed without the path secret, as if the routes did not exist.
+  [
+    "sms report webhook rejects a wrong secret",
+    () => request("/api/sms/raport/smoke-not-the-secret?MsgId=smoke&status=404"),
+    { status: 404, cacheControlIncludes: "no-store" },
+  ],
+  [
+    "sms reply webhook rejects a wrong secret",
+    () =>
+      request("/api/sms/odpowiedz/smoke-not-the-secret", {
+        method: "POST",
+        form: { sms_from: "48600000000", sms_text: "TAK" },
+      }),
+    { status: 404, cacheControlIncludes: "no-store" },
+  ],
   [
     "confirm without token redirects to link error",
     () => request("/auth/confirm"),
