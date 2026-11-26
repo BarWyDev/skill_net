@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-10-29
+updated: 2026-11-26
 prd_version: 2
 main_goal: market-feedback
 top_blocker: decisions
@@ -39,25 +39,39 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 
 ## At a glance
 
-| ID   | Change ID                       | Outcome (user can …)                                                                   | Prerequisites                 | PRD refs              | Status   |
-| ---- | ------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------- | --------------------- | -------- |
-| S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location          | —                             | FR-002, FR-003        | done     |
-| S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | done     |
-| S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents        | S-01, S-02, S-15              | US-01, FR-009, FR-010 | done     |
-| S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | done     |
-| S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | done     |
-| S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | done     |
-| S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | planning |
-| S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | proposed |
-| S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | done     |
-| S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | done     |
-| S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | done     |
-| S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | done     |
-| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | done     |
-| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done     |
-| S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done     |
-| S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm        | S-05                          | FR-001                | done     |
-| S-17 | neighbour-courses               | resident can offer a free course and signed-in neighbours can sign up for it           | S-01, S-11, S-12              | FR-020                | done     |
+| ID   | Change ID                       | Outcome (user can …)                                                                   | Prerequisites                 | PRD refs              | Status |
+| ---- | ------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------- | --------------------- | ------ |
+| S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location          | —                             | FR-002, FR-003        | done   |
+| S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | done   |
+| S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents        | S-01, S-02, S-15              | US-01, FR-009, FR-010 | done   |
+| S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | done   |
+| S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | done   |
+| S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | done   |
+| S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | paused |
+| S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | paused |
+| S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | done   |
+| S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | done   |
+| S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | done   |
+| S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | done   |
+| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | done   |
+| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done   |
+| S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done   |
+| S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm        | S-05                          | FR-001                | done   |
+| S-17 | neighbour-courses               | resident can offer a free course and signed-in neighbours can sign up for it           | S-01, S-11, S-12              | FR-020                | done   |
+
+## Before pilot launch
+
+**Paused, not dropped.** Paused on 2026-11-26 because every item here costs money; the owner will pick them up right before the pilot launch, whose date is not set. M-1 stays open until they are done, and the pilot must not start without them.
+
+| Item                                                  | Why it is required                                                            | State on 2026-11-26                                  |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Workers Paid plan (human-only change)                 | Free's 10 ms CPU and 50-subrequest limits silently truncate the alert fan-out | Not done; Open Roadmap Question 10                   |
+| SMS provider account and sender registration          | S-07 cannot send without it; sender registration has lead time                | Not done                                             |
+| S-07: crisis SMS alert with YES/NO confirmation       | Completes US-01 and FR-011                                                    | PRs #128–#131 open (phases 1–4), phase 5 not started |
+| S-08: live operational list                           | Completes US-01's acceptance criterion and FR-012                             | Not started; waits on S-07                           |
+| Data-protection officer's answer on processing places | Blocks a pilot with real phone numbers and locations                          | Open Roadmap Question 12                             |
+
+While these wait, the open S-07 branches drift from `master`; rebase them when work resumes, before reviewing.
 
 ## Streams
 
@@ -186,7 +200,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
   - Which SMS provider, and is push in v1 or SMS only? Planning the alert path depends on this answer. — Owner: user. Block: yes.
   - Is there a cap on how many top-ranked people get alerted (PRD Open Question 9)? — Owner: user. Block: no for the pilot.
 - **Risk:** The most expensive and most failure-prone integration in the MVP (fan-out limits, the provider's rate limits, the confirmation path crossing three vendors). It sits right after the north star to surface that risk early, which fits the feedback-first goal.
-- **Status:** planning
+- **Status:** paused (2026-11-26). **Required before pilot launch**; see "Before pilot launch".
 
 ### S-08: Coordinator watches the operational list fill up
 
@@ -198,7 +212,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This completes US-01's acceptance criterion (< 5 minutes from activation to the confirmed list). The list must read the database directly, so a missed update never hides a confirmation.
-- **Status:** proposed
+- **Status:** paused (2026-11-26). **Required before pilot launch**; see "Before pilot launch".
 
 ### S-09: Coordinator reveals all matched contacts (break-glass)
 
@@ -326,8 +340,8 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-04       | #5    | crisis-deactivation             | Deactivate crisis mode                                          | done                  | Archived 2026-10-02                                 |
 | S-05       | #6    | verified-sign-up-with-consent   | Sign-up with verified email and data-processing consent         | done                  | Archived 2026-10-06; email delivery split into S-16 |
 | S-06       | #7    | resident-phone-and-availability | Optional hidden phone number and availability                   | done                  | Archived 2026-10-03                                 |
-| S-07       | #8    | crisis-sms-alert-confirmation   | Crisis SMS alert with YES/NO confirmation                       | no                    | Blocked: SMS provider choice; needs Workers Paid    |
-| S-08       | #9    | live-operational-list           | Live operational list of confirmed volunteers                   | no                    | Waits on S-07                                       |
+| S-07       | #8    | crisis-sms-alert-confirmation   | Crisis SMS alert with YES/NO confirmation                       | no                    | Paused 2026-11-26; required before pilot launch     |
+| S-08       | #9    | live-operational-list           | Live operational list of confirmed volunteers                   | no                    | Paused with S-07; required before pilot launch      |
 | S-09       | #10   | break-glass-contact-reveal      | Break-glass reveal of matched contacts, audited                 | done                  | Archived 2026-10-04                                 |
 | S-10       | #11   | crisis-team-templates           | Assemble teams from predefined templates                        | done                  | Archived 2026-10-04                                 |
 | S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | done                  | Archived 2026-10-05                                 |
