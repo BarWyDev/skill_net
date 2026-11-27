@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase";
 import { redirectWithError } from "@/lib/flash";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { captchaToken } from "@/lib/captcha";
+import { auth } from "@/lib/i18n/messages/auth";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -10,12 +11,13 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // is registered, confirmed or rate limited, so the endpoint cannot be used to probe for accounts:
 // every outcome after the format check lands on the same neutral page.
 export const POST: APIRoute = async (context) => {
+  const { locale } = context.locals;
   const form = await context.request.formData();
   const raw = form.get("email");
   const email = typeof raw === "string" ? raw.trim() : "";
 
   if (!EMAIL_PATTERN.test(email)) {
-    return redirectWithError(context, "/auth/link-wygasl", "Podaj poprawny adres e-mail.");
+    return redirectWithError(context, "/auth/link-wygasl", auth[locale].emailInvalidSentence);
   }
 
   const supabase = createClient(context.request.headers, context.cookies);
@@ -28,7 +30,7 @@ export const POST: APIRoute = async (context) => {
       options: { captchaToken: captchaToken(form) },
     });
     if (error?.code === "captcha_failed") {
-      return redirectWithError(context, "/auth/link-wygasl", authErrorMessage(error.code));
+      return redirectWithError(context, "/auth/link-wygasl", authErrorMessage(error.code, locale));
     }
   }
 

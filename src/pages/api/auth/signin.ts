@@ -5,8 +5,10 @@ import { authErrorMessage } from "@/lib/auth-errors";
 import { RETURN_PARAM, safeReturnPath } from "@/lib/return-path";
 import { redirectWithError } from "@/lib/flash";
 import { captchaToken } from "@/lib/captcha";
+import { auth } from "@/lib/i18n/messages/auth";
 
 export const POST: APIRoute = async (context) => {
+  const { locale } = context.locals;
   const form = await context.request.formData();
   const email = form.get("email") as string;
   const password = form.get("password") as string;
@@ -15,7 +17,7 @@ export const POST: APIRoute = async (context) => {
 
   const supabase = createClient(context.request.headers, context.cookies);
   if (!supabase) {
-    return redirectWithError(context, "/auth/signin", "Supabase nie jest skonfigurowany.");
+    return redirectWithError(context, "/auth/signin", auth[locale].notConfigured);
   }
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -30,7 +32,7 @@ export const POST: APIRoute = async (context) => {
       ...(returnTo ? [`${RETURN_PARAM}=${encodeURIComponent(returnTo)}`] : []),
     ];
     const location = flags.length ? `/auth/signin?${flags.join("&")}` : "/auth/signin";
-    return redirectWithError(context, location, authErrorMessage(error.code));
+    return redirectWithError(context, location, authErrorMessage(error.code, locale));
   }
 
   if (returnTo) return context.redirect(returnTo);

@@ -5,32 +5,31 @@ import Turnstile from "@/components/auth/Turnstile.astro";
 import { RETURN_PARAM, safeReturnPath } from "@/lib/return-path";
 import { TEXT_LINK } from "@/lib/site-styles";
 import { takeFlashError } from "@/lib/flash";
+import { auth } from "@/lib/i18n/messages/auth";
 
 // Left by the endpoint that redirected here; never read from the URL (security audit F-06).
 const error = takeFlashError(Astro);
 const unconfirmed = Astro.url.searchParams.has("niepotwierdzony");
 // Set by the middleware when a signed-out visitor opens a protected page.
 const returnTo = safeReturnPath(Astro.url.searchParams.get(RETURN_PARAM));
+const { locale } = Astro.locals;
+const t = auth[locale].signIn;
 ---
 
-<AuthShell
-  title="Zaloguj się — SkillNet"
-  description="Zaloguj się do SkillNet, żeby zaktualizować swoje umiejętności, dostępność i ustawienia widoczności danych."
-  heading="Zaloguj się"
->
+<AuthShell title={t.title} description={t.description} heading={t.heading}>
   {returnTo && !error && (
     <p role="status" class="border-seam mb-8 border px-4 py-3 leading-relaxed">
-      Ta strona jest dostępna po zalogowaniu. Zaloguj się, a od razu na nią wrócisz.
+      {t.returnNotice}
     </p>
   )}
-  <SignInForm serverError={error} unconfirmed={unconfirmed} returnTo={returnTo} client:load>
+  <SignInForm locale={locale} serverError={error} unconfirmed={unconfirmed} returnTo={returnTo} client:load>
     <Turnstile slot="captcha" />
     {unconfirmed && <Turnstile slot="resend-captcha" class="mt-4" />}
   </SignInForm>
   <p class="text-ash mt-10">
-    Nie masz konta?{" "}
+    {t.noAccount}{" "}
     <a href="/auth/signup" class:list={TEXT_LINK}>
-      Załóż konto
+      {t.signUpLink}
     </a>
   </p>
 </AuthShell>

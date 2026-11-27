@@ -3,6 +3,8 @@ import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
+import type { Locale } from "@/lib/i18n/locale";
+import { auth } from "@/lib/i18n/messages/auth";
 import { RETURN_PARAM } from "@/lib/return-path";
 import { TEXT_LINK } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
@@ -13,6 +15,7 @@ import { cn } from "@/lib/utils";
 export const EMAIL_STORAGE_KEY = "skillnet:signin-email";
 
 interface Props {
+  locale: Locale;
   serverError?: string | null;
   // Sign-in failed with `email_not_confirmed`: offer a new confirmation link.
   unconfirmed?: boolean;
@@ -24,12 +27,14 @@ interface Props {
 }
 
 export default function SignInForm({
+  locale,
   serverError,
   unconfirmed = false,
   returnTo = null,
   captcha,
   resendCaptcha,
 }: Props) {
+  const t = auth[locale];
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -52,12 +57,12 @@ export default function SignInForm({
   function validate() {
     const next: typeof errors = {};
     if (!email.trim()) {
-      next.email = "Podaj adres e-mail";
+      next.email = t.fields.emailRequired;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      next.email = "Podaj poprawny adres e-mail";
+      next.email = t.fields.emailInvalid;
     }
     if (!password) {
-      next.password = "Podaj hasło";
+      next.password = t.fields.passwordRequired;
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -86,32 +91,34 @@ export default function SignInForm({
         <FormField
           id="email"
           type="email"
-          label="E-mail"
+          label={t.fields.email}
           autoComplete="email"
           value={email}
           onChange={(v) => {
             setEmail(v);
             clearError("email");
           }}
-          placeholder="ty@przyklad.pl"
+          placeholder={t.fields.emailPlaceholder}
           error={errors.email}
         />
 
         <FormField
           id="password"
-          label="Hasło"
+          label={t.fields.password}
           type={showPassword ? "text" : "password"}
           value={password}
           onChange={(v) => {
             setPassword(v);
             clearError("password");
           }}
-          placeholder="Twoje hasło"
+          placeholder={t.signIn.passwordPlaceholder}
           autoComplete="current-password"
           error={errors.password}
           endContent={
             <PasswordToggle
               visible={showPassword}
+              showLabel={t.fields.showPassword}
+              hideLabel={t.fields.hidePassword}
               onToggle={() => {
                 setShowPassword(!showPassword);
               }}
@@ -123,15 +130,13 @@ export default function SignInForm({
 
         <div className="space-y-4 pt-2">
           <ServerError message={serverError} />
-          <SubmitButton pendingText="Logowanie...">Zaloguj się</SubmitButton>
+          <SubmitButton pendingText={t.signIn.pending}>{t.signIn.submit}</SubmitButton>
         </div>
       </form>
 
       {unconfirmed && (
         <form method="POST" action="/api/auth/resend" className="mt-10">
-          <p className="text-ash max-w-[36ch] leading-relaxed">
-            Link nie dotarł albo wygasł? Wyślemy nowy na adres podany powyżej.
-          </p>
+          <p className="text-ash max-w-[36ch] leading-relaxed">{t.signIn.resendLead}</p>
           <input type="hidden" name="email" value={email} />
           {resendCaptcha}
           <button
@@ -142,7 +147,7 @@ export default function SignInForm({
               "disabled:text-ash mt-1 cursor-pointer disabled:cursor-not-allowed disabled:no-underline",
             )}
           >
-            Wyślij link ponownie
+            {t.signIn.resendButton}
           </button>
         </form>
       )}
