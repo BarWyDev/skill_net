@@ -293,8 +293,8 @@ No migration. Production gets the three languages when the PR with phase 4 is pr
 
 #### Manual
 
-- [x] 1.6 `/profil` in `en` and `uk` shows no Polish outside the language switch; notices follow the language
-- [x] 1.7 `/profil` in `pl` looks and reads as before
+- [x] 1.6 `/profil` in `en` and `uk` shows no Polish outside the language switch; notices follow the language — 4e831a4
+- [x] 1.7 `/profil` in `pl` looks and reads as before — 4e831a4
 
 ### Phase 2: Courses
 
@@ -308,22 +308,22 @@ No migration. Production gets the three languages when the PR with phase 4 is pr
 
 #### Manual
 
-- [x] 2.6 `/kursy` in `en` and `uk`: every action shows copy and notices in that language; typed text stays as typed
-- [x] 2.7 `/kursy` in `pl` reads as before
+- [x] 2.6 `/kursy` in `en` and `uk`: every action shows copy and notices in that language; typed text stays as typed — 1ce213c
+- [x] 2.7 `/kursy` in `pl` reads as before — 1ce213c
 
 ### Phase 3: Consent and privacy
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass, including the pinned hashes: `npm run test:unit`
-- [ ] 3.2 Type check passes: `npx astro check`
-- [ ] 3.3 Lint passes: `npm run lint`
-- [ ] 3.4 Local smoke passes: `npm run smoke`
+- [x] 3.1 Unit tests pass, including the pinned hashes: `npm run test:unit`
+- [x] 3.2 Type check passes: `npx astro check`
+- [x] 3.3 Lint passes: `npm run lint`
+- [x] 3.4 Local smoke passes: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.5 `/prywatnosc` in `en` and `uk` shows the courtesy note and no Polish; `pl` is word for word the current notice
-- [ ] 3.6 `/zgoda` in `en` and `uk` shows the translation and the Polish original
+- [x] 3.5 `/prywatnosc` in `en` and `uk` shows the courtesy note and no Polish; `pl` is word for word the current notice
+- [x] 3.6 `/zgoda` in `en` and `uk` shows the translation and the Polish original
 
 ### Phase 4: Verification and rollout
 
