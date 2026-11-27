@@ -1,0 +1,83 @@
+---
+// The sections of the privacy notice, from one language of the `legal` catalogue. /prywatnosc
+// renders it in the request's language and, under a translation, once more in Polish: the binding
+// text.
+import type { LegalMessages } from "@/lib/i18n/messages/legal";
+import { SECTION_TITLE } from "@/lib/site-styles";
+
+interface Props {
+  notice: LegalMessages["privacy"];
+}
+
+const { notice: t } = Astro.props;
+---
+
+<!-- Running text on the 42rem column; section headings in the site's section style. -->
+<div class="leading-relaxed [&_h2]:mb-4 [&_li]:ml-5 [&_li]:list-[square] [&_section]:mt-12 [&_ul]:space-y-2">
+  <section>
+    <h2 class:list={SECTION_TITLE}>{t.controller.heading}</h2>
+    <p>{t.controller.body}</p>
+  </section>
+
+  <section>
+    <h2 class:list={SECTION_TITLE}>{t.data.heading}</h2>
+    <ul>
+      {t.data.items.map((item) => (
+        <li>{item}</li>
+      ))}
+    </ul>
+  </section>
+
+  <section>
+    <h2 class:list={SECTION_TITLE}>{t.purpose.heading}</h2>
+    <ul>
+      {t.purpose.items.map((item) => (
+        <li>{item}</li>
+      ))}
+    </ul>
+    <p class="mt-3">{t.purpose.phone}</p>
+    <p class="mt-3">{t.purpose.courses}</p>
+  </section>
+
+  <section>
+    <h2 class:list={SECTION_TITLE}>{t.optOut.heading}</h2>
+    <p>{t.optOut.intro}</p>
+    <ul class="mt-3">
+      {t.optOut.items.map((item) => (
+        <li>{item}</li>
+      ))}
+    </ul>
+    <p class="mt-3">{t.optOut.after}</p>
+  </section>
+
+  <section>
+    <h2 class:list={SECTION_TITLE}>{t.recipients.heading}</h2>
+    <p>{t.recipients.intro}</p>
+    <ul class="mt-3">
+      {t.recipients.items.map((item) => (
+        <li>{item}</li>
+      ))}
+    </ul>
+    <p class="mt-3">{t.recipients.after}</p>
+  </section>
+
+  <section>
+    <h2 class:list={SECTION_TITLE}>{t.basis.heading}</h2>
+    <p>{t.basis.body}</p>
+  </section>
+
+  <section>
+    <h2 class:list={SECTION_TITLE}>{t.retention.heading}</h2>
+    <p>{t.retention.body}</p>
+    <p class="mt-3">{t.retention.audit}</p>
+  </section>
+
+  <section>
+    <h2 class:list={SECTION_TITLE}>{t.rights.heading}</h2>
+    <ul>
+      {t.rights.items.map((item) => (
+        <li>{item}</li>
+      ))}
+    </ul>
+  </section>
+</div>
