@@ -271,7 +271,7 @@ npm run dev            # or: npm run build && npm run preview
 BASE_URL=http://localhost:4321 npm run smoke
 ```
 
-It needs a reachable Supabase instance (local or cloud) with email confirmation disabled, and a server that offers all three interface languages (`ENABLED_LOCALES=pl,en,uk`, as in `.env.example`): it checks that the language follows the browser, that a `?lang=` link sets the choice, and that `/api/mapa` is the same in every language.
+It needs a reachable Supabase instance (local or cloud) with email confirmation disabled, and a server that offers all three interface languages (`ENABLED_LOCALES=pl,en,uk`, as in `.env.example`): it checks that the language follows the browser, that a `?lang=` link sets the choice, that `/api/mapa` is the same in every language, that the privacy notice in English keeps the Polish original, and that the profile and its error notices follow the language.
 
 Against production, run only the read-only steps. They create no accounts:
 
@@ -279,7 +279,7 @@ Against production, run only the read-only steps. They create no accounts:
 SMOKE_READONLY=1 BASE_URL=https://skillnet.org.pl npm run smoke
 ```
 
-The read-only run skips the language checks, because production offers Polish only; it still checks that a `?lang=` link is stripped with a redirect that stays on the same host. Against `https://skillnet.org.pl` it also checks that `www` and the old `workers.dev` host answer 301 to it. It also checks the access gates (coordinator-only routes, consent gate, break-glass contact reveal) and security headers. It is a sanity check, not a substitute for the unit and pgTAP suites.
+The read-only run skips the language checks, so it also passes against a build that offers Polish only; it still checks that a `?lang=` link is stripped with a redirect that stays on the same host. Against `https://skillnet.org.pl` it also checks that `www` and the old `workers.dev` host answer 301 to it. It also checks the access gates (coordinator-only routes, consent gate, break-glass contact reveal) and security headers. It is a sanity check, not a substitute for the unit and pgTAP suites.
 
 ## CI
 

@@ -24,7 +24,7 @@ export const pl = {
   },
   postcode: {
     label: "Przejdź do kodu pocztowego",
-    // The same sentence as the profile form's own check, which stays Polish until S-19.
+    // The same sentence as the profile form's own check.
     invalid: POSTCODE_ERROR,
     searching: "Szukam kodu…",
     unknown: "Nie znamy tego kodu pocztowego.",
