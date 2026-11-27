@@ -3,9 +3,8 @@
 // missing phone number. Display-only: none of it changes the order of the list.
 import StatusMark from "@/components/StatusMark.astro";
 import { availabilityStatus, formatAvailabilitySummary } from "@/lib/crisis-format";
+import { crisis as crisisMessages } from "@/lib/i18n/messages/crisis";
 import { cn } from "@/lib/utils";
-
-const { locale } = Astro.locals;
 
 interface Props {
   availableNow: boolean | null;
@@ -16,6 +15,8 @@ interface Props {
 }
 
 const { availableNow, availabilitySlots, hasPhone, class: className } = Astro.props;
+const { locale } = Astro.locals;
+const t = crisisMessages[locale].person;
 const availability = availabilityStatus(locale, availableNow);
 const hours = formatAvailabilitySummary(locale, availabilitySlots);
 ---
@@ -26,13 +27,13 @@ const hours = formatAvailabilitySummary(locale, availabilitySlots);
   </p>
   {hours && (
     <p class="text-ash pl-5">
-      <span class="sr-only">Deklarowana dostępność: </span>
+      <span class="sr-only">{t.declared} </span>
       {hours}
     </p>
   )}
   {hasPhone === false && (
     <p>
-      <StatusMark tone="attention">bez telefonu</StatusMark>
+      <StatusMark tone="attention">{t.noPhone}</StatusMark>
     </p>
   )}
 </div>

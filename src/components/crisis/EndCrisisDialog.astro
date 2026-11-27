@@ -1,10 +1,9 @@
 ---
 import { formatCrisisTitle, formatPeople, matchedWord } from "@/lib/crisis-format";
+import { crisis as crisisMessages } from "@/lib/i18n/messages/crisis";
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import type { CrisisDTO } from "@/types";
-
-const { locale } = Astro.locals;
 
 // "Zakończ kryzys" with a native confirmation dialog. With JS the button opens the dialog;
 // without JS it submits the same form directly. "Anuluj" closes the dialog natively, and so does Esc.
@@ -16,6 +15,8 @@ interface Props {
 }
 
 const { crisis } = Astro.props;
+const { locale } = Astro.locals;
+const t = crisisMessages[locale].end;
 const formId = "end-crisis-form";
 ---
 
@@ -25,7 +26,7 @@ const formId = "end-crisis-form";
   data-end-crisis-open
   class:list={cn(BUTTON, "btn-danger w-full cursor-pointer sm:w-auto")}
 >
-  Zakończ kryzys
+  {t.button}
 </button>
 
 <dialog
@@ -36,13 +37,13 @@ const formId = "end-crisis-form";
 >
   <form id={formId} method="post" action={`/api/koordynator/kryzysy/${crisis.id}/zakoncz`} class="p-6 sm:p-8">
     <h2 id="end-crisis-title" class:list={SECTION_TITLE}>
-      Zakończyć kryzys?
+      {t.title}
     </h2>
     <p class="text-ash mt-4 leading-relaxed">
       {`${formatCrisisTitle(locale, crisis)}, ${formatPeople(locale, crisis.matchCount)} ${matchedWord(locale, crisis.matchCount)}`}
     </p>
     <p id="end-crisis-consequence" class="mt-3 leading-relaxed font-bold">
-      Lista dopasowanych osób zostanie trwale usunięta. Tej operacji nie można cofnąć.
+      {t.consequence}
     </p>
     <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
       <button
@@ -51,10 +52,10 @@ const formId = "end-crisis-form";
         data-end-crisis-cancel
         class:list={cn(BUTTON, "btn-secondary cursor-pointer")}
       >
-        Anuluj
+        {t.cancel}
       </button>
       <button type="submit" class:list={cn(BUTTON, "btn-danger cursor-pointer")}>
-        Zakończ kryzys
+        {t.button}
       </button>
     </div>
   </form>
