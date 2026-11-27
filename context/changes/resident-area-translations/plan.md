@@ -330,9 +330,9 @@ No migration. Production gets the three languages when the PR with phase 4 is pr
 #### Automated
 
 - [x] 4.1 Local smoke passes with the new checks: `npm run smoke` — 50497c4
-- [ ] 4.2 CI is green on the PR: `ci`, `smoke`
+- [x] 4.2 CI is green on the PR: `ci`, `smoke` — f65922e
 
 #### Manual
 
-- [ ] 4.3 Staging: the four pages read correctly in each language
-- [ ] 4.4 The owner has read the English and Ukrainian texts, or accepts shipping them unread
+- [x] 4.3 Staging: the four pages read correctly in each language — f65922e
+- [x] 4.4 The owner has read the English and Ukrainian texts, or accepts shipping them unread — f65922e
