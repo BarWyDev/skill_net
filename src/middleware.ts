@@ -1,6 +1,7 @@
 import type { APIContext, MiddlewareNext } from "astro";
 import { defineMiddleware } from "astro:middleware";
 import { env } from "cloudflare:workers";
+import { ENABLED_LOCALES } from "astro:env/server";
 import { authThrottled, routePath, THROTTLED_PAGE } from "@/lib/auth-throttle";
 import { createClient } from "@/lib/supabase";
 import { isCoordinator } from "@/lib/services/roles";
@@ -9,6 +10,14 @@ import { CURRENT_CONSENT_VERSION, isConsentGateExempt } from "@/lib/consent";
 import { RETURN_PARAM } from "@/lib/return-path";
 import { HSTS_HEADER, httpsRedirect, sendsHsts } from "@/lib/https";
 import { canonicalRedirect } from "@/lib/canonical-host";
+import {
+  LOCALE_COOKIE,
+  LOCALE_COOKIE_MAX_AGE,
+  langRedirectTarget,
+  parseEnabledLocales,
+  requestedLocale,
+  resolveLocale,
+} from "@/lib/i18n/locale";
 
 // Public data that never depends on who asks. The auth lookup is skipped, so no session cookie can
 // reach these responses and they may be cached publicly (context/foundation/lessons.md).
@@ -70,7 +79,45 @@ export const onRequest = defineMiddleware(async (context, next) => {
   return withSecurityHeaders(await route(context, next), context.url);
 });
 
+/**
+ * A `?lang=` link on a page (the switcher, a printed link, a QR code): remember the language when
+ * this environment offers it, then go to the same address without the parameter. Never on `/api/`,
+ * so `/api/mapa` stays one cacheable response in every language.
+ */
+function languageLink(context: APIContext): Response | null {
+  const { method } = context.request;
+  if ((method !== "GET" && method !== "HEAD") || context.url.pathname.startsWith("/api/")) return null;
+  const target = langRedirectTarget(context.url);
+  if (!target) return null;
+
+  const chosen = requestedLocale(context.url, context.locals.enabledLocales);
+  if (chosen) {
+    context.cookies.set(LOCALE_COOKIE, chosen, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: context.url.protocol === "https:",
+      path: "/",
+      maxAge: LOCALE_COOKIE_MAX_AGE,
+    });
+  }
+  // Absolute and on the request's own origin (see langRedirectTarget).
+  return context.redirect(target, 303);
+}
+
 async function route(context: APIContext, next: MiddlewareNext): Promise<Response> {
+  // No I/O: the language is known before anything else answers, including the early returns below.
+  const enabledLocales = parseEnabledLocales(ENABLED_LOCALES);
+  context.locals.enabledLocales = enabledLocales;
+  context.locals.locale = resolveLocale({
+    cookie: context.cookies.get(LOCALE_COOKIE)?.value,
+    acceptLanguage: context.request.headers.get("accept-language"),
+    enabled: enabledLocales,
+  });
+
+  // Before the auth lookup: a language link costs Supabase nothing.
+  const languageRedirect = languageLink(context);
+  if (languageRedirect) return languageRedirect;
+
   // Before any Supabase call, so a throttled request costs Supabase nothing.
   if (
     await authThrottled(context.request, context.url.pathname, {

@@ -5,6 +5,41 @@
 @import "@fontsource/atkinson-hyperlegible-next/400";
 @import "@fontsource/atkinson-hyperlegible-next/700";
 
+/* Neither family above has Cyrillic, so Ukrainian falls through to these two, listed after them in
+   the font stacks below. Only the Cyrillic subset files, declared here because Fontsource's
+   per-subset CSS leaves out unicode-range: with it a browser fetches a file only for a page that
+   has Cyrillic text, and Latin text keeps the families above. */
+@font-face {
+  font-family: "Oswald";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src:
+    url("@fontsource/oswald/files/oswald-cyrillic-700-normal.woff2") format("woff2"),
+    url("@fontsource/oswald/files/oswald-cyrillic-700-normal.woff") format("woff");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Noto Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src:
+    url("@fontsource/noto-sans/files/noto-sans-cyrillic-400-normal.woff2") format("woff2"),
+    url("@fontsource/noto-sans/files/noto-sans-cyrillic-400-normal.woff") format("woff");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Noto Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src:
+    url("@fontsource/noto-sans/files/noto-sans-cyrillic-700-normal.woff2") format("woff2"),
+    url("@fontsource/noto-sans/files/noto-sans-cyrillic-700-normal.woff") format("woff");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -64,11 +99,11 @@
   --color-signal-hover: #f7d564;
   /* Errors on graphite; 7.9:1 contrast. */
   --color-alarm: #ff9b7a;
-  --font-body: "Atkinson Hyperlegible Next", ui-sans-serif, sans-serif;
+  --font-body: "Atkinson Hyperlegible Next", "Noto Sans", ui-sans-serif, sans-serif;
 }
 
 @utility font-display {
-  font-family: "Big Shoulders Display", ui-sans-serif, sans-serif;
+  font-family: "Big Shoulders Display", "Oswald", ui-sans-serif, sans-serif;
   font-weight: 800;
 }
 

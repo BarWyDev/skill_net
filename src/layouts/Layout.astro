@@ -4,18 +4,20 @@ import Banner from "@/components/Banner.astro";
 import { missingConfigs } from "@/lib/config-status";
 import { EMAIL_STORAGE_KEY } from "@/components/auth/SignInForm";
 import { SIGNUP_EMAIL_STORAGE_KEY } from "@/components/auth/SignUpForm";
+import { OG_LOCALES } from "@/lib/i18n/locale";
+import { common } from "@/lib/i18n/messages/common";
 
 interface Props {
   title?: string;
   description?: string;
 }
 
-const {
-  title = "SkillNet",
-  description = "Lokalny katalog umiejętności na czas kryzysu i na co dzień: sąsiedzi, którzy mogą pomóc w okolicy.",
-} = Astro.props;
+const { locale } = Astro.locals;
+const t = common[locale];
+const { title = t.meta.title, description = t.meta.description } = Astro.props;
 const ogImage = new URL("/og-image.png", Astro.site).href;
-const OG_IMAGE_ALT = "SkillNet: lokalny katalog umiejętności na czas kryzysu. Ciemne tło i siatka kwadratów mapy.";
+// One picture for every language (its words are Polish); only the alt text is translated.
+const OG_IMAGE_ALT = t.meta.ogImageAlt;
 // Each auth form reads (and then removes) its saved address itself; every other page drops it.
 const staleEmailKeys = [
   [EMAIL_STORAGE_KEY, "/auth/signin"],
@@ -26,7 +28,7 @@ const staleEmailKeys = [
 ---
 
 <!doctype html>
-<html lang="pl">
+<html lang={locale}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
@@ -40,6 +42,7 @@ const staleEmailKeys = [
     <meta name="description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="SkillNet" />
+    <meta property="og:locale" content={OG_LOCALES[locale]} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
@@ -79,7 +82,7 @@ const staleEmailKeys = [
           href="/prywatnosc"
           class="hover:text-chalk focus-visible:outline-signal inline-flex min-h-11 items-center underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-offset-3"
         >
-          Prywatność i przetwarzanie danych
+          {t.footer.privacy}
         </a>
       </div>
     </footer>
