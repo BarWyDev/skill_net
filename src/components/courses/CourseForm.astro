@@ -6,7 +6,10 @@
 import { COURSE_TEXT_BOUNDS } from "@/lib/course-text";
 import { BUTTON } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
-import { COURSE_CAPACITY_MAX, COURSE_DURATIONS, formatCourseDuration } from "@/lib/validation/courses";
+import { format } from "@/lib/i18n/format";
+import { courses } from "@/lib/i18n/messages/courses";
+import { COURSE_CAPACITY_MAX, COURSE_DURATIONS, courseMessage, formatCourseDuration } from "@/lib/validation/courses";
+import type { CourseTextCode } from "@/lib/course-text";
 import type { MyCourseDTO } from "@/types";
 
 type Props =
@@ -14,6 +17,19 @@ type Props =
   | { mode: "edit"; course: MyCourseDTO; skillName: string };
 
 const props = Astro.props;
+const { locale } = Astro.locals;
+const t = courses[locale].form;
+// The script below runs the text rule in the browser; it reads its messages from here, so the
+// catalogue's other languages never reach the page.
+const TEXT_CODES: CourseTextCode[] = [
+  "title_invalid",
+  "title_contact",
+  "description_invalid",
+  "description_contact",
+  "meeting_invalid",
+  "meeting_contact",
+];
+const textMessages = Object.fromEntries(TEXT_CODES.map((code) => [code, courseMessage(locale, code, "invalid_form")]));
 const course = props.mode === "edit" ? props.course : null;
 // Unique per form: the page holds one create form and one edit form per course.
 const id = (name: string) => `course-${course?.id ?? "new"}-${name}`;
@@ -28,13 +44,14 @@ const HINT = "text-ash mt-2 text-[0.9375rem] leading-relaxed";
   action={props.mode === "create" ? "/api/kursy/utworz" : "/api/kursy/edytuj"}
   class="space-y-8"
   data-course-form
+  data-text-messages={JSON.stringify(textMessages)}
 >
   {course && <input type="hidden" name="id" value={course.id} />}
 
   {props.mode === "create" ? (
     <div>
       <label for={id("skill")} class="mb-2 block font-bold">
-        Umiejętność
+        {t.skill}
       </label>
       <select
         id={id("skill")}
@@ -43,24 +60,24 @@ const HINT = "text-ash mt-2 text-[0.9375rem] leading-relaxed";
         class:list={cn(FIELD, "[&>option]:bg-graphite h-12 cursor-pointer scheme-dark sm:w-80")}
       >
         <option value="" disabled selected>
-          Wybierz…
+          {t.choose}
         </option>
         {props.skills.map((skill) => (
           <option value={skill.slug}>{skill.name}</option>
         ))}
       </select>
-      <p class:list={HINT}>Kurs możesz prowadzić z umiejętności, którą masz w profilu. Później jej nie zmienisz.</p>
+      <p class:list={HINT}>{t.skillHint}</p>
     </div>
   ) : (
     <p>
-      <span class="font-bold">Umiejętność:</span>
+      <span class="font-bold">{t.skillFixed}</span>
       {props.skillName}
     </p>
   )}
 
   <div>
     <label for={id("title")} class="mb-2 block font-bold">
-      Tytuł
+      {t.title}
     </label>
     <input
       id={id("title")}
@@ -75,13 +92,13 @@ const HINT = "text-ash mt-2 text-[0.9375rem] leading-relaxed";
       class:list={cn(FIELD, "h-12")}
     />
     <p id={id("title-hint")} class:list={HINT}>
-      Od {COURSE_TEXT_BOUNDS.title.min} do {COURSE_TEXT_BOUNDS.title.max} znaków, bez telefonu i adresu e-mail.
+      {format(t.titleHint, COURSE_TEXT_BOUNDS.title)}
     </p>
   </div>
 
   <div>
     <label for={id("description")} class="mb-2 block font-bold">
-      Opis
+      {t.description}
     </label>
     <textarea
       id={id("description")}
@@ -94,15 +111,14 @@ const HINT = "text-ash mt-2 text-[0.9375rem] leading-relaxed";
       class:list={cn(FIELD, "resize-y py-3 leading-relaxed")}
     >{course?.description}</textarea>
     <p id={id("description-hint")} class:list={HINT}>
-      Czego się nauczymy i dla kogo jest kurs. Sąsiedzi nie zobaczą Twojego imienia, więc nie podpisuj się i nie podawaj
-      telefonu ani adresu e-mail.
+      {t.descriptionHint}
     </p>
   </div>
 
   <div class="flex flex-wrap gap-x-8 gap-y-8">
     <div>
       <label for={id("duration")} class="mb-2 block font-bold">
-        Czas trwania
+        {t.duration}
       </label>
       <select
         id={id("duration")}
@@ -112,14 +128,14 @@ const HINT = "text-ash mt-2 text-[0.9375rem] leading-relaxed";
       >
         {COURSE_DURATIONS.map((minutes) => (
           <option value={minutes} selected={(course?.durationMinutes ?? DEFAULT_DURATION) === minutes}>
-            {formatCourseDuration(minutes)}
+            {formatCourseDuration(minutes, locale)}
           </option>
         ))}
       </select>
     </div>
     <div>
       <label for={id("capacity")} class="mb-2 block font-bold">
-        Liczba miejsc
+        {t.capacity}
       </label>
       <input
         id={id("capacity")}
@@ -134,14 +150,14 @@ const HINT = "text-ash mt-2 text-[0.9375rem] leading-relaxed";
         class:list={cn(FIELD, "h-12 w-32")}
       />
       <p id={id("capacity-hint")} class:list={HINT}>
-        Od 1 do {COURSE_CAPACITY_MAX}. Puste: bez limitu.
+        {format(t.capacityHint, { max: COURSE_CAPACITY_MAX })}
       </p>
     </div>
   </div>
 
   <div>
     <label for={id("meeting")} class="mb-2 block font-bold">
-      Szczegóły spotkania <span class="text-ash font-normal">(opcjonalnie)</span>
+      {t.meeting} <span class="text-ash font-normal">{t.optional}</span>
     </label>
     <textarea
       id={id("meeting")}
@@ -152,13 +168,12 @@ const HINT = "text-ash mt-2 text-[0.9375rem] leading-relaxed";
       class:list={cn(FIELD, "resize-y py-3 leading-relaxed")}
     >{course?.meetingDetails}</textarea>
     <p id={id("meeting-hint")} class:list={HINT}>
-      Miejsce i termin, np. „sobota 21.10, 10:00, świetlica”. Datę zapisz z kropkami. Widzą je tylko osoby zapisane na
-      kurs. Bez telefonu i adresu e-mail.
+      {t.meetingHint}
     </p>
   </div>
 
   <button type="submit" class:list={cn(BUTTON, "btn-primary w-full cursor-pointer sm:w-auto")}>
-    {props.mode === "create" ? "Dodaj kurs" : "Zapisz zmiany"}
+    {props.mode === "create" ? t.submitCreate : t.submitEdit}
   </button>
 </form>
 
@@ -172,6 +187,7 @@ const HINT = "text-ash mt-2 text-[0.9375rem] leading-relaxed";
   ];
 
   for (const form of document.querySelectorAll<HTMLFormElement>("form[data-course-form]")) {
+    const messages = JSON.parse(form.dataset.textMessages ?? "{}") as Record<string, string | undefined>;
     const inputs = FIELDS.flatMap(([name, field]) => {
       const input = form.elements.namedItem(name);
       return input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement ? [{ input, field }] : [];
@@ -184,7 +200,8 @@ const HINT = "text-ash mt-2 text-[0.9375rem] leading-relaxed";
     form.addEventListener("submit", (event) => {
       for (const { input, field } of inputs) {
         const result = checkCourseText(input.value, field);
-        input.setCustomValidity(result.ok ? "" : result.message);
+        // A space still blocks the submit if a message is missing.
+        input.setCustomValidity(result.ok ? "" : (messages[result.code] ?? " "));
       }
       if (!form.checkValidity()) {
         event.preventDefault();

@@ -9,19 +9,25 @@ import { getCourseArea, getMyCourseSignups, getMyCourses, getNearbyCourses } fro
 import { getMyProfile, getTaxonomy } from "@/lib/services/profile";
 import type { CourseAreaDTO, MyCourseDTO, MyCourseSignupDTO, NearbyCourseDTO } from "@/types";
 import { takeFlashError } from "@/lib/flash";
+import { auth } from "@/lib/i18n/messages/auth";
+import { courses as courseMessages } from "@/lib/i18n/messages/courses";
+import { categoryName, skillName } from "@/lib/i18n/messages/taxonomy";
 
 // Per resident and behind the auth middleware: never cached by a shared proxy (lessons.md).
 Astro.response.headers.set("Cache-Control", "private, no-store");
 
+const { locale } = Astro.locals;
+const t = courseMessages[locale];
+
 const SUCCESS_MESSAGES: [param: string, message: string][] = [
-  ["utworzono", "Kurs dodany."],
-  ["zapisano", "Zapisano zmiany w kursie."],
-  ["zamknieto", "Zapisy na kurs zamknięte."],
-  ["otwarto", "Kurs znów przyjmuje zapisy."],
-  ["odnowiono", "Kurs odnowiony na 90 dni."],
-  ["usunieto", "Kurs usunięty."],
-  ["zapisano-na-kurs", "Zapisano. Szczegóły spotkania znajdziesz w „Moje zapisy”."],
-  ["wypisano", "Wypisano z kursu."],
+  ["utworzono", t.notices.created],
+  ["zapisano", t.notices.saved],
+  ["zamknieto", t.notices.closed],
+  ["otwarto", t.notices.reopened],
+  ["odnowiono", t.notices.renewed],
+  ["usunieto", t.notices.deleted],
+  ["zapisano-na-kurs", t.notices.signedUp],
+  ["wypisano", t.notices.withdrawn],
 ];
 const success = SUCCESS_MESSAGES.find(([param]) => Astro.url.searchParams.has(param))?.[1] ?? null;
 // Left by the endpoint that redirected here; never read from the URL (security audit F-06).
@@ -37,7 +43,7 @@ let loadError: string | null = null;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (!supabase) {
-  loadError = "Supabase nie jest skonfigurowany.";
+  loadError = auth[locale].notConfigured;
 } else {
   try {
     let taxonomy, profile;
@@ -49,16 +55,30 @@ if (!supabase) {
       getNearbyCourses(supabase),
       getMyCourseSignups(supabase),
     ]);
-    skillNames = new Map(taxonomy.skills.map((s) => [s.slug, s.name]));
+    // The database holds Polish names; the page shows them in the request's language.
+    skillNames = new Map(taxonomy.skills.map((s) => [s.slug, skillName(locale, s.slug, s.name)]));
     skills = profile.skills.map((s) => ({ slug: s.slug, name: skillNames.get(s.slug) ?? s.slug }));
+    if (locale !== "pl") {
+      // The course RPCs return Polish skill and category names without slugs, so the names are
+      // translated through the taxonomy. A name it does not have shows as it came.
+      const skillByName = new Map(taxonomy.skills.map((s) => [s.name, skillName(locale, s.slug, s.name)]));
+      const categoryByName = new Map(taxonomy.categories.map((c) => [c.name, categoryName(locale, c.slug, c.name)]));
+      const translate = <T extends { skillName: string; categoryName: string }>(course: T): T => ({
+        ...course,
+        skillName: skillByName.get(course.skillName) ?? course.skillName,
+        categoryName: categoryByName.get(course.categoryName) ?? course.categoryName,
+      });
+      nearby = nearby.map(translate);
+      signups = signups.map(translate);
+    }
   } catch {
-    loadError = "Nie udało się wczytać kursów. Odśwież stronę.";
+    loadError = t.page.loadFailed;
   }
 }
 ---
 
 <!-- PageShell's 42rem column keeps every line under 80 characters. -->
-<PageShell title="Kursy — SkillNet" heading="Kursy">
+<PageShell title={t.page.title} heading={t.page.heading}>
   {success && !error && (
     <StatusLine tone="done" data-page-notice role="status" class="mb-10 font-bold">
       {success}
