@@ -285,11 +285,11 @@ No migration. Production gets the three languages when the PR with phase 4 is pr
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm run test:unit`
-- [x] 1.2 Type check passes: `npx astro check`
-- [x] 1.3 Lint passes: `npm run lint`
-- [x] 1.4 Build passes: `npm run build` (to a scratch `--outDir`)
-- [x] 1.5 Local smoke passes: `npm run smoke`
+- [x] 1.1 Unit tests pass: `npm run test:unit` — 4e831a4
+- [x] 1.2 Type check passes: `npx astro check` — 4e831a4
+- [x] 1.3 Lint passes: `npm run lint` — 4e831a4
+- [x] 1.4 Build passes: `npm run build` (to a scratch `--outDir`) — 4e831a4
+- [x] 1.5 Local smoke passes: `npm run smoke` — 4e831a4
 
 #### Manual
 
