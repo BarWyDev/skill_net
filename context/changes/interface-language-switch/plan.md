@@ -409,8 +409,8 @@ No database change. The rollout switch is `ENABLED_LOCALES` in `wrangler.jsonc`:
 
 #### Automated
 
-- [ ] 4.1 Smoke passes with the new language checks
-- [ ] 4.2 Unit tests, type check, lint and build pass
+- [x] 4.1 Smoke passes with the new language checks
+- [x] 4.2 Unit tests, type check, lint and build pass
 - [ ] 4.3 CI is green on the PR
 - [ ] 4.4 Production offers Polish only in the merged `wrangler.jsonc`
 
