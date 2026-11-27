@@ -2,6 +2,7 @@
 // "Wstrzymaj dostępność": a plain form POST, so it works without JS. The date bounds come from the
 // server (Warsaw calendar), never from the browser clock. Errors come back as a one-shot
 // alert at the top of /profil (src/lib/flash.ts).
+import { profile } from "@/lib/i18n/messages/profile";
 import { pauseDateBounds } from "@/lib/pause";
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ interface Props {
 }
 
 const { paused, pausedUntil } = Astro.props;
+const t = profile[Astro.locals.locale].pause;
 const { min, max } = pauseDateBounds(new Date());
 // The form starts from the current pause, so saving it unchanged keeps it (QA-022).
 const indefinite = paused && !pausedUntil;
@@ -20,22 +22,21 @@ const indefinite = paused && !pausedUntil;
 
 <section aria-labelledby="pause-availability-title" class="border-seam mt-16 border-t pt-10">
   <h2 id="pause-availability-title" class:list={SECTION_TITLE}>
-    {paused ? "Zmień wstrzymanie dostępności" : "Wstrzymaj dostępność"}
+    {paused ? t.titleChange : t.titlePause}
   </h2>
   <p id="pause-availability-help" class="text-ash mt-4 leading-relaxed">
-    Na czas wstrzymania nie pojawisz się w nowych kryzysach ani na mapie, a w trwających kryzysach koordynator Cię nie
-    widzi. Twój profil i konto zostają bez zmian.
+    {t.help}
   </p>
   <form method="post" action="/api/profile/pause" class="mt-6">
     <fieldset aria-describedby="pause-availability-help">
-      <legend class="mb-1 font-bold">Jak długo</legend>
+      <legend class="mb-1 font-bold">{t.howLong}</legend>
       <label class="flex min-h-11 cursor-pointer items-center gap-4">
         <input type="radio" name="mode" value="date" checked={!indefinite} class="radio" />
-        Do dnia (włącznie)
+        {t.untilDate}
       </label>
       <div class="pb-2 pl-10">
         <label for="pause-until" class="sr-only">
-          Ostatni dzień wstrzymania
+          {t.lastDay}
         </label>
         <input
           id="pause-until"
@@ -49,11 +50,11 @@ const indefinite = paused && !pausedUntil;
       </div>
       <label class="flex min-h-11 cursor-pointer items-center gap-4">
         <input type="radio" name="mode" value="indefinite" checked={indefinite} class="radio" />
-        Bezterminowo, do wznowienia
+        {t.indefinitely}
       </label>
     </fieldset>
     <button type="submit" class:list={cn(BUTTON, "btn-secondary mt-6 w-full cursor-pointer sm:w-auto")}>
-      {paused ? "Zmień wstrzymanie" : "Wstrzymaj dostępność"}
+      {paused ? t.submitChange : t.submitPause}
     </button>
   </form>
 </section>

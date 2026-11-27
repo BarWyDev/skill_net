@@ -41,3 +41,37 @@ export function plural(locale: Locale, count: number, forms: PluralForms): strin
   const category = rule.select(count);
   return (category === "one" || category === "few" || category === "many" ? forms[category] : undefined) ?? forms.other;
 }
+
+const DATE_TAGS: Record<Locale, string> = { pl: "pl-PL", en: "en-GB", uk: "uk-UA" };
+
+const longDates = new Map<Locale, Intl.DateTimeFormat>();
+const dateTimes = new Map<Locale, Intl.DateTimeFormat>();
+
+/**
+ * A calendar day (`YYYY-MM-DD`) in the language's own form: `15.10.2026` in Polish and Ukrainian,
+ * `15 October 2026` in English. No time zone is involved, so the day never shifts.
+ */
+export function formatDate(locale: Locale, date: string): string {
+  const [year, month, day] = date.split("-");
+  if (locale !== "en") return `${day}.${month}.${year}`;
+  let formatter = longDates.get(locale);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(DATE_TAGS[locale], { dateStyle: "long", timeZone: "UTC" });
+    longDates.set(locale, formatter);
+  }
+  return formatter.format(new Date(Date.UTC(Number(year), Number(month) - 1, Number(day))));
+}
+
+/** A moment (ISO timestamp) as a short date and time on the Europe/Warsaw clock. */
+export function formatDateTime(locale: Locale, iso: string): string {
+  let formatter = dateTimes.get(locale);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(DATE_TAGS[locale], {
+      dateStyle: "short",
+      timeStyle: "short",
+      timeZone: "Europe/Warsaw",
+    });
+    dateTimes.set(locale, formatter);
+  }
+  return formatter.format(new Date(iso));
+}

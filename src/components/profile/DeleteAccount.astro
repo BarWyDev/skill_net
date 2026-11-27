@@ -4,32 +4,30 @@
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import Turnstile from "@/components/auth/Turnstile.astro";
+import { profile } from "@/lib/i18n/messages/profile";
 
 interface Props {
   returnTo?: "/profil" | "/zgoda";
 }
 
 const { returnTo = "/profil" } = Astro.props;
+const t = profile[Astro.locals.locale].deleteAccount;
 ---
 
 <!-- Destructive, so it sits last and furthest from "Zapisz", in the alarm tone: a heading and an
      outline button, never a filled red panel. -->
 <section aria-labelledby="delete-account-title" class="border-seam mt-24 border-t pt-10 sm:mt-32">
   <h2 id="delete-account-title" class:list={cn(SECTION_TITLE, "text-alarm")}>
-    Usuń konto
+    {t.title}
   </h2>
   <p id="delete-account-consequence" class="mt-4 leading-relaxed">
-    Twoje konto, profil, umiejętności, numer telefonu i dostępność zostaną usunięte natychmiast. Tej operacji nie można
-    cofnąć.
+    {t.consequence}
   </p>
-  <p class="text-ash mt-3 leading-relaxed">
-    Dzienniki audytowe zachowują wyłącznie anonimowy identyfikator, który po usunięciu konta nie wskazuje na żadną
-    osobę.
-  </p>
+  <p class="text-ash mt-3 leading-relaxed">{t.auditNote}</p>
   <form method="post" action="/api/auth/unregister" class="mt-6">
     <input type="hidden" name="return_to" value={returnTo} />
     <label for="delete-account-password" class="mb-2 block font-bold">
-      Potwierdź hasłem
+      {t.passwordLabel}
     </label>
     <input
       id="delete-account-password"
@@ -42,7 +40,7 @@ const { returnTo = "/profil" } = Astro.props;
     />
     <Turnstile class="mt-6" />
     <button type="submit" class:list={cn(BUTTON, "btn-danger mt-6 w-full cursor-pointer sm:w-auto")}>
-      Usuń konto na zawsze
+      {t.submit}
     </button>
   </form>
 </section>

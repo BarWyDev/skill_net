@@ -1,15 +1,19 @@
 import { useState } from "react";
-import { ALL_SLOTS_MASK, DAY_LABELS, DAY_NAMES, SLOT_HOURS, SLOT_NAMES, slotBit, slotLabel } from "@/lib/availability";
+import { ALL_SLOTS_MASK, SLOT_HOURS, slotBit } from "@/lib/availability";
+import type { Locale } from "@/lib/i18n/locale";
+import { profile } from "@/lib/i18n/messages/profile";
 import { NAV_LINK } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 
 interface Props {
+  locale: Locale;
   /** Stored mask; null = not declared. */
   initial: number | null;
 }
 
 /** Days are rows and slots are columns, so the grid fits a 375 px screen without page scroll. */
-export function AvailabilityGrid({ initial }: Props) {
+export function AvailabilityGrid({ locale, initial }: Props) {
+  const t = profile[locale].availability;
   const [mask, setMask] = useState(initial ?? 0);
 
   function toggle(bit: number, checked: boolean) {
@@ -28,7 +32,7 @@ export function AvailabilityGrid({ initial }: Props) {
             setMask(ALL_SLOTS_MASK);
           }}
         >
-          Zawsze / o każdej porze
+          {t.always}
         </button>
         <button
           type="button"
@@ -37,7 +41,7 @@ export function AvailabilityGrid({ initial }: Props) {
             setMask(0);
           }}
         >
-          Wyczyść
+          {t.clear}
         </button>
       </div>
 
@@ -46,11 +50,11 @@ export function AvailabilityGrid({ initial }: Props) {
       <div className="mt-4 overflow-x-auto pb-1">
         <div
           role="group"
-          aria-label="Tygodniowa dostępność"
+          aria-label={t.gridLabel}
           className="grid w-full max-w-[21rem] min-w-[18rem] grid-cols-[2rem_repeat(4,minmax(2.75rem,1fr))] gap-1.5 p-1"
         >
           <span aria-hidden="true" />
-          {SLOT_NAMES.map((name, slot) => (
+          {t.slotNames.map((name, slot) => (
             <span key={name} aria-hidden="true" className="pb-1 text-center text-[0.8125rem] leading-tight">
               {name}
               <br />
@@ -58,12 +62,12 @@ export function AvailabilityGrid({ initial }: Props) {
             </span>
           ))}
 
-          {DAY_LABELS.map((day, dayIndex) => (
+          {t.dayLabels.map((day, dayIndex) => (
             <div key={day} className="contents">
               <span aria-hidden="true" className="text-ash flex items-center">
                 {day}
               </span>
-              {SLOT_NAMES.map((name, slot) => {
+              {t.slotNames.map((name, slot) => {
                 const bit = slotBit(dayIndex, slot);
                 const checked = ((mask >> bit) & 1) === 1;
                 return (
@@ -73,7 +77,7 @@ export function AvailabilityGrid({ initial }: Props) {
                       name="availability"
                       value={bit}
                       checked={checked}
-                      aria-label={`${DAY_NAMES[dayIndex]}, ${slotLabel(slot)}`}
+                      aria-label={`${t.dayNames[dayIndex]}, ${name} ${SLOT_HOURS[slot]}`}
                       onChange={(e) => {
                         toggle(bit, e.target.checked);
                       }}

@@ -24,7 +24,10 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
   // A postcode counts once the lookup found it; the server resolves the raw centroid itself.
   // A pin abroad is refused here too (QA-024), so the form keeps the type and the pin.
   const locationReady =
-    location.source !== null && location.lat !== null && location.lng !== null && locationProblem(location) === null;
+    location.source !== null &&
+    location.lat !== null &&
+    location.lng !== null &&
+    locationProblem(location, "pl") === null;
   const reasonError = reasonProblem(normaliseReason(reason));
   const reasonReady = reasonError === null;
   const ready = crisisType !== "" && locationReady && reasonReady;
@@ -71,6 +74,8 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
           </h3>
           <p className="text-ash mb-4 leading-relaxed">Wpisz kod pocztowy albo zaznacz miejsce na mapie.</p>
           <LocationPicker
+            // Polish until the coordinator area is translated (S-20).
+            locale="pl"
             value={location}
             initial={EMPTY_LOCATION}
             onChange={setLocation}
