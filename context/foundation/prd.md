@@ -7,10 +7,10 @@ context_type: greenfield
 product_type: web-app
 target_scale:
   users: large
-  qps: null                  # TODO: target_scale.qps — see Open Questions
-  data_volume: null          # TODO: target_scale.data_volume — see Open Questions
+  qps: null # TODO: target_scale.qps — see Open Questions
+  data_volume: null # TODO: target_scale.data_volume — see Open Questions
 timeline_budget:
-  mvp_weeks: null            # TODO: timeline_budget.mvp_weeks — see Open Questions
+  mvp_weeks: null # TODO: timeline_budget.mvp_weeks — see Open Questions
   hard_deadline: null
   after_hours_only: true
 ---
@@ -96,6 +96,11 @@ The MVP scope covers **both** modes (dual-use: everyday + crisis), even though t
 - FR-020: Resident can offer a free course tied to one of their skills (title, description, duration), and signed-in residents can see the courses offered in their area and sign up for one in the app. A course shows no personal data about its organiser: no name and no contact, and its place only as the 2 km square of the public map. The organiser sees how many people signed up and gives the meeting place and time to them. Priority: nice-to-have
   > Socrates: Counter-arguments considered: "a course listing reveals that a person with skill X lives nearby", "it reopens the everyday exchange board cut during shaping" and "courses without contact details can't be organised". Resolution: kept, narrowed: visible to signed-in residents only, no organiser identity or contact on the list, the same 2 km square as the map, sign-up inside the app, and free only (payments stay a non-goal). It gives residents an everyday reason to open the app and keep their skills current (insight 2).
 
+### Interface language
+
+- FR-021: Anyone using the app (anonymous visitor, resident, coordinator) can use the whole interface in Polish, English or Ukrainian. The first visit follows the browser's language, a switcher in the header changes it, and the choice is remembered. Addresses stay the same in every language. Emails the app sends follow the resident's chosen language. The fixed lists (skills, skill categories, crisis types, team templates) are translated; text typed by residents (course titles and descriptions) is shown as written. The data-processing consent and the privacy policy are shown in the chosen language as a courtesy translation, marked as such; the Polish text is the binding one, and the consent version stays single. Priority: nice-to-have
+  > Added on 2026-11-26 at the owner's request, after the MVP slices were built; no Socratic round was run. Decisions taken the same day: the whole app including the coordinator area (not only resident pages), the same addresses with the language kept in a cookie (no `/en/` or `/uk/` prefixes), courtesy translations of the legal texts, and delivery inside M-1 without blocking the pilot.
+
 ### Crisis mode
 
 - FR-009: Coordinator can activate crisis mode by choosing the incident type, location and radius. Priority: must-have
@@ -122,13 +127,13 @@ The MVP scope covers **both** modes (dual-use: everyday + crisis), even though t
 - FR-018: Operator can manage the skills taxonomy and the crisis-type × skills matrix from within the product. Priority: nice-to-have
   > Socrates: Counter-arguments considered: "changes break existing profiles" and "a fixed list is enough for a long time". Resolution: no counter-argument; stands as written (nice-to-have).
 
-Note: with FR-013 nice-to-have, the live map is outside the binding MVP. FR-019 is numbered out of document order because it was added during the Socratic round. FR-020 (neighbour courses) was added on 2026-10-20, after the MVP slices were built, as nice-to-have.
+Note: with FR-013 nice-to-have, the live map is outside the binding MVP. FR-019 is numbered out of document order because it was added during the Socratic round. FR-020 (neighbour courses) was added on 2026-10-20, after the MVP slices were built, as nice-to-have. FR-021 (interface language) was added on 2026-11-26, also as nice-to-have.
 
 ## Non-Functional Requirements
 
 - After activating crisis mode, the coordinator sees the ranked list of matched people within ≤ 3 seconds.
 - The ranked list of matched people is available even when optional external services are unavailable.
-- The interface is in Polish and usable on both a phone and a computer.
+- The interface is available in Polish (the default), English and Ukrainian (FR-021), and usable on both a phone and a computer.
 - A resident gives explicit consent to the processing of their data at sign-up; after unregistering, their data disappears from searches immediately and personal data is fully removed within ≤ 30 days.
 
 ## Business Logic
@@ -145,12 +150,12 @@ The coordinator encounters the rule right after activating crisis mode, as a ran
 
 Multi-user model with roles. Sign-up and sign-in by login with email/SMS verification.
 
-| Role | How they get it | Capabilities |
-| --- | --- | --- |
-| Anonymous visitor | No login | Sees the public, aggregated skills map without personal data |
-| Resident / volunteer | Sign-up with email/SMS verification | Registers skills, location and availability; controls the visibility of their data; can unregister at any time; sees the aggregated skills map in their area without personal data; offers free courses and signs up for courses in their area (FR-020) |
-| Coordinator | Regular account; role assigned manually by the operator | Activates and deactivates crisis mode; searches for people by skill and distance; sees the contact details of people who confirmed availability |
-| Operator / admin | Product owner | Assigns the coordinator role; manages the skills taxonomy |
+| Role                 | How they get it                                         | Capabilities                                                                                                                                                                                                                                            |
+| -------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Anonymous visitor    | No login                                                | Sees the public, aggregated skills map without personal data                                                                                                                                                                                            |
+| Resident / volunteer | Sign-up with email/SMS verification                     | Registers skills, location and availability; controls the visibility of their data; can unregister at any time; sees the aggregated skills map in their area without personal data; offers free courses and signs up for courses in their area (FR-020) |
+| Coordinator          | Regular account; role assigned manually by the operator | Activates and deactivates crisis mode; searches for people by skill and distance; sees the contact details of people who confirmed availability                                                                                                         |
+| Operator / admin     | Product owner                                           | Assigns the coordinator role; manages the skills taxonomy                                                                                                                                                                                               |
 
 No formal institutional verification of coordinators in the MVP (manual role assignment is enough for pilots).
 
