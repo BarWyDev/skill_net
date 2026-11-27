@@ -357,19 +357,19 @@ No database change. The rollout switch is `ENABLED_LOCALES` in `wrangler.jsonc`:
 
 #### Automated
 
-- [x] 1.1 Unit tests pass, including the resolution table and the catalogue check
-- [x] 1.2 Type check passes
-- [x] 1.3 Lint passes
-- [x] 1.4 Build passes
-- [x] 1.5 Smoke passes unchanged against a local server
+- [x] 1.1 Unit tests pass, including the resolution table and the catalogue check — a19bd0d
+- [x] 1.2 Type check passes — a19bd0d
+- [x] 1.3 Lint passes — a19bd0d
+- [x] 1.4 Build passes — a19bd0d
+- [x] 1.5 Smoke passes unchanged against a local server — a19bd0d
 
 #### Manual
 
-- [x] 1.6 Switcher changes header and footer language and the choice survives a browser restart
-- [x] 1.7 With `ENABLED_LOCALES` unset there is no switcher and `/?lang=en` lands on `/` in Polish
-- [x] 1.8 `/profil?lang=uk` signed out ends on sign-in in Ukrainian with the return path kept
-- [x] 1.9 Header fits a 360 px screen for a signed-in coordinator in all three languages
-- [x] 1.10 Ukrainian renders in the added fonts and Polish pages fetch no Cyrillic font file
+- [x] 1.6 Switcher changes header and footer language and the choice survives a browser restart — a19bd0d
+- [x] 1.7 With `ENABLED_LOCALES` unset there is no switcher and `/?lang=en` lands on `/` in Polish — a19bd0d
+- [x] 1.8 `/profil?lang=uk` signed out ends on sign-in in Ukrainian with the return path kept — a19bd0d
+- [x] 1.9 Header fits a 360 px screen for a signed-in coordinator in all three languages — a19bd0d
+- [x] 1.10 Ukrainian renders in the added fonts and Polish pages fetch no Cyrillic font file — a19bd0d
 
 ### Phase 2: Public pages and map
 
