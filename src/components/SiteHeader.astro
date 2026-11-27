@@ -2,8 +2,15 @@
 // The header of every page.
 import { cn } from "@/lib/utils";
 import { NAV_LINK } from "@/lib/site-styles";
+import LanguageSwitch from "@/components/LanguageSwitch.astro";
+import { common } from "@/lib/i18n/messages/common";
 
-const { user, isCoordinator } = Astro.locals;
+const { user, isCoordinator, locale, enabledLocales } = Astro.locals;
+const t = common[locale].nav;
+// With the switcher, a narrow screen gets the name and the switcher on the first row and the links
+// on a row of their own; from `lg` it is one row again, with the switcher last. Without it (an
+// environment that offers Polish only) the header is laid out exactly as before.
+const hasSwitch = enabledLocales.length > 1;
 const path = Astro.url.pathname;
 
 // The current page reads as chalk with a signal underline.
@@ -30,25 +37,32 @@ const navLink = (href: string) => {
       SkillNet
     </a>
   )}
-  <nav aria-label="Główna" class="flex flex-wrap items-center gap-x-5 text-[0.9375rem]">
+  <LanguageSwitch class="lg:order-3" />
+  <nav
+    aria-label={t.label}
+    class:list={cn(
+      "flex flex-wrap items-center gap-x-5 text-[0.9375rem]",
+      hasSwitch && "basis-full lg:order-2 lg:ml-auto lg:basis-auto",
+    )}
+  >
     {user ? (
       <>
         <span class="text-ash max-w-full truncate">{user.email}</span>
-        {isCoordinator && <a {...navLink("/koordynator")}>Koordynator</a>}
-        <a {...navLink("/mapa")}>Mapa</a>
-        <a {...navLink("/kursy")}>Kursy</a>
-        <a {...navLink("/profil")}>Mój profil</a>
+        {isCoordinator && <a {...navLink("/koordynator")}>{t.coordinator}</a>}
+        <a {...navLink("/mapa")}>{t.map}</a>
+        <a {...navLink("/kursy")}>{t.courses}</a>
+        <a {...navLink("/profil")}>{t.profile}</a>
         <form method="POST" action="/api/auth/signout">
           <button type="submit" class:list={cn(NAV_LINK, "cursor-pointer")}>
-            Wyloguj
+            {t.signOut}
           </button>
         </form>
       </>
     ) : (
       <>
-        <a {...navLink("/mapa")}>Mapa</a>
-        <a {...navLink("/auth/signin")}>Zaloguj się</a>
-        <a {...navLink("/auth/signup")}>Załóż konto</a>
+        <a {...navLink("/mapa")}>{t.map}</a>
+        <a {...navLink("/auth/signin")}>{t.signIn}</a>
+        <a {...navLink("/auth/signup")}>{t.signUp}</a>
       </>
     )}
   </nav>

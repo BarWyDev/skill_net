@@ -25,6 +25,9 @@ export default defineConfig({
       SUPABASE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
       // Public by design: it only identifies the widget. The secret lives in Supabase Auth.
       TURNSTILE_SITE_KEY: envField.string({ context: "server", access: "public", optional: true }),
+      // The interface languages this environment offers, e.g. "pl,en,uk" (src/lib/i18n/locale.ts).
+      // Unset means Polish only. Set per environment under `vars` in wrangler.jsonc.
+      ENABLED_LOCALES: envField.string({ context: "server", access: "public", optional: true }),
     },
   },
 });
