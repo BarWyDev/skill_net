@@ -59,7 +59,7 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm            | S-05                          | FR-001                | done     |
 | S-17 | neighbour-courses               | resident can offer a free course and signed-in neighbours can sign up for it               | S-01, S-11, S-12              | FR-020                | done     |
 | S-18 | interface-language-switch       | visitor can switch the public and sign-in pages to English or Ukrainian                    | —                             | FR-021                | done     |
-| S-19 | resident-area-translations      | resident can use their profile, courses, consent and privacy pages in English or Ukrainian | S-18                          | FR-021                | proposed |
+| S-19 | resident-area-translations      | resident can use their profile, courses, consent and privacy pages in English or Ukrainian | S-18                          | FR-021                | done     |
 | S-20 | coordinator-area-translations   | coordinator can run the coordinator area and crisis mode in English or Ukrainian           | S-18, S-19                    | FR-021                | proposed |
 | S-21 | emails-in-chosen-language       | resident can receive SkillNet's emails in the language they chose                          | S-18                          | FR-021                | proposed |
 
@@ -363,7 +363,7 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Rollout:** production's `ENABLED_LOCALES` (top-level `vars` in `wrangler.jsonc`) stays `pl` until this slice is done, so no visitor lands on a half-translated resident area; S-18 ships to production with Polish only. Switching it is a one-line change in the last PR of this slice.
 - **Already shipped with S-18:** the courtesy translation of the consent on the sign-up form, with the Polish original below it marked as binding (`src/lib/i18n/messages/auth.ts`; `/zgoda` still shows Polish only), and the six category names.
 - **Risk:** The consent wording has a single source in `src/lib/consent.ts`, tied to a row in `consent_versions`. The translation must not change the consent version, or every resident is asked to consent again. Course titles and descriptions are typed by residents and stay as written.
-- **Status:** proposed
+- **Status:** done
 
 ### S-20: Coordinator runs crisis mode in English or Ukrainian
 
@@ -462,3 +462,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-17: a resident can offer a free course tied to one of their skills (title, description, duration); signed-in residents see the courses offered in their area, with no organiser name or contact and the place only as the 2 km square of the public map, and sign up in the app; the organiser sees how many people signed up and gives them the meeting place and time.** — Archived 2026-10-20 → `context/archive/2026-10-20-neighbour-courses/`. Lesson: —.
 - **S-16: a resident with any email address can sign up on production, receive the Polish confirmation email from SkillNet's own sending domain, and confirm the account through the link, which signs them in and opens `/profil`.** — Archived 2026-10-25 → `context/archive/2026-10-06-email-delivery/`. Lesson: Supabase dashboard settings drift (production had `mailer_autoconfirm` back on true); verify auth config through the Management API, not memory.
 - **S-18: a visitor can switch the interface between Polish, English and Ukrainian with a switcher in the header; the first visit follows the browser's language, the choice is remembered in a cookie, and the landing page, the public map, sign-in, sign-up, the confirmation pages and the error pages follow it, at the same addresses.** — Archived 2026-11-27 → `context/archive/2026-11-26-interface-language-switch/`. Lesson: —.
+- **S-19: a signed-in resident can use `/profil`, `/kursy`, `/zgoda` and `/prywatnosc` in English or Ukrainian, with skill and category names, validation messages, dates and numbers in that language; the consent and the privacy policy carry a note that they are a courtesy translation and the Polish text is binding.** — Archived 2026-11-27 → `context/archive/2026-11-27-resident-area-translations/`. Lesson: —.
