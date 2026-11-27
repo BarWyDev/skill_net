@@ -8,11 +8,11 @@ import {
   OSM_TILE_URL,
   POLAND_MAX_BOUNDS,
   POLAND_VIEW,
-  ZOOM_IN_TITLE,
-  ZOOM_OUT_TITLE,
   type ViewTarget,
 } from "@/components/map/map-view";
-import { checkPostcodeInput, POSTCODE_ERROR } from "@/lib/postcode";
+import type { Locale } from "@/lib/i18n/locale";
+import { map as mapMessages, type MapMessages } from "@/lib/i18n/messages/map";
+import { checkPostcodeInput } from "@/lib/postcode";
 import { cn } from "@/lib/utils";
 import type { DensityBand, DensityCellDTO, SkillCategoryDTO } from "@/types";
 
@@ -23,10 +23,10 @@ const AREA_ZOOM = 12;
 // One hue, light to strong: the signal accent (--color-signal) at rising fill. SVG attributes cannot
 // read CSS variables, so the hex is repeated here. The legend text carries the meaning, not the colour.
 const SIGNAL = "#f2c230";
-const BANDS: { band: DensityBand; label: string; fill: number }[] = [
-  { band: 1, label: "5–9 osób", fill: 0.22 },
-  { band: 2, label: "10–24 osoby", fill: 0.5 },
-  { band: 3, label: "25 i więcej osób", fill: 0.85 },
+const BANDS: { band: DensityBand; label: "low" | "medium" | "high"; fill: number }[] = [
+  { band: 1, label: "low", fill: 0.22 },
+  { band: 2, label: "medium", fill: 0.5 },
+  { band: 3, label: "high", fill: 0.85 },
 ];
 
 function cellStyle(band: DensityBand): PathOptions {
@@ -44,14 +44,20 @@ type CellsState =
   { status: "loading" } | { status: "failed" } | { status: "ready"; cells: DensityCellDTO[]; request: number };
 type LookupStatus = "idle" | "invalid" | "loading" | "found" | "unknown" | "failed";
 
-const LOOKUP_MESSAGES: Record<LookupStatus, string | null> = {
-  idle: null,
-  invalid: POSTCODE_ERROR,
-  loading: "Szukam kodu…",
-  found: null,
-  unknown: "Nie znamy tego kodu pocztowego.",
-  failed: "Nie udało się sprawdzić kodu. Spróbuj ponownie.",
-};
+function lookupMessage(status: LookupStatus, t: MapMessages["postcode"]): string | null {
+  switch (status) {
+    case "invalid":
+      return t.invalid;
+    case "loading":
+      return t.searching;
+    case "unknown":
+      return t.unknown;
+    case "failed":
+      return t.failed;
+    default:
+      return null;
+  }
+}
 
 // The island renders only in the browser (client:only), so matchMedia is always there.
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -68,9 +74,12 @@ interface Props {
   categories: SkillCategoryDTO[];
   /** The signed-in resident's own coarsened point, or null to open on Poland. */
   start: { lat: number; lng: number } | null;
+  /** The request's language. The category names arrive already in it. */
+  locale: Locale;
 }
 
-export function DensityMap({ categories, start }: Props) {
+export function DensityMap({ categories, start, locale }: Props) {
+  const t = mapMessages[locale];
   const [category, setCategory] = useState<string | null>(null);
   const [cells, setCells] = useState<CellsState>({ status: "loading" });
   const [postcode, setPostcode] = useState("");
@@ -132,19 +141,19 @@ export function DensityMap({ categories, start }: Props) {
 
   const statusMessage =
     cells.status === "loading"
-      ? "Wczytuję mapę…"
+      ? t.cells.loading
       : cells.status === "failed"
-        ? "Nie udało się wczytać mapy. Odśwież stronę."
+        ? t.cells.failed
         : cells.cells.length === 0
           ? // Rare skills will always look like this, so say why rather than "nobody" (QA-008).
             category
-            ? "W żadnym kwadracie nie ma jeszcze 10 osób z umiejętnościami z tej grupy. Mniejsze skupiska ukrywamy dla prywatności."
-            : "W żadnym kwadracie nie ma jeszcze 5 osób. Mniejsze skupiska ukrywamy dla prywatności."
+            ? t.cells.emptyForCategory
+            : t.cells.empty
           : null;
   // At the whole-Poland zoom the 2 km cells are too small to see (QA-006).
   const showAreaHint = !start && viewTarget === null;
 
-  const filters = [{ slug: null, name: "Wszystkie" }, ...categories];
+  const filters = [{ slug: null, name: t.filter.all }, ...categories];
 
   const reduceMotion = reducedMotion();
   const container = "mx-auto max-w-6xl px-4 sm:px-8";
@@ -154,7 +163,7 @@ export function DensityMap({ categories, start }: Props) {
       <div className={container}>
         <div className="mt-14 grid grid-cols-12 gap-x-6 gap-y-6 sm:mt-20">
           <fieldset className="col-span-12 min-w-0 lg:col-span-8">
-            <legend className="text-ash mb-1 text-[0.9375rem]">Umiejętności</legend>
+            <legend className="text-ash mb-1 text-[0.9375rem]">{t.filter.legend}</legend>
             <div className="flex flex-wrap gap-x-5">
               {filters.map((f) => {
                 const selected = f.slug === category;
@@ -184,7 +193,7 @@ export function DensityMap({ categories, start }: Props) {
 
           <div className="col-span-12 lg:col-span-4">
             <label htmlFor="map-postcode" className="text-ash mb-2 block text-[0.9375rem]">
-              Przejdź do kodu pocztowego
+              {t.postcode.label}
             </label>
             <input
               id="map-postcode"
@@ -209,13 +218,10 @@ export function DensityMap({ categories, start }: Props) {
               role="status"
               className={cn("mt-2 min-h-6 text-[0.9375rem]", lookup === "loading" ? "text-ash" : "text-alarm")}
             >
-              {LOOKUP_MESSAGES[lookup]}
+              {lookupMessage(lookup, t.postcode)}
             </p>
             {showAreaHint && (
-              <p className="text-ash mt-1 max-w-[40ch] text-[0.9375rem] leading-relaxed">
-                W skali całej Polski kwadraty 2 km są za małe, żeby je zobaczyć. Wpisz kod pocztowy, a mapa przybliży
-                okolicę.
-              </p>
+              <p className="text-ash mt-1 max-w-[40ch] text-[0.9375rem] leading-relaxed">{t.postcode.areaHint}</p>
             )}
           </div>
         </div>
@@ -244,7 +250,7 @@ export function DensityMap({ categories, start }: Props) {
           maxBounds={POLAND_MAX_BOUNDS}
           maxBoundsViscosity={1}
         >
-          <ZoomControl zoomInTitle={ZOOM_IN_TITLE} zoomOutTitle={ZOOM_OUT_TITLE} />
+          <ZoomControl zoomInTitle={t.zoom.in} zoomOutTitle={t.zoom.out} />
           <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
           <Recenter target={viewTarget} />
           {cells.status === "ready" && (
@@ -260,7 +266,7 @@ export function DensityMap({ categories, start }: Props) {
 
       <div className={cn(container, "mt-5")}>
         <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
-          <p>Osoby w kwadracie 2 × 2 km</p>
+          <p>{t.legend.title}</p>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {BANDS.map((b) => (
               <li key={b.band} className="flex items-center gap-2">
@@ -269,14 +275,12 @@ export function DensityMap({ categories, start }: Props) {
                   className="border-signal inline-block size-5 border"
                   style={{ backgroundColor: `rgb(242 194 48 / ${b.fill})` }}
                 />
-                {b.label}
+                {t.legend[b.label]}
               </li>
             ))}
           </ul>
         </div>
-        <p className="text-ash mt-2 max-w-[60ch] leading-relaxed">
-          Kwadraty, w których mieszka mniej niż 5 osób, ukrywamy. Wyglądają tak samo jak puste.
-        </p>
+        <p className="text-ash mt-2 max-w-[60ch] leading-relaxed">{t.legend.hidden}</p>
       </div>
     </>
   );

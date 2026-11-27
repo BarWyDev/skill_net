@@ -1,20 +1,20 @@
 ---
 import PageShell from "@/components/PageShell.astro";
 import { TEXT_LINK } from "@/lib/site-styles";
+import { errors } from "@/lib/i18n/messages/errors";
 
 Astro.response.status = 404;
+const t = errors[Astro.locals.locale].notFound;
 ---
 
-<PageShell title="Nie znaleziono strony — SkillNet" heading="Nie znaleziono strony">
-  <p class="max-w-[52ch] text-lg leading-relaxed">
-    Pod tym adresem nic nie ma. Link mógł się zmienić albo zawierać literówkę.
-  </p>
+<PageShell title={t.title} heading={t.heading}>
+  <p class="max-w-[52ch] text-lg leading-relaxed">{t.body}</p>
   <div class="mt-6 flex flex-wrap gap-x-6">
     <a href="/" class:list={TEXT_LINK}>
-      Strona główna
+      {t.home}
     </a>
     <a href="/mapa" class:list={TEXT_LINK}>
-      Mapa umiejętności
+      {t.map}
     </a>
   </div>
 </PageShell>

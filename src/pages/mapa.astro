@@ -7,6 +7,11 @@ import { getMyProfile, getTaxonomy } from "@/lib/services/profile";
 import type { SkillCategoryDTO } from "@/types";
 import { cn } from "@/lib/utils";
 import { PAGE_TITLE } from "@/lib/site-styles";
+import { map } from "@/lib/i18n/messages/map";
+import { categoryName } from "@/lib/i18n/messages/taxonomy";
+
+const { locale } = Astro.locals;
+const t = map[locale].page;
 
 // Public page. It renders per user (header, start point), so it is never cached as `public`.
 Astro.response.headers.set("Cache-Control", "private");
@@ -17,12 +22,16 @@ let loadError: string | null = null;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (!supabase) {
-  loadError = "Mapa jest niedostępna, bo Supabase nie jest skonfigurowany.";
+  loadError = t.notConfigured;
 } else {
   try {
-    categories = (await getTaxonomy(supabase)).categories;
+    // The database holds Polish names only; the other languages come from the catalogue, by slug.
+    categories = (await getTaxonomy(supabase)).categories.map((category) => ({
+      slug: category.slug,
+      name: categoryName(locale, category.slug, category.name),
+    }));
   } catch {
-    loadError = "Nie udało się wczytać mapy. Odśwież stronę.";
+    loadError = t.loadFailed;
   }
   if (Astro.locals.user) {
     try {
@@ -35,10 +44,7 @@ if (!supabase) {
 }
 ---
 
-<Layout
-  title="Mapa umiejętności — SkillNet"
-  description="Ile osób z daną umiejętnością mieszka w Twojej okolicy, w kwadratach 2 × 2 km. Bez danych osobowych: małe skupiska ukrywamy."
->
+<Layout title={t.title} description={t.description}>
   <div class="site min-h-screen">
     <div class="mx-auto max-w-6xl px-4 sm:px-8">
       <SiteHeader />
@@ -50,16 +56,10 @@ if (!supabase) {
         class="mx-auto grid max-w-6xl grid-cols-12 gap-x-6 px-4 pt-12 sm:px-8 sm:pt-20"
       >
         <h1 id="map-title" class:list={cn(PAGE_TITLE, "col-span-12")}>
-          Mapa umiejętności
+          {t.heading}
         </h1>
-        <p class="col-span-12 mt-8 max-w-[44ch] text-lg leading-relaxed sm:text-xl">
-          Każdy kwadrat to obszar 2 × 2 km. Kolor pokazuje, ile mieszka w nim osób gotowych pomóc.
-        </p>
-        <p class="text-ash col-span-12 mt-3 max-w-[52ch] leading-relaxed">
-          Mapa nie pokazuje osób, adresów ani dokładnych liczb. Pokazuje tylko przedziały i tylko tam, gdzie mieszka co
-          najmniej 5 osób, a po wybraniu kategorii co najmniej 10. Przedziały są celowo lekko zaszumione. Mapa odświeża
-          się raz dziennie i uwzględnia konta założone co najmniej 14 dni temu.
-        </p>
+        <p class="col-span-12 mt-8 max-w-[44ch] text-lg leading-relaxed sm:text-xl">{t.lead}</p>
+        <p class="text-ash col-span-12 mt-3 max-w-[52ch] leading-relaxed">{t.privacy}</p>
       </section>
 
       {loadError && (
@@ -69,9 +69,9 @@ if (!supabase) {
       )}
 
       {categories && (
-        <DensityMap client:only="react" categories={categories} start={start}>
+        <DensityMap client:only="react" categories={categories} start={start} locale={locale}>
           <p slot="fallback" class="text-ash mx-auto mt-10 max-w-6xl px-4 sm:px-8">
-            Ładowanie mapy…
+            {t.loading}
           </p>
         </DensityMap>
       )}

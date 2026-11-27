@@ -2,30 +2,21 @@
 import SiteHeader from "@/components/SiteHeader.astro";
 import { cn } from "@/lib/utils";
 import { BUTTON, TEXT_LINK } from "@/lib/site-styles";
+import { common } from "@/lib/i18n/messages/common";
+import { landing } from "@/lib/i18n/messages/landing";
 
-const { user } = Astro.locals;
+const { user, locale } = Astro.locals;
+const t = landing[locale];
+const nav = common[locale].nav;
 
 // The headline is split by meaning, and each line rises separately on load.
 const HEADLINE = [
-  { text: "Lokalny katalog", accent: false },
-  { text: "umiejętności", accent: false },
-  { text: "na czas kryzysu", accent: true },
+  { text: t.headline.first, accent: false },
+  { text: t.headline.second, accent: false },
+  { text: t.headline.accent, accent: true },
 ];
 
-const POINTS = [
-  {
-    title: "Dodaj swoje umiejętności",
-    body: "Ratownictwo, elektryka, języki, sprzęt. Zaznacz, w czym możesz pomóc i kiedy masz na to czas.",
-  },
-  {
-    title: "Twoja lokalizacja jest chroniona",
-    body: "Zapisujemy tylko przybliżony obszar, około 500 m. Publiczna mapa pokazuje dla kwadratów 2 km wyłącznie przedziały liczby osób.",
-  },
-  {
-    title: "Pomoc, gdy jest potrzebna",
-    body: "W kryzysie koordynator gminy znajduje najbliższe osoby z potrzebnymi umiejętnościami i prosi je o pomoc.",
-  },
-];
+const POINTS = [t.points.skills, t.points.location, t.points.help];
 ---
 
 <div class="site landing min-h-screen">
@@ -47,24 +38,23 @@ const POINTS = [
           ))}
         </h1>
         <p class="col-span-12 mt-10 max-w-[38ch] text-lg leading-relaxed sm:mt-12 sm:text-xl md:col-span-8 lg:col-span-6">
-          Gdy brakuje prądu, wody albo rąk do pracy, koordynator gminy szybko znajduje sąsiadów, którzy mogą pomóc. Na
-          co dzień ci sami ludzie pomagają sobie w okolicy.
+          {t.lead}
         </p>
         <div class="col-span-12 mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
           <a href="/mapa" class:list={cn(BUTTON, "btn-primary")}>
-            Zobacz mapę umiejętności
+            {t.seeMap}
           </a>
           {user ? (
             <a href="/profil" class:list={cn(BUTTON, "btn-secondary")}>
-              Mój profil
+              {nav.profile}
             </a>
           ) : (
             <>
               <a href="/auth/signup" class:list={cn(BUTTON, "btn-secondary")}>
-                Załóż konto
+                {nav.signUp}
               </a>
               <a href="/auth/signin" class:list={TEXT_LINK}>
-                Zaloguj się
+                {nav.signIn}
               </a>
             </>
           )}
@@ -73,7 +63,7 @@ const POINTS = [
 
       <section aria-labelledby="landing-how" class="pt-4 pb-20 sm:pt-8 lg:pb-28">
         <h2 id="landing-how" class="sr-only">
-          Jak to działa
+          {t.howItWorks}
         </h2>
         {POINTS.map((point) => (
           <div class="grid grid-cols-12 gap-x-6 gap-y-2 py-6 sm:py-8">

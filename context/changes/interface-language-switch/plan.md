@@ -375,18 +375,18 @@ No database change. The rollout switch is `ENABLED_LOCALES` in `wrangler.jsonc`:
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass
-- [ ] 2.2 Type check passes
-- [ ] 2.3 Lint passes
-- [ ] 2.4 Smoke passes unchanged
-- [ ] 2.5 Only `/api/mapa` sends a public cache header
+- [x] 2.1 Unit tests pass
+- [x] 2.2 Type check passes
+- [x] 2.3 Lint passes
+- [x] 2.4 Smoke passes unchanged
+- [x] 2.5 Only `/api/mapa` sends a public cache header
 
 #### Manual
 
-- [ ] 2.6 Landing, map, 404 and access-denied pages read fully in English and Ukrainian
-- [ ] 2.7 Map filter, legend, postcode jump and empty state are translated
-- [ ] 2.8 Page titles and descriptions match the language
-- [ ] 2.9 Polish pages look and read exactly as before
+- [x] 2.6 Landing, map, 404 and access-denied pages read fully in English and Ukrainian
+- [x] 2.7 Map filter, legend, postcode jump and empty state are translated
+- [x] 2.8 Page titles and descriptions match the language
+- [x] 2.9 Polish pages look and read exactly as before
 
 ### Phase 3: Sign-in and sign-up
 
