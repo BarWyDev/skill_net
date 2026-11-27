@@ -2,13 +2,7 @@ import type { LatLngBoundsExpression, PathOptions } from "leaflet";
 import type { Polygon } from "geojson";
 import { GeoJSON, MapContainer, TileLayer, Tooltip, ZoomControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import {
-  OSM_ATTRIBUTION,
-  OSM_TILE_URL,
-  POLAND_MAX_BOUNDS,
-  ZOOM_IN_TITLE,
-  ZOOM_OUT_TITLE,
-} from "@/components/map/map-view";
+import { OSM_ATTRIBUTION, OSM_TILE_URL, POLAND_MAX_BOUNDS } from "@/components/map/map-view";
 
 // Only the block outline and the lettered course squares reach this island: no course text or ids.
 
@@ -33,9 +27,12 @@ interface Props {
   block: Polygon;
   /** One entry per square with courses, lettered in the list's order. */
   squares: { letter: string; cell: Polygon }[];
+  /** The zoom buttons' titles, in the request's language. */
+  zoomInTitle: string;
+  zoomOutTitle: string;
 }
 
-export function CoursesMap({ block, squares }: Props) {
+export function CoursesMap({ block, squares, zoomInTitle, zoomOutTitle }: Props) {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   return (
@@ -51,7 +48,7 @@ export function CoursesMap({ block, squares }: Props) {
       maxBounds={POLAND_MAX_BOUNDS}
       maxBoundsViscosity={1}
     >
-      <ZoomControl zoomInTitle={ZOOM_IN_TITLE} zoomOutTitle={ZOOM_OUT_TITLE} />
+      <ZoomControl zoomInTitle={zoomInTitle} zoomOutTitle={zoomOutTitle} />
       <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
       <GeoJSON data={block} style={BLOCK_STYLE} interactive={false} />
       {squares.map((s) => (

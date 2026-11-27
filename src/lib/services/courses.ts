@@ -1,7 +1,9 @@
 import { z } from "zod";
 import type { Database } from "@/db/database.types";
-import { COURSE_TEXT_MESSAGES } from "@/lib/course-text";
-import { formatPauseUntil } from "@/lib/pause";
+import { format, formatDate } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/locale";
+import { courses } from "@/lib/i18n/messages/courses";
+import { courseMessage } from "@/lib/validation/courses";
 import type { SupabaseClient } from "@/lib/supabase";
 import type {
   CourseAreaDTO,
@@ -20,58 +22,21 @@ type UpdateCourseArgs = Database["public"]["Functions"]["update_course"]["Args"]
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; message: string };
 
-const GENERIC_ERROR = "Nie udało się zapisać zmian w kursie. Spróbuj ponownie.";
-
-// Every code raised by the RPCs in the neighbour courses migration.
-export const COURSE_ERROR_MESSAGES: Record<string, string> = {
-  ...COURSE_TEXT_MESSAGES,
-  not_authenticated: "Zaloguj się ponownie.",
-  course_no_location: "Aby prowadzić kursy, dodaj lokalizację w profilu.",
-  course_recent_move: "Lokalizacja zmieniła się w ostatnich 7 dniach. Kursy będą dostępne po 7 dniach od zmiany.",
-  course_too_new: "Kursy są dostępne dla kont założonych co najmniej 14 dni temu.",
-  course_unconfirmed: "Potwierdź adres e-mail, aby korzystać z kursów.",
-  course_no_consent: "Najpierw zaakceptuj zgodę na przetwarzanie danych.",
-  course_skill_not_held: "Kurs możesz prowadzić tylko z umiejętności, którą masz w profilu.",
-  course_duration_invalid: "Wybierz czas trwania z listy.",
-  course_capacity_invalid: "Liczba miejsc to od 1 do 50 albo puste pole.",
-  course_limit_reached: "Możesz mieć najwyżej 3 otwarte kursy.",
-  course_total_limit_reached: "Możesz mieć najwyżej 20 kursów, także zamkniętych. Usuń stary kurs, aby dodać nowy.",
-  course_capacity_below_signups: "Liczba miejsc nie może być mniejsza niż liczba osób, które już się zapisały.",
-  course_not_found: "Nie znaleziono kursu.",
-  course_own: "Nie możesz zapisać się na własny kurs.",
-  course_full: "Na tym kursie nie ma już wolnych miejsc.",
-  course_signup_rate_limited: "Zapisałeś się na zbyt wiele kursów w ciągu godziny. Spróbuj później.",
-  course_already_signed_up: "Ten kurs masz już w swoich zapisach.",
-  course_not_signed_up: "Tego kursu nie ma w Twoich zapisach.",
-};
-
-export function courseErrorMessage(error: { message?: string }): string {
-  return (error.message && COURSE_ERROR_MESSAGES[error.message]) ?? GENERIC_ERROR;
+/** The message in `locale` for a code raised by the RPCs in the neighbour courses migration. */
+export function courseErrorMessage(error: { message?: string }, locale: Locale): string {
+  return courseMessage(locale, error.message, "generic");
 }
 
 /**
- * Why a course is hidden, in Polish. `eligibleOn` is the organiser's own date from getCourseArea,
+ * Why a course is hidden, in `locale`. `eligibleOn` is the organiser's own date from getCourseArea,
  * which for a recent move is the day the course comes back.
  */
-export function hiddenReasonLabel(reason: CourseHiddenReason, eligibleOn: string | null): string {
-  switch (reason) {
-    case "closed":
-      return "Zamknięty: sąsiedzi go nie widzą i nie mogą się zapisać.";
-    case "expired":
-      return "Wygasł: sąsiedzi go nie widzą. Odnów go, aby był widoczny przez kolejne 90 dni.";
-    case "paused":
-      return "Ukryty: Twoja dostępność jest wstrzymana.";
-    case "skill_removed":
-      return "Ukryty: tej umiejętności nie ma już w Twoim profilu.";
-    case "no_location":
-      return "Ukryty: Twój profil nie ma lokalizacji.";
-    case "recent_move":
-      return eligibleOn
-        ? `Ukryty do ${formatPauseUntil(eligibleOn)}: lokalizacja zmieniona w ostatnich 7 dniach.`
-        : "Ukryty: lokalizacja zmieniona w ostatnich 7 dniach.";
-    case "square_hidden":
-      return "Ukryty: w Twojej okolicy mieszka jeszcze za mało osób, żeby pokazać kurs bez wskazywania Ciebie. Może się to zmieniać z dnia na dzień.";
+export function hiddenReasonLabel(reason: CourseHiddenReason, eligibleOn: string | null, locale: Locale): string {
+  const labels = courses[locale].hidden;
+  if (reason === "recent_move" && eligibleOn) {
+    return format(labels.recent_move_until, { date: formatDate(locale, eligibleOn) });
   }
+  return labels[reason];
 }
 
 const eligibilitySchema = z.enum(["ok", "no_location", "recent_move", "too_new", "unconfirmed", "no_consent"]);
@@ -154,34 +119,44 @@ const courseArgs = (input: CourseInput) => ({
 export async function createCourse(
   supabase: SupabaseClient,
   input: CourseInput & { skillSlug: string },
+  locale: Locale,
 ): Promise<Result<{ id: string }>> {
   const args = { p_skill_slug: input.skillSlug, ...courseArgs(input) } as CreateCourseArgs;
   const { data, error } = await supabase.rpc("create_course", args);
-  return error ? { ok: false, message: courseErrorMessage(error) } : { ok: true, id: data };
+  return error ? { ok: false, message: courseErrorMessage(error, locale) } : { ok: true, id: data };
 }
 
-export async function updateCourse(supabase: SupabaseClient, input: CourseInput & { id: string }): Promise<Result> {
+export async function updateCourse(
+  supabase: SupabaseClient,
+  input: CourseInput & { id: string },
+  locale: Locale,
+): Promise<Result> {
   const args = { p_id: input.id, ...courseArgs(input) } as UpdateCourseArgs;
   const { error } = await supabase.rpc("update_course", args);
-  return error ? { ok: false, message: courseErrorMessage(error) } : { ok: true };
+  return error ? { ok: false, message: courseErrorMessage(error, locale) } : { ok: true };
 }
 
 /** Closes (false) or reopens (true) a course. */
-export async function setCourseOpen(supabase: SupabaseClient, id: string, open: boolean): Promise<Result> {
+export async function setCourseOpen(
+  supabase: SupabaseClient,
+  id: string,
+  open: boolean,
+  locale: Locale,
+): Promise<Result> {
   const { error } = await supabase.rpc("set_course_open", { p_id: id, p_open: open });
-  return error ? { ok: false, message: courseErrorMessage(error) } : { ok: true };
+  return error ? { ok: false, message: courseErrorMessage(error, locale) } : { ok: true };
 }
 
 /** Restarts the course's 90 days. */
-export async function renewCourse(supabase: SupabaseClient, id: string): Promise<Result> {
+export async function renewCourse(supabase: SupabaseClient, id: string, locale: Locale): Promise<Result> {
   const { error } = await supabase.rpc("renew_course", { p_id: id });
-  return error ? { ok: false, message: courseErrorMessage(error) } : { ok: true };
+  return error ? { ok: false, message: courseErrorMessage(error, locale) } : { ok: true };
 }
 
 /** Deletes a course and every sign-up to it. */
-export async function deleteCourse(supabase: SupabaseClient, id: string): Promise<Result> {
+export async function deleteCourse(supabase: SupabaseClient, id: string, locale: Locale): Promise<Result> {
   const { error } = await supabase.rpc("delete_course", { p_id: id });
-  return error ? { ok: false, message: courseErrorMessage(error) } : { ok: true };
+  return error ? { ok: false, message: courseErrorMessage(error, locale) } : { ok: true };
 }
 
 const nearbyCourseSchema = z.object({
@@ -248,12 +223,12 @@ export async function getMyCourseSignups(supabase: SupabaseClient): Promise<MyCo
     }));
 }
 
-export async function signUpForCourse(supabase: SupabaseClient, id: string): Promise<Result> {
+export async function signUpForCourse(supabase: SupabaseClient, id: string, locale: Locale): Promise<Result> {
   const { error } = await supabase.rpc("sign_up_for_course", { p_id: id });
-  return error ? { ok: false, message: courseErrorMessage(error) } : { ok: true };
+  return error ? { ok: false, message: courseErrorMessage(error, locale) } : { ok: true };
 }
 
-export async function withdrawFromCourse(supabase: SupabaseClient, id: string): Promise<Result> {
+export async function withdrawFromCourse(supabase: SupabaseClient, id: string, locale: Locale): Promise<Result> {
   const { error } = await supabase.rpc("withdraw_from_course", { p_id: id });
-  return error ? { ok: false, message: courseErrorMessage(error) } : { ok: true };
+  return error ? { ok: false, message: courseErrorMessage(error, locale) } : { ok: true };
 }

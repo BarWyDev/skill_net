@@ -2,6 +2,7 @@
 // "Moje zapisy": the viewer's active sign-ups with the organiser's meeting details. A hidden course
 // keeps its details, since the sign-up has already seen them.
 import StatusLine from "@/components/StatusLine.astro";
+import { courses } from "@/lib/i18n/messages/courses";
 import { SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import { formatCourseDuration } from "@/lib/validation/courses";
@@ -12,19 +13,19 @@ interface Props {
 }
 
 const { signups } = Astro.props;
+const { locale } = Astro.locals;
+const t = courses[locale].signups;
 
 const SMALL_BUTTON = "inline-flex min-h-11 items-center justify-center px-4 font-bold";
 ---
 
 <section aria-labelledby="my-signups-title">
   <h2 id="my-signups-title" class:list={SECTION_TITLE}>
-    Moje zapisy
+    {t.title}
   </h2>
 
   {signups.length === 0 ? (
-    <p class="text-ash mt-4 leading-relaxed">
-      Nie masz jeszcze zapisów. Gdy zapiszesz się na kurs w okolicy, tu zobaczysz miejsce i termin od organizatora.
-    </p>
+    <p class="text-ash mt-4 leading-relaxed">{t.none}</p>
   ) : (
     <ul class="mt-6 space-y-8">
       {signups.map((signup) => (
@@ -34,30 +35,30 @@ const SMALL_BUTTON = "inline-flex min-h-11 items-center justify-center px-4 font
               {signup.title}
             </h3>
             <p class="text-ash mt-1">
-              {signup.skillName} ({signup.categoryName}) · {formatCourseDuration(signup.durationMinutes)}
+              {signup.skillName} ({signup.categoryName}) · {formatCourseDuration(signup.durationMinutes, locale)}
             </p>
 
             {!signup.available && (
               <StatusLine tone="attention" class="mt-4">
-                <p>Kurs chwilowo niedostępny. Sąsiedzi go teraz nie widzą, a Twój zapis zostaje.</p>
+                <p>{t.unavailable}</p>
               </StatusLine>
             )}
 
             <p class="mt-4 leading-relaxed break-words">{signup.description}</p>
 
             <div class="mt-4">
-              <p class="font-bold">Szczegóły spotkania</p>
+              <p class="font-bold">{t.meetingTitle}</p>
               {signup.meetingDetails ? (
                 <p class="mt-1 leading-relaxed break-words">{signup.meetingDetails}</p>
               ) : (
-                <p class="text-ash mt-1 leading-relaxed">Organizator jeszcze nie podał szczegółów.</p>
+                <p class="text-ash mt-1 leading-relaxed">{t.meetingMissing}</p>
               )}
             </div>
 
             <form method="post" action="/api/kursy/wypisz" class="mt-4">
               <input type="hidden" name="id" value={signup.id} />
               <button type="submit" class:list={cn(SMALL_BUTTON, "btn-secondary cursor-pointer")}>
-                Wypisz się
+                {t.withdraw}
               </button>
             </form>
           </article>

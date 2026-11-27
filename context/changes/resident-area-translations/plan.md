@@ -300,16 +300,16 @@ No migration. Production gets the three languages when the PR with phase 4 is pr
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm run test:unit`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Lint passes: `npm run lint`
-- [ ] 2.4 Build passes: `npm run build` (to a scratch `--outDir`)
-- [ ] 2.5 Local smoke passes: `npm run smoke`
+- [x] 2.1 Unit tests pass: `npm run test:unit` — 1ce213c
+- [x] 2.2 Type check passes: `npx astro check` — 1ce213c
+- [x] 2.3 Lint passes: `npm run lint` — 1ce213c
+- [x] 2.4 Build passes: `npm run build` (to a scratch `--outDir`) — 1ce213c
+- [x] 2.5 Local smoke passes: `npm run smoke` — 1ce213c
 
 #### Manual
 
-- [ ] 2.6 `/kursy` in `en` and `uk`: every action shows copy and notices in that language; typed text stays as typed
-- [ ] 2.7 `/kursy` in `pl` reads as before
+- [x] 2.6 `/kursy` in `en` and `uk`: every action shows copy and notices in that language; typed text stays as typed
+- [x] 2.7 `/kursy` in `pl` reads as before
 
 ### Phase 3: Consent and privacy
 

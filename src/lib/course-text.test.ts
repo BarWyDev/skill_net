@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { COURSE_TEXT_MESSAGES, checkCourseText, normaliseCourseText } from "./course-text.ts";
+import { checkCourseText, normaliseCourseText } from "./course-text.ts";
 
 const cp = (...points: number[]) => String.fromCodePoint(...points);
 const ZWSP = cp(0x200b);
@@ -22,12 +22,12 @@ test("phone numbers are refused, with spaces, dashes, brackets or +48", () => {
   ]) {
     assert.deepEqual(checkCourseText(`${DESCRIPTION} ${text}`, "description"), {
       ok: false,
-      message: COURSE_TEXT_MESSAGES.description_contact,
+      code: "description_contact",
     });
   }
   assert.deepEqual(checkCourseText("Kurs 600 100 200", "title"), {
     ok: false,
-    message: COURSE_TEXT_MESSAGES.title_contact,
+    code: "title_contact",
   });
 });
 
@@ -40,7 +40,7 @@ test("dates, times and short counts pass", () => {
 test("email addresses are refused", () => {
   assert.deepEqual(checkCourseText("Pisz na jan.kowalski@example.pl po szczegóły", "meeting"), {
     ok: false,
-    message: COURSE_TEXT_MESSAGES.meeting_contact,
+    code: "meeting_contact",
   });
   assert.deepEqual(checkCourseText("Spotkanie przy @rynku, wejście od podwórza", "meeting").ok, true);
 });
@@ -53,7 +53,7 @@ test("whitespace and invisible characters are folded before the bounds", () => {
   });
   assert.deepEqual(checkCourseText(`ab${ZWSP.repeat(10)}`, "title"), {
     ok: false,
-    message: COURSE_TEXT_MESSAGES.title_invalid,
+    code: "title_invalid",
   });
 });
 
@@ -74,5 +74,5 @@ test("the bounds per field", () => {
 test("empty meeting details are null, an empty title is refused", () => {
   assert.deepEqual(checkCourseText(null, "meeting"), { ok: true, text: null });
   assert.deepEqual(checkCourseText(`  ${ZWSP} `, "meeting"), { ok: true, text: null });
-  assert.deepEqual(checkCourseText("", "title"), { ok: false, message: COURSE_TEXT_MESSAGES.title_invalid });
+  assert.deepEqual(checkCourseText("", "title"), { ok: false, code: "title_invalid" });
 });

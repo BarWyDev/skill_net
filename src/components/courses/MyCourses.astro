@@ -3,7 +3,8 @@
 // POSTs to /api/kursy/*, so everything works without JS. Sign-ups are a count, never who.
 import StatusLine from "@/components/StatusLine.astro";
 import CourseForm from "@/components/courses/CourseForm.astro";
-import { formatPauseUntil } from "@/lib/pause";
+import { format, formatDate } from "@/lib/i18n/format";
+import { courses as courseMessages } from "@/lib/i18n/messages/courses";
 import { hiddenReasonLabel } from "@/lib/services/courses";
 import { INLINE_LINK, NAV_LINK, SECTION_TITLE, type StatusTone } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,8 @@ interface Props {
 }
 
 const { courses, area, skills, skillNames } = Astro.props;
+const { locale } = Astro.locals;
+const t = courseMessages[locale].mine;
 
 // The same limit as create_course: open courses that have not expired.
 const OPEN_LIMIT = 3;
@@ -39,22 +42,19 @@ const TONES: Record<CourseHiddenReason, StatusTone> = {
 
 const signups = (course: MyCourseDTO) =>
   course.capacity === null
-    ? `Zapisane osoby: ${course.signupCount} (bez limitu miejsc)`
-    : `Zapisane osoby: ${course.signupCount} z ${course.capacity}`;
+    ? format(t.signupsNoLimit, { count: course.signupCount })
+    : format(t.signupsOf, { count: course.signupCount, capacity: course.capacity });
 
-const eligibleOn = area.eligibleOn ? formatPauseUntil(area.eligibleOn) : null;
+const eligibleOn = area.eligibleOn ? formatDate(locale, area.eligibleOn) : null;
 const SMALL_BUTTON = "inline-flex min-h-11 items-center justify-center px-4 font-bold";
 const SUMMARY = cn(NAV_LINK, "text-chalk cursor-pointer font-bold underline");
 ---
 
 <section aria-labelledby="my-courses-title">
   <h2 id="my-courses-title" class:list={SECTION_TITLE}>
-    Moje kursy
+    {t.title}
   </h2>
-  <p class="text-ash mt-4 leading-relaxed">
-    Zaproponuj sąsiadom bezpłatny kurs z jednej ze swoich umiejętności. Zobaczą go mieszkańcy Twojej okolicy, bez
-    Twojego imienia i kontaktu, a miejsce tylko jako kwadrat 2 km na mapie. Widzisz, ile osób się zapisało, ale nie kto.
-  </p>
+  <p class="text-ash mt-4 leading-relaxed">{t.lead}</p>
 
   {courses.length > 0 && (
     <ul class="mt-10 space-y-10">
@@ -65,19 +65,22 @@ const SUMMARY = cn(NAV_LINK, "text-chalk cursor-pointer font-bold underline");
               {course.title}
             </h3>
             <p class="text-ash mt-1">
-              {skillNames.get(course.skillSlug) ?? course.skillSlug} · {formatCourseDuration(course.durationMinutes)}
+              {skillNames.get(course.skillSlug) ?? course.skillSlug} ·{" "}
+              {formatCourseDuration(course.durationMinutes, locale)}
             </p>
 
             <div class="mt-4 space-y-2">
               {course.hiddenReason === null ? (
                 <StatusLine tone="done">
-                  <p>Widoczny dla sąsiadów do {formatPauseUntil(course.expiresOn)}.</p>
+                  <p>{format(t.visibleUntil, { date: formatDate(locale, course.expiresOn) })}</p>
                 </StatusLine>
               ) : (
                 <StatusLine tone={TONES[course.hiddenReason]}>
-                  <p>{hiddenReasonLabel(course.hiddenReason, area.eligibleOn)}</p>
+                  <p>{hiddenReasonLabel(course.hiddenReason, area.eligibleOn, locale)}</p>
                   {course.hiddenReason !== "expired" && (
-                    <p class="text-ash text-[0.9375rem]">Wygasa {formatPauseUntil(course.expiresOn)}.</p>
+                    <p class="text-ash text-[0.9375rem]">
+                      {format(t.expiresOn, { date: formatDate(locale, course.expiresOn) })}
+                    </p>
                   )}
                 </StatusLine>
               )}
@@ -87,18 +90,16 @@ const SUMMARY = cn(NAV_LINK, "text-chalk cursor-pointer font-bold underline");
             <p class="mt-4 leading-relaxed break-words">{course.description}</p>
 
             <div class="mt-4">
-              <p class="font-bold">Szczegóły spotkania</p>
+              <p class="font-bold">{t.meetingTitle}</p>
               {course.meetingDetails ? (
                 <p class="mt-1 leading-relaxed break-words">{course.meetingDetails}</p>
               ) : (
-                <p class="text-ash mt-1 leading-relaxed">
-                  Nie podano. Osoby zapisane zobaczą je, gdy dodasz je w edycji.
-                </p>
+                <p class="text-ash mt-1 leading-relaxed">{t.meetingMissing}</p>
               )}
             </div>
 
             <details class="mt-6">
-              <summary class:list={SUMMARY}>Edytuj</summary>
+              <summary class:list={SUMMARY}>{t.edit}</summary>
               <div class="mt-6">
                 <CourseForm
                   mode="edit"
@@ -112,27 +113,27 @@ const SUMMARY = cn(NAV_LINK, "text-chalk cursor-pointer font-bold underline");
               <form method="post" action={course.isOpen ? "/api/kursy/zamknij" : "/api/kursy/otworz"}>
                 <input type="hidden" name="id" value={course.id} />
                 <button type="submit" class:list={cn(SMALL_BUTTON, "btn-secondary cursor-pointer")}>
-                  {course.isOpen ? "Zamknij zapisy" : "Otwórz ponownie"}
+                  {course.isOpen ? t.closeSignups : t.reopen}
                 </button>
               </form>
               <form method="post" action="/api/kursy/odnow">
                 <input type="hidden" name="id" value={course.id} />
                 <button type="submit" class:list={cn(SMALL_BUTTON, "btn-secondary cursor-pointer")}>
-                  Odnów na 90 dni
+                  {t.renew}
                 </button>
               </form>
             </div>
 
             <details class="mt-4">
-              <summary class:list={cn(SUMMARY, "text-alarm")}>Usuń kurs</summary>
+              <summary class:list={cn(SUMMARY, "text-alarm")}>{t.deleteSummary}</summary>
               <form method="post" action="/api/kursy/usun" class="mt-4">
                 <input type="hidden" name="id" value={course.id} />
                 <label class="flex min-h-11 cursor-pointer items-center gap-4">
                   <input type="checkbox" name="confirm" value="1" required class="check" />
-                  Usuwam kurs i wszystkie zapisy
+                  {t.deleteConfirm}
                 </label>
                 <button type="submit" class:list={cn(SMALL_BUTTON, "btn-danger mt-4 w-full cursor-pointer sm:w-auto")}>
-                  Usuń kurs na zawsze
+                  {t.deleteSubmit}
                 </button>
               </form>
             </details>
@@ -144,53 +145,47 @@ const SUMMARY = cn(NAV_LINK, "text-chalk cursor-pointer font-bold underline");
 
   <section aria-labelledby="new-course-title" class="border-seam mt-12 border-t pt-8">
     <h3 id="new-course-title" class="text-xl font-bold">
-      Nowy kurs
+      {t.newTitle}
     </h3>
     <div class="mt-6">
       {area.eligibility === "no_location" ? (
         <p class="leading-relaxed">
-          Aby prowadzić kursy,{" "}
+          {t.needLocationBefore}{" "}
           <a href="/profil" class:list={INLINE_LINK}>
-            dodaj lokalizację w profilu
+            {t.needLocationLink}
           </a>
-          . Kurs dodasz 7 dni po jej ustawieniu.
+          {t.needLocationAfter}
         </p>
       ) : area.eligibility === "recent_move" ? (
         <p class="leading-relaxed">
-          Twoja lokalizacja zmieniła się w ostatnich 7 dniach.{" "}
-          {eligibleOn ? `Kurs dodasz od ${eligibleOn}.` : "Kurs dodasz 7 dni po zmianie."}
+          {t.recentMove} {eligibleOn ? format(t.addFrom, { date: eligibleOn }) : t.addAfterMove}
         </p>
       ) : area.eligibility === "too_new" ? (
         <p class="leading-relaxed">
-          Kursy są dostępne dla kont założonych co najmniej 14 dni temu.{" "}
-          {eligibleOn ? `Kurs dodasz od ${eligibleOn}.` : ""}
+          {t.tooNew} {eligibleOn ? format(t.addFrom, { date: eligibleOn }) : ""}
         </p>
       ) : area.eligibility === "unconfirmed" ? (
-        <p class="leading-relaxed">Potwierdź adres e-mail, aby prowadzić kursy.</p>
+        <p class="leading-relaxed">{t.unconfirmed}</p>
       ) : area.eligibility === "no_consent" ? (
         <p class="leading-relaxed">
-          Aby prowadzić kursy,{" "}
+          {t.needConsentBefore}{" "}
           <a href="/zgoda" class:list={INLINE_LINK}>
-            zaakceptuj zgodę na przetwarzanie danych
+            {t.needConsentLink}
           </a>
-          .
+          {t.needConsentAfter}
         </p>
       ) : skills.length === 0 ? (
         <p class="leading-relaxed">
-          Aby prowadzić kurs,{" "}
+          {t.needSkillBefore}{" "}
           <a href="/profil" class:list={INLINE_LINK}>
-            dodaj umiejętność w profilu
+            {t.needSkillLink}
           </a>
-          .
+          {t.needSkillAfter}
         </p>
       ) : courses.length >= TOTAL_LIMIT ? (
-        <p class="leading-relaxed">
-          Możesz mieć najwyżej {TOTAL_LIMIT} kursów, także zamkniętych. Usuń stary kurs, aby dodać nowy.
-        </p>
+        <p class="leading-relaxed">{format(t.totalLimit, { limit: TOTAL_LIMIT })}</p>
       ) : openCount >= OPEN_LIMIT ? (
-        <p class="leading-relaxed">
-          Możesz mieć najwyżej {OPEN_LIMIT} otwarte kursy. Zamknij albo usuń jeden z nich, aby dodać nowy.
-        </p>
+        <p class="leading-relaxed">{format(t.openLimit, { limit: OPEN_LIMIT })}</p>
       ) : (
         <CourseForm mode="create" skills={skills} />
       )}
