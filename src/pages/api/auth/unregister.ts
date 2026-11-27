@@ -31,7 +31,8 @@ export const POST: APIRoute = async (context) => {
     return redirectWithError(context, errorPage, "Tego konta nie można usunąć hasłem.");
   }
 
-  const result = await unregisterMe(supabase, user.email, password, captchaToken(form));
+  // Polish until /profil is translated (S-19): the page this error lands on is still Polish.
+  const result = await unregisterMe(supabase, user.email, password, captchaToken(form), "pl");
   if (!result.ok) {
     return redirectWithError(context, errorPage, result.message);
   }

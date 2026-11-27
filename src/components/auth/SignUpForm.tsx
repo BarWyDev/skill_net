@@ -5,29 +5,27 @@ import { SubmitButton } from "@/components/auth/SubmitButton";
 import { ServerError } from "@/components/auth/ServerError";
 import { FieldError } from "@/components/auth/FieldError";
 import { INLINE_LINK, TEXT_LINK } from "@/lib/site-styles";
-import { authErrorMessage } from "@/lib/auth-errors";
-import { CONSENT_LABEL, CONSENT_LINK_TEXT, CONSENT_REQUIRED_MESSAGE } from "@/lib/consent";
+import { CONSENT_LABEL } from "@/lib/consent";
+import { format, plural } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/locale";
+import { auth } from "@/lib/i18n/messages/auth";
 import { MIN_PASSWORD_LENGTH, passwordProblem } from "@/lib/password";
 
 // Like the sign-in form's key: keeps the address across a failed sign-up without putting it in
 // the URL. Removed by the next page load, here or by Layout.astro on any other page.
 export const SIGNUP_EMAIL_STORAGE_KEY = "skillnet:signup-email";
-const ACCOUNT_EXISTS_MESSAGE = authErrorMessage("user_already_exists");
 
 interface Props {
+  locale: Locale;
   serverError?: string | null;
   /** The Turnstile widget (Turnstile.astro) passed as a slot. */
   captcha?: React.ReactNode;
 }
 
-function charactersWord(n: number) {
-  if (n === 1) return "znak";
-  const lastTwo = n % 100;
-  if (n % 10 >= 2 && n % 10 <= 4 && (lastTwo < 12 || lastTwo > 14)) return "znaki";
-  return "znaków";
-}
-
-export default function SignUpForm({ serverError, captcha }: Props) {
+export default function SignUpForm({ locale, serverError, captcha }: Props) {
+  const t = auth[locale];
+  // The Polish wording is the binding one (src/lib/consent.ts): a translated label shows it below.
+  const consentIsTranslated = locale !== "pl";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -58,26 +56,26 @@ export default function SignUpForm({ serverError, captcha }: Props) {
     const next: typeof errors = {};
 
     if (!email.trim()) {
-      next.email = "Podaj adres e-mail";
+      next.email = t.fields.emailRequired;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      next.email = "Podaj poprawny adres e-mail";
+      next.email = t.fields.emailInvalid;
     }
 
     if (!password) {
-      next.password = "Podaj hasło";
+      next.password = t.fields.passwordRequired;
     } else {
-      const problem = passwordProblem(password);
+      const problem = passwordProblem(password, locale);
       if (problem) next.password = problem;
     }
 
     if (!confirmPassword) {
-      next.confirmPassword = "Powtórz hasło";
+      next.confirmPassword = t.signUp.confirmRequired;
     } else if (password !== confirmPassword) {
-      next.confirmPassword = "Hasła nie są takie same";
+      next.confirmPassword = t.signUp.mismatch;
     }
 
     if (!consent) {
-      next.consent = CONSENT_REQUIRED_MESSAGE;
+      next.consent = t.consent.required;
     }
 
     setErrors(next);
@@ -105,41 +103,46 @@ export default function SignUpForm({ serverError, captcha }: Props) {
     errors.password || password.length === 0
       ? undefined
       : missing > 0
-        ? `Jeszcze ${missing} ${charactersWord(missing)}`
-        : (passwordProblem(password) ?? undefined);
+        ? format(plural(locale, missing, t.password.charactersLeft), { count: missing })
+        : (passwordProblem(password, locale) ?? undefined);
+  const consentDescribedBy =
+    [consentIsTranslated && "consent-original", errors.consent && "consent-error"].filter(Boolean).join(" ") ||
+    undefined;
 
   return (
     <form method="POST" action="/api/auth/signup" className="space-y-6" onSubmit={handleSubmit} noValidate>
       <FormField
         id="email"
         type="email"
-        label="E-mail"
+        label={t.fields.email}
         value={email}
         onChange={(v) => {
           setEmail(v);
           clearError("email");
         }}
-        placeholder="ty@przyklad.pl"
+        placeholder={t.fields.emailPlaceholder}
         autoComplete="email"
         error={errors.email}
       />
 
       <FormField
         id="password"
-        label="Hasło"
+        label={t.fields.password}
         type={showPassword ? "text" : "password"}
         value={password}
         onChange={(v) => {
           setPassword(v);
           clearError("password");
         }}
-        placeholder={`Co najmniej ${MIN_PASSWORD_LENGTH} znaków`}
+        placeholder={format(t.password.placeholder, { min: MIN_PASSWORD_LENGTH })}
         autoComplete="new-password"
         error={errors.password}
         hint={passwordHint}
         endContent={
           <PasswordToggle
             visible={showPassword}
+            showLabel={t.fields.showPassword}
+            hideLabel={t.fields.hidePassword}
             onToggle={() => {
               setShowPassword(!showPassword);
             }}
@@ -150,19 +153,21 @@ export default function SignUpForm({ serverError, captcha }: Props) {
       <FormField
         id="confirmPassword"
         name="confirmPassword"
-        label="Powtórz hasło"
+        label={t.signUp.confirmLabel}
         type={showConfirmPassword ? "text" : "password"}
         value={confirmPassword}
         onChange={(v) => {
           setConfirmPassword(v);
           clearError("confirmPassword");
         }}
-        placeholder="Wpisz hasło jeszcze raz"
+        placeholder={t.signUp.confirmPlaceholder}
         autoComplete="new-password"
         error={errors.confirmPassword}
         endContent={
           <PasswordToggle
             visible={showConfirmPassword}
+            showLabel={t.fields.showPassword}
+            hideLabel={t.fields.hidePassword}
             onToggle={() => {
               setShowConfirmPassword(!showConfirmPassword);
             }}
@@ -185,16 +190,21 @@ export default function SignUpForm({ serverError, captcha }: Props) {
               clearError("consent");
             }}
             aria-invalid={errors.consent ? true : undefined}
-            aria-describedby={errors.consent ? "consent-error" : undefined}
+            aria-describedby={consentDescribedBy}
             className="check mt-0.5"
           />
           <span>
-            {CONSENT_LABEL}{" "}
+            {t.consent.label}{" "}
             <a href="/prywatnosc" target="_blank" rel="noopener" className={INLINE_LINK}>
-              {CONSENT_LINK_TEXT}
+              {t.consent.linkText}
             </a>
           </span>
         </label>
+        {consentIsTranslated && (
+          <p id="consent-original" className="text-ash pb-2.5 pl-10 text-sm leading-relaxed">
+            {t.consent.bindingNote} <span lang="pl">{CONSENT_LABEL}</span>
+          </p>
+        )}
         {errors.consent && <FieldError id="consent-error">{errors.consent}</FieldError>}
       </div>
 
@@ -202,14 +212,14 @@ export default function SignUpForm({ serverError, captcha }: Props) {
 
       <div className="space-y-4">
         <ServerError message={serverError} />
-        {serverError === ACCOUNT_EXISTS_MESSAGE && (
+        {serverError === t.errors.user_already_exists && (
           <p>
             <a href="/auth/signin" className={TEXT_LINK}>
-              Przejdź do logowania
+              {t.signUp.goToSignIn}
             </a>
           </p>
         )}
-        <SubmitButton pendingText="Zakładanie konta...">Załóż konto</SubmitButton>
+        <SubmitButton pendingText={t.signUp.pending}>{t.signUp.submit}</SubmitButton>
       </div>
     </form>
   );

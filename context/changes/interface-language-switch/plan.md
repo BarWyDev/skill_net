@@ -392,18 +392,18 @@ No database change. The rollout switch is `ENABLED_LOCALES` in `wrangler.jsonc`:
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass with per-language cases for auth errors and password messages
-- [ ] 3.2 Type check passes
-- [ ] 3.3 Lint passes
-- [ ] 3.4 Smoke passes unchanged, including the full sign-up and sign-in walk
+- [x] 3.1 Unit tests pass with per-language cases for auth errors and password messages — 78dc226
+- [x] 3.2 Type check passes — 78dc226
+- [x] 3.3 Lint passes — 78dc226
+- [x] 3.4 Smoke passes unchanged, including the full sign-up and sign-in walk — 78dc226
 
 #### Manual
 
-- [ ] 3.5 Sign-up validation messages appear in the chosen language, with and without JavaScript
-- [ ] 3.6 Wrong-password error is translated and shown once
-- [ ] 3.7 Sign-up shows the translated consent with the Polish original and the binding-text note
-- [ ] 3.8 Confirmation pages read in the chosen language
-- [ ] 3.9 Turnstile widget follows the language
+- [x] 3.5 Sign-up validation messages appear in the chosen language, with and without JavaScript — 78dc226
+- [x] 3.6 Wrong-password error is translated and shown once — 78dc226
+- [x] 3.7 Sign-up shows the translated consent with the Polish original and the binding-text note — 78dc226
+- [x] 3.8 Confirmation pages read in the chosen language — 78dc226
+- [x] 3.9 Turnstile widget follows the language — 78dc226
 
 ### Phase 4: Verification and rollout
 

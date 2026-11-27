@@ -1,6 +1,8 @@
 ---
 import AuthShell from "@/components/auth/AuthShell.astro";
 import { parseConfirmParams } from "@/lib/confirm-link";
+import { format } from "@/lib/i18n/format";
+import { auth } from "@/lib/i18n/messages/auth";
 import { BUTTON } from "@/lib/site-styles";
 import { createClient } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -41,26 +43,19 @@ if (isPost && !signedIn) {
 
 Astro.response.headers.set("Cache-Control", NO_STORE["Cache-Control"]);
 
+const t = auth[Astro.locals.locale].confirm;
 const isSignIn = params.type === "magiclink";
 const content = signedIn
   ? {
-      heading: "Jesteś już zalogowany",
+      heading: t.alreadySignedIn.heading,
       text: signedIn.email
-        ? `W tej przeglądarce trwa sesja konta ${signedIn.email}. Link z wiadomości działa tylko po wylogowaniu: wyloguj się i otwórz go jeszcze raz.`
-        : "W tej przeglądarce trwa już sesja. Link z wiadomości działa tylko po wylogowaniu: wyloguj się i otwórz go jeszcze raz.",
-      button: "Wyloguj się",
+        ? format(t.alreadySignedIn.bodyWithEmail, { email: signedIn.email })
+        : t.alreadySignedIn.body,
+      button: t.alreadySignedIn.button,
     }
   : isSignIn
-    ? {
-        heading: "Zaloguj się",
-        text: "Kliknij przycisk, aby zalogować się do SkillNet.",
-        button: "Zaloguj się",
-      }
-    : {
-        heading: "Potwierdź adres e-mail",
-        text: "Ostatni krok: kliknij przycisk, aby potwierdzić adres e-mail i dokończyć zakładanie konta w SkillNet.",
-        button: "Potwierdzam",
-      };
+    ? { heading: t.signIn.heading, text: t.signIn.body, button: t.signIn.button }
+    : { heading: t.confirmAddress.heading, text: t.confirmAddress.body, button: t.confirmAddress.button };
 ---
 
 <AuthShell title={`${content.heading} — SkillNet`} heading={content.heading}>
@@ -82,9 +77,5 @@ const content = signedIn
     </form>
   )}
 
-  <p slot="aside">
-    {signedIn
-      ? "Link loguje na konto, do którego został wysłany. Dopóki trwa inna sesja, nie używamy go, żeby nikt nie podmienił Ci konta bez Twojej wiedzy."
-      : "Pytamy o kliknięcie, bo programy pocztowe same otwierają linki z wiadomości, żeby sprawdzić, czy są bezpieczne. Bez tego kroku link mógłby się zużyć, zanim do niego zajrzysz."}
-  </p>
+  <p slot="aside">{signedIn ? t.alreadySignedIn.aside : t.aside}</p>
 </AuthShell>
