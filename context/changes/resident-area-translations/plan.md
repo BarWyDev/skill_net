@@ -329,7 +329,7 @@ No migration. Production gets the three languages when the PR with phase 4 is pr
 
 #### Automated
 
-- [ ] 4.1 Local smoke passes with the new checks: `npm run smoke`
+- [x] 4.1 Local smoke passes with the new checks: `npm run smoke`
 - [ ] 4.2 CI is green on the PR: `ci`, `smoke`
 
 #### Manual

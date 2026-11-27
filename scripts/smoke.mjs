@@ -284,7 +284,8 @@ const readonlySteps = [
 ];
 
 // The language rules, on an environment that offers all three (ENABLED_LOCALES=pl,en,uk: local,
-// CI, previews, staging). Skipped with SMOKE_READONLY=1, because production offers Polish only.
+// CI, previews, staging). Skipped with SMOKE_READONLY=1: production may still run a build that
+// offers Polish only.
 const languageSteps = [
   // Node's fetch sends `Accept-Language: *`, which names no language.
   ["no language preference reads in Polish", () => langRequest("/"), { status: 200, bodyIncludes: '<html lang="pl"' }],
@@ -322,7 +323,22 @@ const languageSteps = [
     },
     { status: 200, bodyIncludes: "same body", cacheControlIncludes: "public" },
   ],
+  // The privacy notice is a courtesy translation: it must carry the binding Polish text as well.
+  [
+    "privacy notice reads in English and keeps the Polish original",
+    async () => {
+      const response = await langRequest("/prywatnosc", { cookie: `${LANG_COOKIE}=en` });
+      const both =
+        response.body.includes("Information on data processing") && response.body.includes("Administrator danych");
+      return { ...response, body: both ? "translation and original" : "one is missing" };
+    },
+    { status: 200, bodyIncludes: "translation and original", cacheControlIncludes: "private" },
+  ],
 ];
+
+// The session's cookies plus an English language cookie, for one request. The shared jar never
+// holds the language cookie, so every other step stays Polish.
+const englishSession = () => ({ Cookie: `${cookieHeader()}; ${LANG_COOKIE}=en` });
 
 const writeSteps = [
   // Refused before GoTrue is called, so no account is created.
@@ -456,6 +472,30 @@ const writeSteps = [
         ],
       }),
     { status: 302, location: "/profil", flash: true },
+  ],
+  // The resident area follows the language (roadmap S-19): the page, and the notice an endpoint
+  // leaves for it. The GET also takes the Polish notice of the step above out of the way.
+  [
+    "profil reads in English with the language cookie",
+    () => request("/profil", { headers: englishSession() }),
+    { status: 200, bodyIncludes: "My profile" },
+  ],
+  [
+    "a refused profile save answers in English",
+    async () => {
+      await request("/api/profile", {
+        method: "POST",
+        form: [
+          ["location_source", "pin"],
+          ["lat", "52.2297"],
+          ["lng", "21.0122"],
+          ["skill", "elektryk:5"],
+        ],
+        headers: englishSession(),
+      });
+      return request("/profil", { headers: englishSession() });
+    },
+    { status: 200, bodyIncludes: "Invalid skill or level." },
   ],
   [
     "profile save accepts pin and skill",
