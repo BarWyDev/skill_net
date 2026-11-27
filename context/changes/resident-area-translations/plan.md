@@ -315,15 +315,15 @@ No migration. Production gets the three languages when the PR with phase 4 is pr
 
 #### Automated
 
-- [x] 3.1 Unit tests pass, including the pinned hashes: `npm run test:unit`
-- [x] 3.2 Type check passes: `npx astro check`
-- [x] 3.3 Lint passes: `npm run lint`
-- [x] 3.4 Local smoke passes: `npm run smoke`
+- [x] 3.1 Unit tests pass, including the pinned hashes: `npm run test:unit` — 53a447b
+- [x] 3.2 Type check passes: `npx astro check` — 53a447b
+- [x] 3.3 Lint passes: `npm run lint` — 53a447b
+- [x] 3.4 Local smoke passes: `npm run smoke` — 53a447b
 
 #### Manual
 
-- [x] 3.5 `/prywatnosc` in `en` and `uk` shows the courtesy note and no Polish; `pl` is word for word the current notice
-- [x] 3.6 `/zgoda` in `en` and `uk` shows the translation and the Polish original
+- [x] 3.5 `/prywatnosc` in `en` and `uk` shows the courtesy note and no Polish; `pl` is word for word the current notice — 53a447b
+- [x] 3.6 `/zgoda` in `en` and `uk` shows the translation and the Polish original — 53a447b
 
 ### Phase 4: Verification and rollout
 
