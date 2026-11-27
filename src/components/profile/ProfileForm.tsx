@@ -6,19 +6,26 @@ import { PhoneField } from "@/components/profile/PhoneField";
 import { SkillsPicker, type SelectedSkills } from "@/components/profile/SkillsPicker";
 import { FieldError } from "@/components/auth/FieldError";
 import { SubmitButton } from "@/components/auth/SubmitButton";
-import { formatPhone, normalisePhone, PHONE_ERROR } from "@/lib/phone";
-import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
+import { format } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/locale";
+import { profile as profileMessages } from "@/lib/i18n/messages/profile";
+import { formatPhone, normalisePhone } from "@/lib/phone";
+import { normalisePostcode } from "@/lib/postcode";
 import { SWITCH_OFF, SWITCH_ON } from "@/lib/visibility";
 import type { MyProfileDTO, SkillLevel, TaxonomyDTO } from "@/types";
 import { SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 
 interface Props {
+  locale: Locale;
+  /** Category and skill names already in the request's language. */
   taxonomy: TaxonomyDTO;
   profile: MyProfileDTO;
 }
 
-export default function ProfileForm({ taxonomy, profile }: Props) {
+export default function ProfileForm({ locale, taxonomy, profile }: Props) {
+  const messages = profileMessages[locale];
+  const t = messages.form;
   const [selected, setSelected] = useState<SelectedSkills>(() =>
     Object.fromEntries(profile.skills.map((s) => [s.slug, s.level])),
   );
@@ -104,7 +111,7 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
       e.preventDefault();
       dismissPageNotices();
       setShowMissingLevels(true);
-      setClientError(`Wybierz poziom dla: ${missingLevels.map((s) => s.name).join(", ")}.`);
+      setClientError(format(t.chooseLevelFor, { skills: missingLevels.map((s) => s.name).join(", ") }));
       setFocusSkill(missingLevels[0].slug);
       return;
     }
@@ -113,12 +120,12 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
     if (location.source === "postcode" && postcode && normalisePostcode(postcode) === null) {
       e.preventDefault();
       dismissPageNotices();
-      setClientError(POSTCODE_ERROR);
+      setClientError(messages.location.postcodeInvalid);
       return;
     }
     // An unknown postcode or a pin abroad would be refused by the server, and the reload would
     // drop every unsaved edit (QA-017).
-    const problem = locationProblem(location);
+    const problem = locationProblem(location, locale);
     if (problem) {
       e.preventDefault();
       dismissPageNotices();
@@ -130,7 +137,7 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
       e.preventDefault();
       dismissPageNotices();
       setPhoneInvalid(true);
-      setClientError(PHONE_ERROR);
+      setClientError(messages.phone.invalid);
       return;
     }
     setPhoneInvalid(false);
@@ -142,13 +149,11 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
     <form method="POST" action="/api/profile" onSubmit={handleSubmit} onChange={dismissPageNotices} noValidate>
       <div className="divide-seam mt-14 divide-y [&>section]:py-10 [&>section:first-child]:pt-0 [&>section:last-child]:pb-12">
         <section aria-labelledby="skills-heading">
-          <SectionHeading
-            id="skills-heading"
-            help="Zaznacz, co umiesz lub co masz. Przy umiejętnościach wybierz poziom. Odznacz „Używaj w kryzysie”, jeśli koordynator nie ma brać danej umiejętności pod uwagę."
-          >
-            Umiejętności i sprzęt
+          <SectionHeading id="skills-heading" help={t.skillsHelp}>
+            {t.skillsHeading}
           </SectionHeading>
           <SkillsPicker
+            locale={locale}
             categories={taxonomy.categories}
             skills={taxonomy.skills}
             selected={selected}
@@ -161,17 +166,18 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
         </section>
 
         <section aria-labelledby="location-heading">
-          <SectionHeading id="location-heading" help="Wpisz kod pocztowy albo zaznacz miejsce na mapie.">
-            Przybliżona lokalizacja
+          <SectionHeading id="location-heading" help={t.locationHelp}>
+            {t.locationHeading}
           </SectionHeading>
-          <LocationPicker value={location} initial={initialLocation} onChange={setLocation} />
+          <LocationPicker locale={locale} value={location} initial={initialLocation} onChange={setLocation} />
         </section>
 
         <section aria-labelledby="phone-heading">
-          <SectionHeading id="phone-heading" help="Opcjonalnie.">
-            Telefon
+          <SectionHeading id="phone-heading" help={t.phoneHelp}>
+            {t.phoneHeading}
           </SectionHeading>
           <PhoneField
+            locale={locale}
             value={phone}
             invalid={phoneInvalid}
             onChange={(value) => {
@@ -182,43 +188,37 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
         </section>
 
         <section aria-labelledby="availability-heading">
-          <SectionHeading
-            id="availability-heading"
-            help="Zaznacz, kiedy zwykle możesz pomóc. To tylko informacja dla koordynatora — nikogo nie wyklucza z listy."
-          >
-            Dostępność
+          <SectionHeading id="availability-heading" help={t.availabilityHelp}>
+            {t.availabilityHeading}
           </SectionHeading>
-          <AvailabilityGrid initial={profile.availabilitySlots} />
+          <AvailabilityGrid locale={locale} initial={profile.availabilitySlots} />
         </section>
 
         <section aria-labelledby="visibility-heading">
-          <SectionHeading
-            id="visibility-heading"
-            help="Zdecyduj, do czego wolno użyć Twoich danych. E-mail i dokładna lokalizacja nie są nikomu pokazywane."
-          >
-            Widoczność danych
+          <SectionHeading id="visibility-heading" help={t.visibilityHelp}>
+            {t.visibilityHeading}
           </SectionHeading>
           <div className="space-y-5">
             <VisibilitySwitch
               name="show_on_map"
               checked={showOnMap}
               onChange={setShowOnMap}
-              label="Wliczaj mnie do publicznej mapy umiejętności"
-              help="Mapa pokazuje tylko przedziały liczby osób w kwadratach 2 × 2 km. Zmiana działa od następnego dnia."
+              label={t.showOnMapLabel}
+              help={t.showOnMapHelp}
             />
             <VisibilitySwitch
               name="show_availability"
               checked={showAvailability}
               onChange={setShowAvailability}
-              label="Pokazuj koordynatorowi, kiedy jestem dostępny"
-              help="Wyłączone: w kryzysie koordynator zobaczy „nie podano”. Twoje miejsce na liście się nie zmienia."
+              label={t.showAvailabilityLabel}
+              help={t.showAvailabilityHelp}
             />
             <VisibilitySwitch
               name="allow_contact_reveal"
               checked={allowContactReveal}
               onChange={setAllowContactReveal}
-              label="Pozwól koordynatorowi awaryjnie odsłonić mój numer"
-              help="Gdy w kryzysie nie da się zawiadomić ludzi inaczej, koordynator może po podaniu powodu zobaczyć numery. Wyłączone: Twój numer zostanie pominięty."
+              label={t.allowContactRevealLabel}
+              help={t.allowContactRevealHelp}
             />
           </div>
         </section>
@@ -235,8 +235,8 @@ export default function ProfileForm({ taxonomy, profile }: Props) {
 
       {/* The error sits under the button, so nothing above it moves when it appears. */}
       <div className="mt-2">
-        <SubmitButton pending={submitting} pendingText="Zapisywanie…">
-          Zapisz profil
+        <SubmitButton pending={submitting} pendingText={t.submitting}>
+          {t.submit}
         </SubmitButton>
         <div role="alert" className="min-h-8 font-bold">
           {clientError && <FieldError id="profile-form-error">{clientError}</FieldError>}

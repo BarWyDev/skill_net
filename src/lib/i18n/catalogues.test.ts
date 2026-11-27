@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
 import { test } from "node:test";
 
-import { format, placeholders, plural } from "./format.ts";
+import { format, formatDate, formatDateTime, placeholders, plural } from "./format.ts";
 import { LOCALES } from "./locale.ts";
 
 const MESSAGES_DIR = new URL("./messages/", import.meta.url);
@@ -78,4 +78,19 @@ test("plural picks the English forms, and falls back to `other` for a form left 
   assert.equal(plural("en", 2, forms), "characters");
   assert.equal(plural("en", 0, forms), "characters");
   assert.equal(plural("pl", 5, forms), "characters");
+});
+
+test("formatDate follows the language and never shifts the day", () => {
+  assert.equal(formatDate("pl", "2026-10-15"), "15.10.2026");
+  assert.equal(formatDate("uk", "2027-01-05"), "05.01.2027");
+  assert.equal(formatDate("en", "2026-10-15"), "15 October 2026");
+  assert.equal(formatDate("en", "2027-01-01"), "1 January 2027");
+  assert.equal(formatDate("en", "2026-12-31"), "31 December 2026");
+});
+
+test("formatDateTime shows the Warsaw clock", () => {
+  // 23:30 UTC on 31 October is 00:30 CET on 1 November.
+  assert.equal(formatDateTime("pl", "2026-10-31T23:30:00Z"), "1.11.2026, 00:30");
+  assert.equal(formatDateTime("en", "2026-10-31T23:30:00Z"), "01/11/2026, 00:30");
+  assert.equal(formatDateTime("uk", "2026-10-31T23:30:00Z"), "01.11.26, 00:30");
 });

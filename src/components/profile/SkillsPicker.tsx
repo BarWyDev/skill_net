@@ -1,7 +1,11 @@
 import { FieldError } from "@/components/auth/FieldError";
+import { format } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/locale";
+import { profile } from "@/lib/i18n/messages/profile";
 import { cn } from "@/lib/utils";
 import type { SkillCategoryDTO, SkillDTO, SkillLevel } from "@/types";
 
+// Polish, for the coordinator's skill list (translated with S-20). The picker reads the catalogue.
 export const LEVEL_LABELS: Record<SkillLevel, string> = {
   1: "Podstawowy kurs",
   2: "Praktyk",
@@ -13,6 +17,8 @@ const LEVELS: SkillLevel[] = [1, 2, 3];
 export type SelectedSkills = Record<string, SkillLevel | null>;
 
 interface Props {
+  locale: Locale;
+  /** Names already in the request's language. */
   categories: SkillCategoryDTO[];
   skills: SkillDTO[];
   selected: SelectedSkills;
@@ -28,6 +34,7 @@ interface Props {
 // signal accent. A checked skill opens an indented block underneath: its level radios on a
 // full-width row when it has levels, then its "use in crisis" checkbox.
 export function SkillsPicker({
+  locale,
   categories,
   skills,
   selected,
@@ -37,6 +44,8 @@ export function SkillsPicker({
   onLevel,
   onCrisis,
 }: Props) {
+  const t = profile[locale].skills;
+  const levelLabels: Record<SkillLevel, string> = { 1: t.level1, 2: t.level2, 3: t.level3 };
   return (
     <div className="space-y-8">
       {categories.map((category) => (
@@ -71,7 +80,7 @@ export function SkillsPicker({
                             id={`level-${skill.slug}`}
                             aria-describedby={missingLevel ? `level-${skill.slug}-error` : undefined}
                           >
-                            <legend className="sr-only">Poziom: {skill.name}</legend>
+                            <legend className="sr-only">{format(t.levelLegend, { skill: skill.name })}</legend>
                             <div className="flex flex-wrap gap-x-6">
                               {LEVELS.map((value) => (
                                 <label key={value} className="flex min-h-11 cursor-pointer items-center gap-3">
@@ -85,25 +94,25 @@ export function SkillsPicker({
                                     }}
                                     className="radio"
                                   />
-                                  <span className="text-[0.9375rem]">{LEVEL_LABELS[value]}</span>
+                                  <span className="text-[0.9375rem]">{levelLabels[value]}</span>
                                 </label>
                               ))}
                             </div>
-                            {missingLevel && <FieldError id={`level-${skill.slug}-error`}>Wybierz poziom.</FieldError>}
+                            {missingLevel && <FieldError id={`level-${skill.slug}-error`}>{t.chooseLevel}</FieldError>}
                           </fieldset>
                         )}
                         <label className="flex min-h-11 cursor-pointer items-center gap-3">
                           <input
                             type="checkbox"
                             checked={!crisisOff.has(skill.slug)}
-                            aria-label={`Używaj w kryzysie: ${skill.name}`}
+                            aria-label={format(t.useInCrisisFor, { skill: skill.name })}
                             onChange={(e) => {
                               onCrisis(skill.slug, e.target.checked);
                             }}
                             className="check"
                           />
                           <span className={cn("text-[0.9375rem]", crisisOff.has(skill.slug) && "text-ash")}>
-                            Używaj w kryzysie
+                            {t.useInCrisis}
                           </span>
                         </label>
                       </div>

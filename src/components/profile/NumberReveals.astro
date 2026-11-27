@@ -1,7 +1,8 @@
 ---
 // "Kto widział mój numer" (security audit F-11): every break-glass reveal of the resident's own
 // number. Never the coordinator or their reason, which the RPC does not return.
-import { formatActivatedAt } from "@/lib/crisis-format";
+import { format, formatDateTime } from "@/lib/i18n/format";
+import { profile } from "@/lib/i18n/messages/profile";
 import { SECTION_TITLE } from "@/lib/site-styles";
 import type { NumberRevealDTO } from "@/types";
 
@@ -11,28 +12,29 @@ interface Props {
 }
 
 const { reveals } = Astro.props;
+const { locale } = Astro.locals;
+const t = profile[locale].reveals;
 ---
 
 <section aria-labelledby="number-reveals-title" class="border-seam mt-16 border-t pt-10">
   <h2 id="number-reveals-title" class:list={SECTION_TITLE}>
-    Kto widział mój numer
+    {t.title}
   </h2>
-  <p class="text-ash mt-4 leading-relaxed">
-    Koordynator może zobaczyć Twój numer tylko w trwającym kryzysie i po podaniu powodu. Każde takie odsłonięcie jest
-    zapisywane i widzisz je tutaj.
-  </p>
+  <p class="text-ash mt-4 leading-relaxed">{t.help}</p>
   {reveals === null ? (
-    <p class="mt-6">Nie udało się wczytać listy. Odśwież stronę.</p>
+    <p class="mt-6">{t.loadFailed}</p>
   ) : reveals.length === 0 ? (
-    <p class="mt-6">Nikt jeszcze nie odsłonił Twojego numeru.</p>
+    <p class="mt-6">{t.none}</p>
   ) : (
     <ul class="mt-6 space-y-3">
       {reveals.map((reveal) => (
         <li class="border-seam border-l-2 pl-4">
-          <span class="font-bold tabular-nums">{formatActivatedAt(reveal.revealedAt)}</span>
+          <span class="font-bold tabular-nums">{formatDateTime(locale, reveal.revealedAt)}</span>
           <span class="text-ash"> · </span>
           {reveal.crisisType}
-          {reveal.epicentrePostcode && <span class="text-ash">, okolice {reveal.epicentrePostcode}</span>}
+          {reveal.epicentrePostcode && (
+            <span class="text-ash">, {format(t.near, { postcode: reveal.epicentrePostcode })}</span>
+          )}
         </li>
       ))}
     </ul>
