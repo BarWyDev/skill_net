@@ -1,7 +1,9 @@
 import { z } from "zod";
 import type { Database } from "@/db/database.types";
+import type { Locale } from "@/lib/i18n/locale";
+import { crisis as crisisMessages, crisisTypeName, scenarioName } from "@/lib/i18n/messages/crisis";
 import type { SupabaseClient } from "@/lib/supabase";
-import { REASON_REQUIRED_MESSAGE, REASON_TOO_LONG_MESSAGE } from "@/lib/reason";
+import { REASON_REQUIRED_MESSAGE, REASON_TOO_LONG_MESSAGE, reasonMessages } from "@/lib/reason";
 import { assembleTeams } from "@/lib/team-assembly";
 import type {
   ActivateCrisisInput,
@@ -23,43 +25,45 @@ type ActivateCrisisArgs = Database["public"]["Functions"]["activate_crisis"]["Ar
 
 export const MATCHES_PAGE_SIZE = 200;
 
-const GENERIC_ACTIVATE_ERROR = "Nie udało się aktywować trybu kryzysowego. Spróbuj ponownie.";
+// Codes raised by activate_crisis in the crisis matching and activation audit migrations; their
+// messages are in the `crisis` catalogue under `activate`.
+const ACTIVATE_DB_ERRORS = [
+  "not_coordinator",
+  "unknown_crisis_type",
+  "invalid_radius",
+  "unknown_postcode",
+  "outside_poland",
+  "location_required",
+  "activation_rate_limited",
+] as const;
 
-// Messages raised by activate_crisis in the crisis matching and activation audit migrations.
-const DB_ERROR_MESSAGES: Record<string, string> = {
-  not_coordinator: "Tylko koordynator może aktywować tryb kryzysowy.",
-  unknown_crisis_type: "Wybierz rodzaj kryzysu z listy.",
-  invalid_radius: "Wybierz promień z listy.",
-  unknown_postcode: "Nie znamy tego kodu pocztowego — zaznacz epicentrum na mapie.",
-  outside_poland: "Epicentrum musi być w Polsce.",
-  location_required: "Wskaż epicentrum: wpisz kod pocztowy albo zaznacz punkt na mapie.",
-  reason_required: REASON_REQUIRED_MESSAGE,
-  reason_too_long: REASON_TOO_LONG_MESSAGE,
-  activation_rate_limited:
-    "Limit aktywacji: najwyżej 3 kryzysy na godzinę na jednego koordynatora, licząc też zakończone. Spróbuj później albo poproś o aktywację innego koordynatora.",
-};
-
-export function activateErrorMessage(error: { message?: string }): string {
-  return (error.message && DB_ERROR_MESSAGES[error.message]) ?? GENERIC_ACTIVATE_ERROR;
+export function activateErrorMessage(error: { message?: string }, locale: Locale): string {
+  const t = crisisMessages[locale].activate;
+  const code = error.message;
+  if (code === "reason_required") return reasonMessages(locale).required;
+  if (code === "reason_too_long") return reasonMessages(locale).tooLong;
+  const known = ACTIVATE_DB_ERRORS.find((c) => c === code);
+  return known ? t[known] : t.failed;
 }
 
-export async function getCrisisTypes(supabase: SupabaseClient): Promise<CrisisTypeDTO[]> {
+/** Every crisis type, in its seeded order, named in `locale`. */
+export async function getCrisisTypes(supabase: SupabaseClient, locale: Locale): Promise<CrisisTypeDTO[]> {
   const { data, error } = await supabase.from("crisis_types").select("slug, name_pl").order("sort");
   if (error) throw new Error(`getCrisisTypes: ${error.code}`);
-  return data.map((t) => ({ slug: t.slug, name: t.name_pl }));
+  return data.map((t) => ({ slug: t.slug, name: crisisTypeName(locale, t.slug, t.name_pl) }));
 }
 
-/** Every ready exercise, in its seeded order. RLS shows them to coordinators only. */
-export async function getCrisisScenarios(supabase: SupabaseClient): Promise<CrisisScenarioDTO[]> {
+/** Every ready exercise, in its seeded order, named in `locale`. RLS shows them to coordinators only. */
+export async function getCrisisScenarios(supabase: SupabaseClient, locale: Locale): Promise<CrisisScenarioDTO[]> {
   const { data, error } = await supabase
     .from("crisis_scenarios")
-    .select("slug, name_pl, postcode, radius_km, crisis_types(name_pl)")
+    .select("slug, name_pl, postcode, radius_km, crisis_types(slug, name_pl)")
     .order("sort");
   if (error) throw new Error(`getCrisisScenarios: ${error.code}`);
   return data.map((s) => ({
     slug: s.slug,
-    name: s.name_pl,
-    typeName: s.crisis_types.name_pl,
+    name: scenarioName(locale, s.slug, s.name_pl),
+    typeName: crisisTypeName(locale, s.crisis_types.slug, s.crisis_types.name_pl),
     postcode: s.postcode,
     radiusKm: s.radius_km,
   }));
@@ -67,37 +71,45 @@ export async function getCrisisScenarios(supabase: SupabaseClient): Promise<Cris
 
 /**
  * Starts a ready exercise: activates its crisis type at its postcode and radius, with its reason, as
- * an exercise. Returns a Polish message on failure.
+ * an exercise. The stored reason stays as seeded, whatever the language. Returns a message in
+ * `locale` on failure.
  */
 export async function startScenario(
   supabase: SupabaseClient,
   slug: string,
+  locale: Locale,
 ): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
   const { data, error } = await supabase
     .from("crisis_scenarios")
     .select("crisis_type_slug, postcode, radius_km, reason")
     .eq("slug", slug)
     .maybeSingle();
-  if (error) return { ok: false, message: GENERIC_ACTIVATE_ERROR };
-  if (!data) return { ok: false, message: "Nie znaleziono tego ćwiczenia. Odśwież stronę i wybierz je z listy." };
+  const t = crisisMessages[locale].activate;
+  if (error) return { ok: false, message: t.failed };
+  if (!data) return { ok: false, message: t.exerciseNotFound };
 
-  return activateCrisis(supabase, {
-    crisisType: data.crisis_type_slug,
-    locationSource: "postcode",
-    postcode: data.postcode,
-    lat: null,
-    lng: null,
-    // The table's check constraint keeps the radius to the presets.
-    radiusKm: data.radius_km as ActivateCrisisInput["radiusKm"],
-    reason: data.reason,
-    exercise: true,
-  });
+  return activateCrisis(
+    supabase,
+    {
+      crisisType: data.crisis_type_slug,
+      locationSource: "postcode",
+      postcode: data.postcode,
+      lat: null,
+      lng: null,
+      // The table's check constraint keeps the radius to the presets.
+      radiusKm: data.radius_km as ActivateCrisisInput["radiusKm"],
+      reason: data.reason,
+      exercise: true,
+    },
+    locale,
+  );
 }
 
-/** Activates a crisis and writes its ranking snapshot. Returns a Polish message on failure. */
+/** Activates a crisis and writes its ranking snapshot. Returns a message in `locale` on failure. */
 export async function activateCrisis(
   supabase: SupabaseClient,
   input: ActivateCrisisInput,
+  locale: Locale,
 ): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
   // The generated types mark every RPC argument non-null, but SQL accepts nulls for these.
   const args = {
@@ -111,7 +123,7 @@ export async function activateCrisis(
     p_exercise: input.exercise,
   } as ActivateCrisisArgs;
   const { data, error } = await supabase.rpc("activate_crisis", args);
-  return error ? { ok: false, message: activateErrorMessage(error) } : { ok: true, id: data };
+  return error ? { ok: false, message: activateErrorMessage(error, locale) } : { ok: true, id: data };
 }
 
 const GENERIC_END_ERROR = "Nie udało się zakończyć kryzysu. Spróbuj ponownie.";
@@ -141,7 +153,7 @@ export async function endCrisis(
 // `visible_match_count` and `reveal_declined_count` are PostgREST computed columns (SQL functions
 // over the crises row type).
 const CRISIS_COLUMNS =
-  "id, radius_m, activated_at, ended_at, visible_match_count, reveal_declined_count, status, is_exercise, epicentre_postcode, crisis_types(name_pl)";
+  "id, radius_m, activated_at, ended_at, visible_match_count, reveal_declined_count, status, is_exercise, epicentre_postcode, crisis_types(slug, name_pl)";
 
 interface CrisisRow {
   id: string;
@@ -153,13 +165,14 @@ interface CrisisRow {
   status: string;
   is_exercise: boolean;
   epicentre_postcode: string | null;
-  crisis_types: { name_pl: string } | null;
+  crisis_types: { slug: string; name_pl: string } | null;
 }
 
-function toCrisisDTO(row: CrisisRow): CrisisDTO {
+function toCrisisDTO(row: CrisisRow, locale: Locale): CrisisDTO {
+  const type = row.crisis_types;
   return {
     id: row.id,
-    typeName: row.crisis_types?.name_pl ?? "",
+    typeName: type ? crisisTypeName(locale, type.slug, type.name_pl) : "",
     radiusKm: row.radius_m / 1000,
     epicentrePostcode: row.epicentre_postcode,
     activatedAt: row.activated_at,
@@ -171,19 +184,23 @@ function toCrisisDTO(row: CrisisRow): CrisisDTO {
   };
 }
 
-/** Every active crisis, newest first. RLS shows them to coordinators only. */
-export async function listActiveCrises(supabase: SupabaseClient): Promise<CrisisDTO[]> {
+/** Every active crisis, newest first, its type named in `locale`. RLS shows them to coordinators only. */
+export async function listActiveCrises(supabase: SupabaseClient, locale: Locale): Promise<CrisisDTO[]> {
   const { data, error } = await supabase
     .from("crises")
     .select(CRISIS_COLUMNS)
     .eq("status", "active")
     .order("activated_at", { ascending: false });
   if (error) throw new Error(`listActiveCrises: ${error.code}`);
-  return data.map(toCrisisDTO);
+  return data.map((row) => toCrisisDTO(row, locale));
 }
 
 /** The most recently ended crises, newest end first. */
-export async function listRecentEndedCrises(supabase: SupabaseClient, limit = 10): Promise<CrisisDTO[]> {
+export async function listRecentEndedCrises(
+  supabase: SupabaseClient,
+  locale: Locale,
+  limit = 10,
+): Promise<CrisisDTO[]> {
   const { data, error } = await supabase
     .from("crises")
     .select(CRISIS_COLUMNS)
@@ -191,14 +208,14 @@ export async function listRecentEndedCrises(supabase: SupabaseClient, limit = 10
     .order("ended_at", { ascending: false })
     .limit(limit);
   if (error) throw new Error(`listRecentEndedCrises: ${error.code}`);
-  return data.map(toCrisisDTO);
+  return data.map((row) => toCrisisDTO(row, locale));
 }
 
 /** One crisis, or null when it does not exist or is not visible to the caller. */
-export async function getCrisis(supabase: SupabaseClient, id: string): Promise<CrisisDTO | null> {
+export async function getCrisis(supabase: SupabaseClient, id: string, locale: Locale): Promise<CrisisDTO | null> {
   const { data, error } = await supabase.from("crises").select(CRISIS_COLUMNS).eq("id", id).maybeSingle();
   if (error) throw new Error(`getCrisis: ${error.code}`);
-  return data ? toCrisisDTO(data) : null;
+  return data ? toCrisisDTO(data, locale) : null;
 }
 
 const matchedSkillsSchema = z.array(

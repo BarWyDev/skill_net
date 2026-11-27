@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { declinedVerb, revealCounts } from "@/lib/visibility";
 import type { CrisisContactDTO, CrisisDTO } from "@/types";
 
+const { locale } = Astro.locals;
+
 // Break-glass (S-09, FR-012). GET shows the warning and the reason form, never a number. POST calls
 // reveal_crisis_contacts, which logs the reveal, and renders the numbers in this response only:
 // no redirect, nothing in a URL, cookie or client storage. A reload or a resubmitted form is a new,
@@ -39,7 +41,7 @@ if (!supabase) {
   loadError = "Supabase nie jest skonfigurowany.";
 } else if (UUID_RE.test(id)) {
   try {
-    crisis = await getCrisis(supabase, id);
+    crisis = await getCrisis(supabase, id, locale);
   } catch {
     loadError = "Nie udało się wczytać kryzysu. Odśwież stronę.";
   }
@@ -136,7 +138,7 @@ const heading = !crisis
         <p>Ujawnienie zostanie trwale zapisane: Twoje konto, czas, powód i lista osób, których numery zobaczysz.</p>
         {crisis.revealDeclinedCount > 0 && (
           <p>
-            {formatPeople(crisis.revealDeclinedCount)} {declinedVerb(crisis.revealDeclinedCount)} na awaryjne
+            {formatPeople(locale, crisis.revealDeclinedCount)} {declinedVerb(crisis.revealDeclinedCount)} na awaryjne
             odsłonięcie numeru. Ich numerów nie zobaczysz.
           </p>
         )}
@@ -186,7 +188,7 @@ const heading = !crisis
   {crisis && contacts && revealedAt && (
     <>
       <StatusLine tone="done" role="status" class="max-w-[64ch] text-lg">
-        <p class="font-bold">Ujawnienie zapisano w dzienniku, {formatActivatedAt(revealedAt)}.</p>
+        <p class="font-bold">Ujawnienie zapisano w dzienniku, {formatActivatedAt(locale, revealedAt)}.</p>
         <p class="text-ash text-base">
           {crisis.typeName}, promień {crisis.radiusKm} km. Numery znikną po opuszczeniu tej strony.
         </p>
@@ -215,7 +217,7 @@ const heading = !crisis
               <p class="text-lg leading-tight">
                 <span class="font-bold">Osoba #{c.position}</span>
                 <span class="text-ash tabular-nums">
-                  , {formatDistanceKm(c.distanceKm)}
+                  , {formatDistanceKm(locale, c.distanceKm)}
                   <span class="sr-only"> od epicentrum</span>
                 </span>
               </p>
@@ -245,8 +247,10 @@ const heading = !crisis
       )}
 
       <p class="text-ash mt-6 leading-relaxed">
-        Bez numeru telefonu: {formatPeople(counts?.withoutPhone ?? 0)}.
-        {counts && counts.declined > 0 && <>Bez zgody na awaryjne odsłonięcie: {formatPeople(counts.declined)}.</>}
+        Bez numeru telefonu: {formatPeople(locale, counts?.withoutPhone ?? 0)}.
+        {counts && counts.declined > 0 && (
+          <>Bez zgody na awaryjne odsłonięcie: {formatPeople(locale, counts.declined)}.</>
+        )}
         Numery znikną po opuszczeniu tej strony.
       </p>
     </>

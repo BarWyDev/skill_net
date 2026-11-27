@@ -42,31 +42,7 @@ export function slotsToMask(slots: Iterable<number>): number {
   return mask;
 }
 
-function daySlots(mask: number, dayIndex: number): number {
+/** The four slot bits of one day, slot 0 lowest. */
+export function daySlots(mask: number, dayIndex: number): number {
   return (mask >> (dayIndex * SLOTS_PER_DAY)) & ((1 << SLOTS_PER_DAY) - 1);
-}
-
-/**
- * A compact summary such as "pn–pt: wieczór; sb–nd: cały dzień". Consecutive days with the same
- * slots are grouped, days without slots are left out. "zawsze" for every slot, "" for not declared.
- */
-export function formatAvailabilitySummary(mask: number | null): string {
-  if (!mask) return "";
-  if (mask === ALL_SLOTS_MASK) return "zawsze";
-
-  const fullDay = (1 << SLOTS_PER_DAY) - 1;
-  const groups: string[] = [];
-  let start = 0;
-  while (start < DAYS) {
-    const slots = daySlots(mask, start);
-    let end = start;
-    while (end + 1 < DAYS && daySlots(mask, end + 1) === slots) end++;
-    if (slots !== 0) {
-      const days = start === end ? DAY_LABELS[start] : `${DAY_LABELS[start]}–${DAY_LABELS[end]}`;
-      const names = slots === fullDay ? "cały dzień" : SLOT_NAMES.filter((_, slot) => (slots >> slot) & 1).join(", ");
-      groups.push(`${days}: ${names}`);
-    }
-    start = end + 1;
-  }
-  return groups.join("; ");
 }

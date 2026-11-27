@@ -4,6 +4,8 @@ import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import type { CrisisDTO } from "@/types";
 
+const { locale } = Astro.locals;
+
 // "Zakończ kryzys" with a native confirmation dialog. With JS the button opens the dialog;
 // without JS it submits the same form directly. "Anuluj" closes the dialog natively, and so does Esc.
 // showModal() makes the rest of the page inert, so focus stays in the dialog; it starts on "Anuluj",
@@ -37,7 +39,7 @@ const formId = "end-crisis-form";
       Zakończyć kryzys?
     </h2>
     <p class="text-ash mt-4 leading-relaxed">
-      {`${formatCrisisTitle(crisis)}, ${formatPeople(crisis.matchCount)} ${matchedWord(crisis.matchCount)}`}
+      {`${formatCrisisTitle(locale, crisis)}, ${formatPeople(locale, crisis.matchCount)} ${matchedWord(locale, crisis.matchCount)}`}
     </p>
     <p id="end-crisis-consequence" class="mt-3 leading-relaxed font-bold">
       Lista dopasowanych osób zostanie trwale usunięta. Tej operacji nie można cofnąć.
