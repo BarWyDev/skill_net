@@ -3,7 +3,7 @@ project: SkillNet
 version: 1
 status: draft
 created: 2026-09-26
-updated: 2026-11-26
+updated: 2026-11-27
 prd_version: 2
 main_goal: market-feedback
 top_blocker: decisions
@@ -25,7 +25,7 @@ milestone_status: open
 - **Intent:** A council coordinator can run a simulated crisis on real registrations from one area: residents register skills and location, the coordinator activates a crisis, gets a ranked list, alerts go out, and confirmed people land on the operational list, with the privacy guardrails in place for a real pilot.
 - **Source materials:** `context/foundation/prd.md` (v2); crisis-type × skills matrix and team templates from `docs/shape_not.md`, which the PRD cites as the seed spec.
 - **Done when:** every S-NN below is `done`.
-- **Scope anchors:** all must-have FRs (FR-001 to FR-012, FR-014, FR-015, FR-017, FR-019) and US-01, plus the nice-to-have FR-020 (neighbour courses), pulled in on 2026-10-20. The other nice-to-have FRs (FR-013, FR-016, FR-018) are parked.
+- **Scope anchors:** all must-have FRs (FR-001 to FR-012, FR-014, FR-015, FR-017, FR-019) and US-01, plus the nice-to-have FR-020 (neighbour courses), pulled in on 2026-10-20, and FR-021 (interface in English and Ukrainian), pulled in on 2026-11-26. The other nice-to-have FRs (FR-013, FR-016, FR-018) are parked.
 
 ## Vision recap
 
@@ -39,25 +39,29 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 
 ## At a glance
 
-| ID   | Change ID                       | Outcome (user can …)                                                                   | Prerequisites                 | PRD refs              | Status |
-| ---- | ------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------- | --------------------- | ------ |
-| S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location          | —                             | FR-002, FR-003        | done   |
-| S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area           | —                             | FR-017                | done   |
-| S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents        | S-01, S-02, S-15              | US-01, FR-009, FR-010 | done   |
-| S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                            | S-03                          | FR-015                | done   |
-| S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent        | —                             | FR-001                | done   |
-| S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability              | S-01                          | FR-004, FR-005        | done   |
-| S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                            | S-03, S-06, Workers Paid plan | US-01, FR-011         | paused |
-| S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts      | S-07                          | US-01, FR-012         | paused |
-| S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged | S-03, S-06                    | FR-012                | done   |
-| S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                          | S-03                          | FR-014                | done   |
-| S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area         | S-01                          | FR-008                | done   |
-| S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                  | S-06                          | FR-006                | done   |
-| S-13 | pause-availability              | resident can pause their availability without deleting the account                     | S-01                          | FR-019                | done   |
-| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                        | S-01                          | FR-007                | done   |
-| S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed     | S-01                          | FR-003                | done   |
-| S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm        | S-05                          | FR-001                | done   |
-| S-17 | neighbour-courses               | resident can offer a free course and signed-in neighbours can sign up for it           | S-01, S-11, S-12              | FR-020                | done   |
+| ID   | Change ID                       | Outcome (user can …)                                                                       | Prerequisites                 | PRD refs              | Status   |
+| ---- | ------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------- | --------------------- | -------- |
+| S-01 | resident-skills-profile         | resident can record their skills (with level 1–3) and an approximate location              | —                             | FR-002, FR-003        | done     |
+| S-02 | coordinator-role-grant          | operator can grant the coordinator role, which opens a coordinator-only area               | —                             | FR-017                | done     |
+| S-03 | crisis-activation-ranked-list   | coordinator can activate crisis mode and see a ranked list of matched residents            | S-01, S-02, S-15              | US-01, FR-009, FR-010 | done     |
+| S-04 | crisis-deactivation             | coordinator can end crisis mode and return to everyday mode                                | S-03                          | FR-015                | done     |
+| S-05 | verified-sign-up-with-consent   | resident can sign up with a verified email and explicit data-processing consent            | —                             | FR-001                | done     |
+| S-06 | resident-phone-and-availability | resident can add an optional hidden phone number and declare availability                  | S-01                          | FR-004, FR-005        | done     |
+| S-07 | crisis-sms-alert-confirmation   | matched resident can receive a crisis SMS and answer YES/NO                                | S-03, S-06, Workers Paid plan | US-01, FR-011         | paused   |
+| S-08 | live-operational-list           | coordinator can watch confirmed people land on the operational list with contacts          | S-07                          | US-01, FR-012         | paused   |
+| S-09 | break-glass-contact-reveal      | coordinator can deliberately reveal all matched people's contacts, with the act logged     | S-03, S-06                    | FR-012                | done     |
+| S-10 | crisis-team-templates           | coordinator can get teams assembled from predefined templates                              | S-03                          | FR-014                | done     |
+| S-11 | public-skills-density-map       | anonymous visitor and resident can see the aggregated skills map of their area             | S-01                          | FR-008                | done     |
+| S-12 | data-visibility-controls        | resident can choose which of their data is visible, and in which mode                      | S-06                          | FR-006                | done     |
+| S-13 | pause-availability              | resident can pause their availability without deleting the account                         | S-01                          | FR-019                | done     |
+| S-14 | unregister-and-erase            | resident can unregister and immediately disappear from searches                            | S-01                          | FR-007                | done     |
+| S-15 | profile-postcode-minimisation   | resident's stored profile holds only the coarsened point, never the postcode typed         | S-01                          | FR-003                | done     |
+| S-16 | email-delivery                  | resident outside the team can receive the Polish confirmation email and confirm            | S-05                          | FR-001                | done     |
+| S-17 | neighbour-courses               | resident can offer a free course and signed-in neighbours can sign up for it               | S-01, S-11, S-12              | FR-020                | done     |
+| S-18 | interface-language-switch       | visitor can switch the public and sign-in pages to English or Ukrainian                    | —                             | FR-021                | done     |
+| S-19 | resident-area-translations      | resident can use their profile, courses, consent and privacy pages in English or Ukrainian | S-18                          | FR-021                | proposed |
+| S-20 | coordinator-area-translations   | coordinator can run the coordinator area and crisis mode in English or Ukrainian           | S-18, S-19                    | FR-021                | proposed |
+| S-21 | emails-in-chosen-language       | resident can receive SkillNet's emails in the language they chose                          | S-18                          | FR-021                | proposed |
 
 ## Before pilot launch
 
@@ -77,11 +81,12 @@ While these wait, the open S-07 branches drift from `master`; rebase them when w
 
 Navigation aid: items grouped by the prerequisite chain they share. The canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks. There are no foundations in this milestone, so streams follow the slice chains.
 
-| Stream | Theme                             | Chain                                                        | Note                                                                                                                                                                  |
-| ------ | --------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A      | Crisis matching core              | `S-01` → `S-15` → `S-02` → `S-03` → `S-04` → `S-10`          | Reaches the north star as fast as possible; the first thing a coordinator can give feedback on.                                                                       |
-| B      | Alert and confirmation loop       | `S-06` → `S-07` → `S-08` → `S-09`                            | Joins Stream A at `S-03`; completes US-01 end to end and carries the riskiest integration (SMS).                                                                      |
-| C      | Resident control and everyday use | `S-05` → `S-16` → `S-11` → `S-12` → `S-13` → `S-14` → `S-17` | Joins Stream A at `S-01` (and B at `S-06` for `S-12`); the guardrails a real pilot needs before launch, then neighbour courses as an everyday reason to open the app. |
+| Stream | Theme                             | Chain                                                          | Note                                                                                                                                                                  |
+| ------ | --------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A      | Crisis matching core              | `S-01` → `S-15` → `S-02` → `S-03` → `S-04` → `S-10`            | Reaches the north star as fast as possible; the first thing a coordinator can give feedback on.                                                                       |
+| B      | Alert and confirmation loop       | `S-06` → `S-07` → `S-08` → `S-09`                              | Joins Stream A at `S-03`; completes US-01 end to end and carries the riskiest integration (SMS).                                                                      |
+| C      | Resident control and everyday use | `S-05` → `S-16` → `S-11` → `S-12` → `S-13` → `S-14` → `S-17`   | Joins Stream A at `S-01` (and B at `S-06` for `S-12`); the guardrails a real pilot needs before launch, then neighbour courses as an everyday reason to open the app. |
+| D      | Interface language                | `S-18` → `S-19` → `S-20`, with `S-21` beside them after `S-18` | Starts from nothing and touches every page, so it runs while Stream B waits. It does not block the pilot.                                                             |
 
 ## Baseline
 
@@ -330,27 +335,86 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Risk:** Added on 2026-10-20 as the only nice-to-have pulled into M-1. It reopens a slice of the everyday exchange cut during shaping, so the privacy narrowing in FR-020 (signed-in only, no organiser identity, 2 km square) is the whole slice. It touches no crisis path, so it never competes with S-16 for the pilot's critical path.
 - **Status:** done
 
+### S-18: Visitor switches the interface language
+
+- **Outcome:** a visitor can switch the interface between Polish, English and Ukrainian with a switcher in the header; the first visit follows the browser's language, the choice is remembered in a cookie, and the landing page, the public map, sign-in, sign-up, the confirmation pages and the error pages follow it, at the same addresses.
+- **Change ID:** interface-language-switch
+- **PRD refs:** FR-021
+- **Prerequisites:** —
+- **Parallel with:** S-07, S-08
+- **Blockers:** —
+- **Unknowns:**
+  - Who checks the Ukrainian text before it reaches production? A machine translation of crisis and consent wording needs a native reader. — Owner: user. Block: no for staging; yes for promoting Ukrainian to production (Open Roadmap Question 13).
+  - Is a library needed, or are typed message catalogues in `src/lib/` enough? The app has about 600 lines of Polish copy in 73 files, in Astro pages, React islands and server-side validation and services. — Owner: planning. Block: no.
+- **Risk:** This slice carries the foundation every later one uses: where the messages live, how the language is resolved on the server (cookie, then the browser's `Accept-Language`, then Polish), and how React islands and server-side error messages get it. The language now varies a page at one address, so no page may be cached as public (see the lesson on public cache headers). The auth endpoints pass errors as `?error=` codes, which the smoke test asserts, so the codes stay and only their display text is translated.
+- **Status:** done
+
+### S-19: Resident uses their area in English or Ukrainian
+
+- **Outcome:** a signed-in resident can use `/profil`, `/kursy`, `/zgoda` and `/prywatnosc` in English or Ukrainian, with skill and category names, validation messages, dates and numbers in that language; the consent and the privacy policy carry a note that they are a courtesy translation and the Polish text is binding.
+- **Change ID:** resident-area-translations
+- **PRD refs:** FR-021
+- **Prerequisites:** S-18
+- **Parallel with:** S-07, S-08, S-21
+- **Blockers:** —
+- **Unknowns:**
+  - Does the pilot council's data-protection officer accept a courtesy translation of the consent with the Polish text binding? — Owner: user. Block: no for building it; ask together with Open Roadmap Question 12.
+  - Category names already come from a message catalogue keyed by slug (`src/lib/i18n/messages/taxonomy.ts`, shipped with S-18, with the database's Polish name as the fallback). Do skill names follow the same way, or get `name_en` and `name_uk` columns beside `name_pl`? Columns are an expand-only migration; catalogues need no migration. — Owner: planning. Block: no.
+- **Rollout:** production's `ENABLED_LOCALES` (top-level `vars` in `wrangler.jsonc`) stays `pl` until this slice is done, so no visitor lands on a half-translated resident area; S-18 ships to production with Polish only. Switching it is a one-line change in the last PR of this slice.
+- **Already shipped with S-18:** the courtesy translation of the consent on the sign-up form, with the Polish original below it marked as binding (`src/lib/i18n/messages/auth.ts`; `/zgoda` still shows Polish only), and the six category names.
+- **Risk:** The consent wording has a single source in `src/lib/consent.ts`, tied to a row in `consent_versions`. The translation must not change the consent version, or every resident is asked to consent again. Course titles and descriptions are typed by residents and stay as written.
+- **Status:** proposed
+
+### S-20: Coordinator runs crisis mode in English or Ukrainian
+
+- **Outcome:** a coordinator can use the coordinator area and crisis mode (activation, ranked list, coverage, teams, contacts, ending a crisis) in English or Ukrainian, with crisis types, team templates and role names in that language.
+- **Change ID:** coordinator-area-translations
+- **PRD refs:** FR-021
+- **Prerequisites:** S-18, S-19 (skill names)
+- **Parallel with:** S-07, S-08, S-21
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** This is the crisis path, so a wrong or missing translation costs the most here: a missing message must fall back to Polish, never to an empty label or a key. The ranked list must still appear within 3 seconds. The open S-07 and S-08 branches touch the same pages, so whichever lands second rebases onto the other.
+- **Status:** proposed
+
+### S-21: Resident receives emails in the chosen language
+
+- **Outcome:** a resident who chose English or Ukrainian receives the confirmation, sign-in-link and password-recovery emails in that language; the choice is stored with the account, so it also holds on another device.
+- **Change ID:** emails-in-chosen-language
+- **PRD refs:** FR-021, FR-001
+- **Prerequisites:** S-18
+- **Parallel with:** S-07, S-08, S-19, S-20
+- **Blockers:** —
+- **Unknowns:**
+  - Supabase keeps one template per email type. Can the three templates in `supabase/templates/` branch on a language value in the user's metadata, and one subject line serve three languages? — Owner: planning. Block: no.
+- **Risk:** Email settings are per Supabase project and have drifted on production before (S-16's lesson), so the templates must be checked on production through the Management API after the change. The crisis SMS wording and the YES/NO replies in three languages belong to S-07, not here: a Ukrainian SMS in Cyrillic holds 70 characters per part instead of 160, which raises the cost per alert.
+- **Status:** proposed
+
 ## Backlog Handoff
 
-| Roadmap ID | Issue | Change ID                       | Suggested issue title                                           | Ready for `/10x-plan` | Notes                                               |
-| ---------- | ----- | ------------------------------- | --------------------------------------------------------------- | --------------------- | --------------------------------------------------- |
-| S-01       | #2    | resident-skills-profile         | Resident profile: skills (level 1–3) and approximate location   | done                  | Archived 2026-09-27                                 |
-| S-02       | #3    | coordinator-role-grant          | Operator grants coordinator role; coordinator-only area         | done                  | Archived 2026-09-28                                 |
-| S-03       | #4    | crisis-activation-ranked-list   | Activate crisis mode and show ranked matched residents          | done                  | Archived 2026-10-02 (north star)                    |
-| S-04       | #5    | crisis-deactivation             | Deactivate crisis mode                                          | done                  | Archived 2026-10-02                                 |
-| S-05       | #6    | verified-sign-up-with-consent   | Sign-up with verified email and data-processing consent         | done                  | Archived 2026-10-06; email delivery split into S-16 |
-| S-06       | #7    | resident-phone-and-availability | Optional hidden phone number and availability                   | done                  | Archived 2026-10-03                                 |
-| S-07       | #8    | crisis-sms-alert-confirmation   | Crisis SMS alert with YES/NO confirmation                       | no                    | Paused 2026-11-26; required before pilot launch     |
-| S-08       | #9    | live-operational-list           | Live operational list of confirmed volunteers                   | no                    | Paused with S-07; required before pilot launch      |
-| S-09       | #10   | break-glass-contact-reveal      | Break-glass reveal of matched contacts, audited                 | done                  | Archived 2026-10-04                                 |
-| S-10       | #11   | crisis-team-templates           | Assemble teams from predefined templates                        | done                  | Archived 2026-10-04                                 |
-| S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                            | done                  | Archived 2026-10-05                                 |
-| S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                    | done                  | Archived 2026-10-19                                 |
-| S-13       | #14   | pause-availability              | Pause and resume availability                                   | done                  | Archived 2026-10-06                                 |
-| S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure            | done                  | Archived 2026-10-04                                 |
-| S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point | done                  | Archived 2026-09-27; no issue was created           |
-| S-16       | #103  | email-delivery                  | Own sending domain, custom SMTP and Polish confirmation email   | done                  | Archived 2026-10-25                                 |
-| S-17       | —     | neighbour-courses               | Neighbour courses: offer a free course, neighbours sign up      | done                  | Archived 2026-10-20; no issue was created           |
+| Roadmap ID | Issue | Change ID                       | Suggested issue title                                                  | Ready for `/10x-plan` | Notes                                               |
+| ---------- | ----- | ------------------------------- | ---------------------------------------------------------------------- | --------------------- | --------------------------------------------------- |
+| S-01       | #2    | resident-skills-profile         | Resident profile: skills (level 1–3) and approximate location          | done                  | Archived 2026-09-27                                 |
+| S-02       | #3    | coordinator-role-grant          | Operator grants coordinator role; coordinator-only area                | done                  | Archived 2026-09-28                                 |
+| S-03       | #4    | crisis-activation-ranked-list   | Activate crisis mode and show ranked matched residents                 | done                  | Archived 2026-10-02 (north star)                    |
+| S-04       | #5    | crisis-deactivation             | Deactivate crisis mode                                                 | done                  | Archived 2026-10-02                                 |
+| S-05       | #6    | verified-sign-up-with-consent   | Sign-up with verified email and data-processing consent                | done                  | Archived 2026-10-06; email delivery split into S-16 |
+| S-06       | #7    | resident-phone-and-availability | Optional hidden phone number and availability                          | done                  | Archived 2026-10-03                                 |
+| S-07       | #8    | crisis-sms-alert-confirmation   | Crisis SMS alert with YES/NO confirmation                              | no                    | Paused 2026-11-26; required before pilot launch     |
+| S-08       | #9    | live-operational-list           | Live operational list of confirmed volunteers                          | no                    | Paused with S-07; required before pilot launch      |
+| S-09       | #10   | break-glass-contact-reveal      | Break-glass reveal of matched contacts, audited                        | done                  | Archived 2026-10-04                                 |
+| S-10       | #11   | crisis-team-templates           | Assemble teams from predefined templates                               | done                  | Archived 2026-10-04                                 |
+| S-11       | #12   | public-skills-density-map       | Public aggregated skills-density map                                   | done                  | Archived 2026-10-05                                 |
+| S-12       | #13   | data-visibility-controls        | Per-field, per-mode data visibility controls                           | done                  | Archived 2026-10-19                                 |
+| S-13       | #14   | pause-availability              | Pause and resume availability                                          | done                  | Archived 2026-10-06                                 |
+| S-14       | #15   | unregister-and-erase            | Unregister with immediate removal and 30-day erasure                   | done                  | Archived 2026-10-04                                 |
+| S-15       | —     | profile-postcode-minimisation   | Stop storing the resident's postcode; keep only coarsened point        | done                  | Archived 2026-09-27; no issue was created           |
+| S-16       | #103  | email-delivery                  | Own sending domain, custom SMTP and Polish confirmation email          | done                  | Archived 2026-10-25                                 |
+| S-17       | —     | neighbour-courses               | Neighbour courses: offer a free course, neighbours sign up             | done                  | Archived 2026-10-20; no issue was created           |
+| S-18       | —     | interface-language-switch       | Language switcher (PL, EN, UK) and translated public and sign-in pages | yes                   | Carries the message catalogues the next three use   |
+| S-19       | —     | resident-area-translations      | Resident area, taxonomy and legal texts in English and Ukrainian       | no                    | Waits on S-18                                       |
+| S-20       | —     | coordinator-area-translations   | Coordinator area and crisis mode in English and Ukrainian              | no                    | Waits on S-18 and S-19                              |
+| S-21       | —     | emails-in-chosen-language       | Emails in the resident's chosen language                               | no                    | Waits on S-18                                       |
 
 ## Open Roadmap Questions
 
@@ -366,6 +430,8 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 10. **When does production move to the Workers Paid plan?** It is a human-only change, and it must happen before the first deploy that carries crisis alerts. — Owner: user. Block: S-07.
 11. ~~**Which own domain and email-sending provider back sign-up verification?**~~ Resolved 2026-10-24: `skillnet.org.pl` with Resend (eu-west-1). Open follow-up: the pilot council's DPO on Resend's US-hosted logs (see 12).
 12. **What will the pilot council's data-protection officer accept for where phone numbers and locations are processed?** The Supabase region is fixed, but Workers process requests at any edge location. — Owner: user. Block: pilot launch (S-07, S-08, S-09 with real data).
+13. **Who checks the Ukrainian (and English) text before it reaches production?** Crisis instructions and the consent need a native reader, not only a machine translation. — Owner: user. Block: promoting S-18 to S-21 to production with Ukrainian switched on.
+14. **In which languages do the crisis SMS and its YES/NO replies go out?** A Cyrillic SMS holds 70 characters per part instead of 160. — Owner: user. Block: S-07.
 
 ## Parked
 
@@ -395,3 +461,4 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **S-05: a resident can sign up in Polish, verify their email, and give explicit consent to data processing, with the consent recorded in an audit trail that is not platform logs.** — Archived 2026-10-06 → `context/archive/2026-10-06-verified-sign-up-with-consent/`. Lesson: —.
 - **S-17: a resident can offer a free course tied to one of their skills (title, description, duration); signed-in residents see the courses offered in their area, with no organiser name or contact and the place only as the 2 km square of the public map, and sign up in the app; the organiser sees how many people signed up and gives them the meeting place and time.** — Archived 2026-10-20 → `context/archive/2026-10-20-neighbour-courses/`. Lesson: —.
 - **S-16: a resident with any email address can sign up on production, receive the Polish confirmation email from SkillNet's own sending domain, and confirm the account through the link, which signs them in and opens `/profil`.** — Archived 2026-10-25 → `context/archive/2026-10-06-email-delivery/`. Lesson: Supabase dashboard settings drift (production had `mailer_autoconfirm` back on true); verify auth config through the Management API, not memory.
+- **S-18: a visitor can switch the interface between Polish, English and Ukrainian with a switcher in the header; the first visit follows the browser's language, the choice is remembered in a cookie, and the landing page, the public map, sign-in, sign-up, the confirmation pages and the error pages follow it, at the same addresses.** — Archived 2026-11-27 → `context/archive/2026-11-26-interface-language-switch/`. Lesson: —.
