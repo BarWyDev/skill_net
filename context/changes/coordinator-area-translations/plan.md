@@ -272,16 +272,16 @@ No migration. The area reaches production with the next promotion after the phas
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `npm run test:unit`
-- [x] 1.2 Type check passes: `npx astro check`
-- [x] 1.3 Lint passes: `npm run lint`
-- [x] 1.4 Build passes: `npm run build` (to a scratch `--outDir`)
-- [x] 1.5 Local smoke passes: `npm run smoke`
+- [x] 1.1 Unit tests pass: `npm run test:unit` — 128c01e
+- [x] 1.2 Type check passes: `npx astro check` — 128c01e
+- [x] 1.3 Lint passes: `npm run lint` — 128c01e
+- [x] 1.4 Build passes: `npm run build` (to a scratch `--outDir`) — 128c01e
+- [x] 1.5 Local smoke passes: `npm run smoke` — 128c01e
 
 #### Manual
 
-- [x] 1.6 `/koordynator` in `en` and `uk` shows no Polish outside typed reasons; activation and exercise notices follow the language
-- [x] 1.7 `/koordynator` in `pl` reads as before
+- [x] 1.6 `/koordynator` in `en` and `uk` shows no Polish outside typed reasons; activation and exercise notices follow the language — 128c01e
+- [x] 1.7 `/koordynator` in `pl` reads as before — 128c01e
 
 ### Phase 2: Crisis page
 
