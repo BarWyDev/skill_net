@@ -412,10 +412,10 @@ No database change. The rollout switch is `ENABLED_LOCALES` in `wrangler.jsonc`:
 - [x] 4.1 Smoke passes with the new language checks — b5b5bb6
 - [x] 4.2 Unit tests, type check, lint and build pass — b5b5bb6
 - [x] 4.3 CI is green on the PR
-- [ ] 4.4 Production offers Polish only in the merged `wrangler.jsonc`
+- [x] 4.4 Production offers Polish only in the merged `wrangler.jsonc`
 
 #### Manual
 
-- [ ] 4.5 All three languages work end to end on staging
+- [x] 4.5 All three languages work end to end on staging
 - [x] 4.6 A branch preview offers all three languages
 - [ ] 4.7 Owner has read the English text and listed the Ukrainian pages for the native reader

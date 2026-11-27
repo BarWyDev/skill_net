@@ -1,7 +1,7 @@
 ---
 change_id: interface-language-switch
 title: Interface language switch
-status: implementing
+status: implemented
 created: 2026-11-26
 updated: 2026-11-27
 archived_at: null
