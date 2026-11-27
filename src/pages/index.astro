@@ -2,6 +2,7 @@
 import Landing from "@/components/Landing.astro";
 import Layout from "@/layouts/Layout.astro";
 import StatusLine from "@/components/StatusLine.astro";
+import { landing } from "@/lib/i18n/messages/landing";
 
 const accountDeleted = Astro.url.searchParams.has("konto-usuniete");
 ---
@@ -10,7 +11,7 @@ const accountDeleted = Astro.url.searchParams.has("konto-usuniete");
   <Landing>
     {accountDeleted && (
       <StatusLine tone="done" role="status" class="mt-6 font-bold">
-        Twoje konto i dane zostały usunięte.
+        {landing[Astro.locals.locale].accountDeleted}
       </StatusLine>
     )}
   </Landing>

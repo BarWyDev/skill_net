@@ -18,6 +18,10 @@ export const pl = {
     signIn: "Zaloguj się",
     signUp: "Załóż konto",
   },
+  breadcrumb: {
+    /** The accessible name of the breadcrumb trail (PageShell). */
+    label: "Ścieżka",
+  },
   footer: {
     privacy: "Prywatność i przetwarzanie danych",
   },
@@ -45,6 +49,9 @@ export const en: CommonMessages = {
     signIn: "Sign in",
     signUp: "Create account",
   },
+  breadcrumb: {
+    label: "Breadcrumb",
+  },
   footer: {
     privacy: "Privacy and data processing",
   },
@@ -68,6 +75,9 @@ export const uk: CommonMessages = {
     signOut: "Вийти",
     signIn: "Увійти",
     signUp: "Створити акаунт",
+  },
+  breadcrumb: {
+    label: "Шлях",
   },
   footer: {
     privacy: "Приватність і обробка даних",

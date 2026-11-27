@@ -6,6 +6,7 @@ import Layout from "@/layouts/Layout.astro";
 import SiteHeader from "@/components/SiteHeader.astro";
 import { NAV_LINK, PAGE_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
+import { common } from "@/lib/i18n/messages/common";
 
 interface Crumb {
   href: string;
@@ -33,7 +34,7 @@ const { title, description, heading, crumbs = [], crumbLabel, wide = false } = A
       <SiteHeader />
 
       {crumbs.length > 0 && (
-        <nav aria-label="Ścieżka" class="mt-6 text-[0.9375rem] sm:mt-10">
+        <nav aria-label={common[Astro.locals.locale].breadcrumb.label} class="mt-6 text-[0.9375rem] sm:mt-10">
           <ol class="flex flex-wrap items-center gap-x-3">
             {crumbs.map((crumb) => (
               <li class="flex items-center gap-x-3">
