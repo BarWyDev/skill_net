@@ -2,9 +2,10 @@
 // A matched person's live status: declared availability now, the declared hours and, when known, a
 // missing phone number. Display-only: none of it changes the order of the list.
 import StatusMark from "@/components/StatusMark.astro";
-import { formatAvailabilitySummary } from "@/lib/availability";
-import { availabilityStatus } from "@/lib/crisis-format";
+import { availabilityStatus, formatAvailabilitySummary } from "@/lib/crisis-format";
 import { cn } from "@/lib/utils";
+
+const { locale } = Astro.locals;
 
 interface Props {
   availableNow: boolean | null;
@@ -15,8 +16,8 @@ interface Props {
 }
 
 const { availableNow, availabilitySlots, hasPhone, class: className } = Astro.props;
-const availability = availabilityStatus(availableNow);
-const hours = formatAvailabilitySummary(availabilitySlots);
+const availability = availabilityStatus(locale, availableNow);
+const hours = formatAvailabilitySummary(locale, availabilitySlots);
 ---
 
 <div class:list={cn("space-y-1 text-[0.9375rem] leading-snug", className)}>

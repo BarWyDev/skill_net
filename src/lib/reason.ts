@@ -2,11 +2,22 @@
 // activation. The same rule lives in `check_reason` in the meaningful reasons migration, which
 // checks it again; change both together. Relative imports only, so `node:test` can load it.
 
+import { format } from "./i18n/format.ts";
+import type { Locale } from "./i18n/locale.ts";
+import { crisis } from "./i18n/messages/crisis.ts";
+
 export const REASON_MIN = 10;
 export const REASON_MAX = 500;
 
-export const REASON_REQUIRED_MESSAGE = `Opisz powód słowami: co najmniej ${REASON_MIN} znaków i dwa słowa.`;
-export const REASON_TOO_LONG_MESSAGE = `Powód może mieć najwyżej ${REASON_MAX} znaków.`;
+/** The two refusals of the rule, in `locale`. */
+export function reasonMessages(locale: Locale): { required: string; tooLong: string } {
+  const t = crisis[locale].reason;
+  return { required: format(t.required, { min: REASON_MIN }), tooLong: format(t.tooLong, { max: REASON_MAX }) };
+}
+
+// Polish, for the break-glass page until it is translated (coordinator-area-translations, Phase 3).
+export const REASON_REQUIRED_MESSAGE = reasonMessages("pl").required;
+export const REASON_TOO_LONG_MESSAGE = reasonMessages("pl").tooLong;
 
 // Whitespace, control characters and invisible formatting characters: zero-width spaces and
 // joiners, direction marks and overrides, the BOM, soft hyphens, variation selectors, fillers.
@@ -20,12 +31,13 @@ export function normaliseReason(raw: string): string {
   return raw.replace(INVISIBLE_RUN, " ").trim();
 }
 
-/** A Polish message when a normalised reason is not acceptable, otherwise null. */
-export function reasonProblem(reason: string): string | null {
-  if (reason.length < REASON_MIN) return REASON_REQUIRED_MESSAGE;
-  if (reason.length > REASON_MAX) return REASON_TOO_LONG_MESSAGE;
+/** A message in `locale` when a normalised reason is not acceptable, otherwise null. */
+export function reasonProblem(reason: string, locale: Locale): string | null {
+  const messages = reasonMessages(locale);
+  if (reason.length < REASON_MIN) return messages.required;
+  if (reason.length > REASON_MAX) return messages.tooLong;
   const words = reason.match(/\p{L}{3,}/gu) ?? [];
   const letters = new Set(reason.toLowerCase().match(/\p{L}/gu) ?? []);
-  if (words.length < 2 || letters.size < 4) return REASON_REQUIRED_MESSAGE;
+  if (words.length < 2 || letters.size < 4) return messages.required;
   return null;
 }

@@ -10,6 +10,8 @@ import { SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import type { CrisisCoverageDTO } from "@/types";
 
+const { locale } = Astro.locals;
+
 interface Props {
   coverage: CrisisCoverageDTO[];
   class?: string;
@@ -30,7 +32,7 @@ const groups = [
 
   {summary.missingPriority.length > 0 ? (
     <StatusLine tone="attention" class="mt-4 max-w-[64ch] text-lg">
-      <p class="font-bold">W promieniu brakuje: {joinNames(summary.missingPriority)}.</p>
+      <p class="font-bold">W promieniu brakuje: {joinNames(locale, summary.missingPriority)}.</p>
       <p class="text-ash text-base">
         Priorytetowe umiejętności na liście: {summary.priorityCovered} z {summary.priorityTotal}. Rozważ większy promień
         albo pomoc z zewnątrz.
@@ -54,7 +56,7 @@ const groups = [
                 <StatusMark tone="attention">nikt w promieniu</StatusMark>
               ) : (
                 <span class="tabular-nums">
-                  {formatPeople(r.people)}
+                  {formatPeople(locale, r.people)}
                   {r.availableNow > 0 && <span class="text-ash">, teraz dostępne: {r.availableNow}</span>}
                 </span>
               )}

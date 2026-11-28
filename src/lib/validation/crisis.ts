@@ -1,74 +1,80 @@
 import { z } from "zod";
-import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
+import type { Locale } from "@/lib/i18n/locale";
+import { crisis } from "@/lib/i18n/messages/crisis";
+import { profile } from "@/lib/i18n/messages/profile";
+import { normalisePostcode } from "@/lib/postcode";
 import { normaliseReason, REASON_REQUIRED_MESSAGE, reasonProblem } from "@/lib/reason";
 import type { ActivateCrisisInput, RadiusKm } from "@/types";
 
 export const RADIUS_PRESETS: RadiusKm[] = [1, 2, 5, 10, 20];
 export const DEFAULT_RADIUS: RadiusKm = 5;
 
-const LOCATION_REQUIRED = "Wskaż epicentrum: wpisz kod pocztowy albo zaznacz punkt na mapie.";
-
-const coordinate = (min: number, max: number) =>
+const coordinate = (locale: Locale, min: number, max: number) =>
   z
     .string()
     .trim()
-    .min(1, LOCATION_REQUIRED)
+    .min(1, crisis[locale].activate.location_required)
     .transform(Number)
-    .refine((n) => Number.isFinite(n) && n >= min && n <= max, "Nieprawidłowa lokalizacja epicentrum.");
+    .refine((n) => Number.isFinite(n) && n >= min && n <= max, crisis[locale].activate.invalidLocation);
 
 export { REASON_MAX, REASON_MIN } from "@/lib/reason";
 
 // The rule of check_reason, which activate_crisis and reveal_crisis_contacts apply again. The parsed
 // value is the normalised reason, as the database stores it.
-const reasonSchema = z
-  .string()
-  .transform(normaliseReason)
-  .superRefine((reason, ctx) => {
-    const problem = reasonProblem(reason);
-    if (problem) ctx.addIssue({ code: "custom", message: problem });
-  });
-
-const common = {
-  // Whether the type exists is checked by the RPC, the single source of truth.
-  crisis_type: z.string().regex(/^[a-z0-9-]+$/, "Wybierz rodzaj kryzysu."),
-  radius_km: z
+const reasonSchema = (locale: Locale) =>
+  z
     .string()
-    .transform(Number)
-    .refine((n): n is RadiusKm => (RADIUS_PRESETS as number[]).includes(n), "Wybierz promień z listy."),
-  reason: reasonSchema,
-};
+    .transform(normaliseReason)
+    .superRefine((reason, ctx) => {
+      const problem = reasonProblem(reason, locale);
+      if (problem) ctx.addIssue({ code: "custom", message: problem });
+    });
 
-const crisisFormSchema = z.discriminatedUnion(
-  "location_source",
-  [
-    z.object({
-      ...common,
-      location_source: z.literal("postcode"),
-      postcode: z.string().transform((value, ctx) => {
-        const postcode = normalisePostcode(value);
-        if (postcode === null) {
-          ctx.addIssue({ code: "custom", message: POSTCODE_ERROR });
-          return z.NEVER;
-        }
-        return postcode;
+function crisisFormSchema(locale: Locale) {
+  const t = crisis[locale].activate;
+  const common = {
+    // Whether the type exists is checked by the RPC, the single source of truth.
+    crisis_type: z.string().regex(/^[a-z0-9-]+$/, t.chooseType),
+    radius_km: z
+      .string()
+      .transform(Number)
+      .refine((n): n is RadiusKm => (RADIUS_PRESETS as number[]).includes(n), t.invalid_radius),
+    reason: reasonSchema(locale),
+  };
+
+  return z.discriminatedUnion(
+    "location_source",
+    [
+      z.object({
+        ...common,
+        location_source: z.literal("postcode"),
+        postcode: z.string().transform((value, ctx) => {
+          const postcode = normalisePostcode(value);
+          if (postcode === null) {
+            ctx.addIssue({ code: "custom", message: profile[locale].location.postcodeInvalid });
+            return z.NEVER;
+          }
+          return postcode;
+        }),
       }),
-    }),
-    z.object({
-      ...common,
-      location_source: z.literal("pin"),
-      lat: coordinate(-90, 90),
-      lng: coordinate(-180, 180),
-    }),
-  ],
-  { error: LOCATION_REQUIRED },
-);
+      z.object({
+        ...common,
+        location_source: z.literal("pin"),
+        lat: coordinate(locale, -90, 90),
+        lng: coordinate(locale, -180, 180),
+      }),
+    ],
+    { error: t.location_required },
+  );
+}
 
 /** Parses the break-glass reason from the reveal form. Messages are Polish and safe to show. */
 export function parseRevealReason(
   form: FormData,
 ): { success: true; data: string } | { success: false; message: string } {
   const value = form.get("reason");
-  const result = reasonSchema.safeParse(typeof value === "string" ? value : "");
+  // Polish until the break-glass page is translated (coordinator-area-translations, Phase 3).
+  const result = reasonSchema("pl").safeParse(typeof value === "string" ? value : "");
   return result.success
     ? { success: true, data: result.data }
     : { success: false, message: result.error.issues[0]?.message ?? REASON_REQUIRED_MESSAGE };
@@ -103,14 +109,14 @@ export function parseTeamRequest(
 
 export type CrisisParseResult = { success: true; data: ActivateCrisisInput } | { success: false; message: string };
 
-/** Parses the crisis activation form POST into the RPC input. Messages are Polish and safe to show. */
-export function parseCrisisForm(form: FormData): CrisisParseResult {
+/** Parses the crisis activation form POST into the RPC input. Messages are in `locale` and safe to show. */
+export function parseCrisisForm(form: FormData, locale: Locale): CrisisParseResult {
   const text = (name: string) => {
     const value = form.get(name);
     return typeof value === "string" ? value : "";
   };
 
-  const result = crisisFormSchema.safeParse({
+  const result = crisisFormSchema(locale).safeParse({
     crisis_type: text("crisis_type"),
     radius_km: text("radius_km"),
     reason: text("reason"),
@@ -121,7 +127,7 @@ export function parseCrisisForm(form: FormData): CrisisParseResult {
   });
 
   if (!result.success) {
-    return { success: false, message: result.error.issues[0]?.message ?? "Nieprawidłowe dane formularza." };
+    return { success: false, message: result.error.issues[0]?.message ?? crisis[locale].activate.invalidForm };
   }
 
   const parsed = result.data;

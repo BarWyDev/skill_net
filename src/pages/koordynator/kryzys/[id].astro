@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import type { CrisisCoverageDTO, CrisisDTO, CrisisMatchDTO } from "@/types";
 import { takeFlashError } from "@/lib/flash";
 
+const { locale } = Astro.locals;
+
 // The middleware gates this route (coordinators only) and sends Cache-Control: private, no-store.
 // The list is a snapshot from activation: no identity, coordinates or score reach this page.
 // Availability and phone presence are read live and are display-only: they never change the order.
@@ -37,7 +39,7 @@ if (!supabase) {
   loadError = "Supabase nie jest skonfigurowany.";
 } else if (UUID_RE.test(id)) {
   try {
-    crisis = await getCrisis(supabase, id);
+    crisis = await getCrisis(supabase, id, locale);
     if (crisis?.status === "active") {
       [matches, coverage] = await Promise.all([
         getCrisisMatches(supabase, id),
@@ -150,7 +152,7 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
                   </p>
                   <p class="text-lg leading-tight font-bold">Osoba #{m.position}</p>
                   <p class="text-right text-lg leading-tight tabular-nums md:text-left">
-                    {formatDistanceKm(m.distanceKm)}
+                    {formatDistanceKm(locale, m.distanceKm)}
                     <span class="sr-only"> od epicentrum</span>
                   </p>
                   <SkillList skills={m.skills} class="col-span-2 col-start-2 md:col-span-1" />
@@ -168,7 +170,7 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
 
         {hidden > 0 && (
           <p class="text-ash mt-6 leading-relaxed">
-            Pokazano pierwsze {MATCHES_PAGE_SIZE}. Niewyświetlonych: {formatPeople(hidden)}.
+            Pokazano pierwsze {MATCHES_PAGE_SIZE}. Niewyświetlonych: {formatPeople(locale, hidden)}.
           </p>
         )}
       </section>

@@ -14,6 +14,8 @@ import { parseTeamRequest, TEAM_COUNT_MAX, TEAM_COUNT_MIN } from "@/lib/validati
 import { cn } from "@/lib/utils";
 import type { CrisisDTO, CrisisTeamDTO, TeamTemplateDTO } from "@/types";
 
+const { locale } = Astro.locals;
+
 // Crisis team templates (S-10, FR-014). A GET form: the template and the team count live in the
 // query string, so a reload gives the same teams (the solver is deterministic). Teams are computed
 // per request from the crisis's snapshot and the residents' current skills, and never stored.
@@ -40,7 +42,7 @@ if (!supabase) {
   loadError = "Supabase nie jest skonfigurowany.";
 } else if (UUID_RE.test(id)) {
   try {
-    crisis = await getCrisis(supabase, id);
+    crisis = await getCrisis(supabase, id, locale);
     if (crisis?.status === "active") templates = await getTeamTemplates(supabase);
   } catch {
     loadError = "Nie udało się wczytać kryzysu. Odśwież stronę.";
@@ -235,7 +237,7 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
                               <SkillList skills={slot.member.skills} class="mt-1" />
                             </div>
                             <p class="tabular-nums">
-                              {formatDistanceKm(slot.member.distanceKm)}
+                              {formatDistanceKm(locale, slot.member.distanceKm)}
                               <span class="sr-only"> od epicentrum</span>
                             </p>
                             <PersonStatus

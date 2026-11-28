@@ -1,5 +1,6 @@
 // The summary above a crisis's skill coverage. Relative imports only, so `node:test` can load it.
 
+import type { Locale } from "./i18n/locale.ts";
 import type { CrisisCoverageDTO } from "../types";
 
 export interface CoverageSummary {
@@ -23,8 +24,16 @@ export function summariseCoverage(rows: Pick<CrisisCoverageDTO, "name" | "tier" 
   };
 }
 
-/** "Brak: sternik, łódź." style list: the names joined with commas and a final "i". */
-export function joinNames(names: string[]): string {
-  if (names.length <= 1) return names.join("");
-  return `${names.slice(0, -1).join(", ")} i ${names[names.length - 1]}`;
+// British English has no comma before the final "and".
+const LIST_TAGS: Record<Locale, string> = { pl: "pl-PL", en: "en-GB", uk: "uk-UA" };
+const lists = new Map<Locale, Intl.ListFormat>();
+
+/** "Brak: sternik, łódź." style list: the names joined with commas and the language's final "and". */
+export function joinNames(locale: Locale, names: string[]): string {
+  let list = lists.get(locale);
+  if (!list) {
+    list = new Intl.ListFormat(LIST_TAGS[locale], { type: "conjunction" });
+    lists.set(locale, list);
+  }
+  return list.format(names);
 }
