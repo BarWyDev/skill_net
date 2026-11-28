@@ -1,7 +1,8 @@
 ---
 // A person's skills as one line of text, comma-separated. Priority skills for the crisis type are bold
 // chalk, supporting ones ash, and the tier is spelled out for screen readers.
-import { LEVEL_LABELS } from "@/components/profile/SkillsPicker";
+import { crisis as crisisMessages } from "@/lib/i18n/messages/crisis";
+import { profile } from "@/lib/i18n/messages/profile";
 import { cn } from "@/lib/utils";
 import type { CrisisSkillTier, SkillLevel } from "@/types";
 
@@ -11,6 +12,10 @@ interface Props {
 }
 
 const { skills, class: className } = Astro.props;
+const { locale } = Astro.locals;
+const t = crisisMessages[locale].person;
+const levels = profile[locale].skills;
+const LEVEL_LABELS: Record<SkillLevel, string> = { 1: levels.level1, 2: levels.level2, 3: levels.level3 };
 ---
 
 <ul class:list={cn("leading-relaxed", className)}>
@@ -18,11 +23,7 @@ const { skills, class: className } = Astro.props;
     <li class:list={cn("inline", s.tier === "priority" ? "text-chalk font-bold" : s.tier && "text-ash")}>
       {s.name}
       {s.level !== null && <span class="text-ash font-normal"> ({LEVEL_LABELS[s.level].toLowerCase()})</span>}
-      {s.tier && (
-        <span class="sr-only">
-          {s.tier === "priority" ? " (umiejętność priorytetowa)" : " (umiejętność wspierająca)"}
-        </span>
-      )}
+      {s.tier && <span class="sr-only">{` (${s.tier === "priority" ? t.prioritySkill : t.supportingSkill})`}</span>}
       {i < skills.length - 1 && (
         <span aria-hidden="true" class="text-ash font-normal">
           ,{" "}

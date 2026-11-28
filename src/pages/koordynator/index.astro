@@ -5,13 +5,19 @@ import StatusMark from "@/components/StatusMark.astro";
 import CrisisActivationForm from "@/components/crisis/CrisisActivationForm";
 import { createClient } from "@/lib/supabase";
 import { getCrisisScenarios, getCrisisTypes, listActiveCrises, listRecentEndedCrises } from "@/lib/services/crisis";
-import { formatActivatedAt, formatActiveFor, formatPeople, isStale } from "@/lib/crisis-format";
+import { formatActivatedAt, formatActiveFor, formatArea, formatPeople, isStale } from "@/lib/crisis-format";
+import { format } from "@/lib/i18n/format";
+import { auth } from "@/lib/i18n/messages/auth";
+import { crisis as crisisMessages } from "@/lib/i18n/messages/crisis";
 import type { CrisisDTO, CrisisScenarioDTO, CrisisTypeDTO } from "@/types";
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import { takeFlashError } from "@/lib/flash";
 
 // The middleware gates this route: only coordinators get here.
+
+const { locale } = Astro.locals;
+const t = crisisMessages[locale].panel;
 
 // Left by the endpoint that redirected here; never read from the URL (security audit F-06).
 const error = takeFlashError(Astro);
@@ -26,18 +32,18 @@ let loadError: string | null = null;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (!supabase) {
-  loadError = "Supabase nie jest skonfigurowany.";
+  loadError = auth[locale].notConfigured;
 } else {
   try {
     [crisisTypes, activeCrises, endedCrises, scenarios] = await Promise.all([
-      getCrisisTypes(supabase),
-      listActiveCrises(supabase),
-      listRecentEndedCrises(supabase),
+      getCrisisTypes(supabase, locale),
+      listActiveCrises(supabase, locale),
+      listRecentEndedCrises(supabase, locale),
       // Exercises are optional: a failure hides the section, never the panel.
-      getCrisisScenarios(supabase).catch(() => []),
+      getCrisisScenarios(supabase, locale).catch(() => []),
     ]);
   } catch {
-    loadError = "Nie udało się wczytać panelu. Odśwież stronę.";
+    loadError = t.loadFailed;
   }
 }
 
@@ -45,18 +51,19 @@ if (!supabase) {
 const ROW =
   "group grid gap-x-6 gap-y-1 border-t border-seam py-4 md:grid-cols-[minmax(0,1fr)_11.5rem_16.5rem_6rem] md:items-baseline";
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
-const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okolice ${c.epicentrePostcode}` : ""}`;
+const area = (c: CrisisDTO) => formatArea(locale, c.radiusKm, c.epicentrePostcode);
+const activatedAt = (c: CrisisDTO) => format(t.activatedAt, { time: formatActivatedAt(locale, c.activatedAt) });
 ---
 
-<PageShell title="Panel koordynatora — SkillNet" heading="Panel koordynatora" wide>
+<PageShell title={t.title} heading={t.heading} wide>
   {ended && (
     <StatusLine tone="done" role="status" class="mb-10 text-lg font-bold">
-      Kryzys zakończony. Lista dopasowanych osób została usunięta.
+      {t.ended}
     </StatusLine>
   )}
   {error && (
     <StatusLine tone="error" role="alert" class="mb-10">
-      <p class="font-bold">Kryzysu nie aktywowano.</p>
+      <p class="font-bold">{t.notActivated}</p>
       <p>{error}</p>
     </StatusLine>
   )}
@@ -69,35 +76,36 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
   {activeCrises && (
     <section aria-labelledby="active-heading">
       <h2 id="active-heading" class:list={SECTION_TITLE}>
-        Aktywne kryzysy
+        {t.activeHeading}
       </h2>
       {activeCrises.length === 0 ? (
-        <p class="text-ash mt-4 text-lg">Brak aktywnych kryzysów.</p>
+        <p class="text-ash mt-4 text-lg">{t.noActive}</p>
       ) : (
         <ul class="border-seam mt-6 border-b">
           {activeCrises.map((c) => {
             const stale = isStale(c.activatedAt, now);
+            const activeFor = sentence(formatActiveFor(locale, c.activatedAt, now));
             return (
               <li>
                 <a href={`/koordynator/kryzys/${c.id}`} class:list={ROW}>
                   <span class="min-w-0">
                     <span class="block text-xl font-bold underline-offset-4 group-hover:underline">
                       {c.typeName}
-                      {c.isExercise && <span class="text-signal font-normal"> · ćwiczenie</span>}
+                      {c.isExercise && <span class="text-signal font-normal"> · {t.exerciseTag}</span>}
                     </span>
                     <span class="mt-1 block text-[0.9375rem]">
                       {stale ? (
                         <StatusMark tone="attention" class="font-bold">
-                          {sentence(formatActiveFor(c.activatedAt, now))}. Sprawdź, czy nadal trwa.
+                          {format(t.stale, { activeFor })}
                         </StatusMark>
                       ) : (
-                        <StatusMark tone="done">{sentence(formatActiveFor(c.activatedAt, now))}</StatusMark>
+                        <StatusMark tone="done">{activeFor}</StatusMark>
                       )}
                     </span>
                   </span>
                   <span class="tabular-nums">{area(c)}</span>
-                  <span class="text-ash tabular-nums">{`aktywowano ${formatActivatedAt(c.activatedAt)}`}</span>
-                  <span class="font-bold tabular-nums md:text-right">{formatPeople(c.matchCount)}</span>
+                  <span class="text-ash tabular-nums">{activatedAt(c)}</span>
+                  <span class="font-bold tabular-nums md:text-right">{formatPeople(locale, c.matchCount)}</span>
                 </a>
               </li>
             );
@@ -110,14 +118,12 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
   {crisisTypes && (
     <section aria-labelledby="activate-heading" class="mt-16 max-w-[42rem] sm:mt-20">
       <h2 id="activate-heading" class:list={SECTION_TITLE}>
-        Aktywuj kryzys
+        {t.activateHeading}
       </h2>
-      <p class="text-ash mt-3 leading-relaxed">
-        Wybierz rodzaj, wskaż epicentrum i promień. Po aktywacji dostaniesz listę mieszkańców z okolicy.
-      </p>
-      <CrisisActivationForm client:only="react" crisisTypes={crisisTypes}>
+      <p class="text-ash mt-3 leading-relaxed">{t.activateIntro}</p>
+      <CrisisActivationForm client:only="react" crisisTypes={crisisTypes} locale={locale}>
         <p slot="fallback" class="text-ash mt-8">
-          Ładowanie formularza…
+          {t.formLoading}
         </p>
       </CrisisActivationForm>
     </section>
@@ -126,13 +132,9 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
   {crisisTypes && scenarios.length > 0 && (
     <section aria-labelledby="exercises-heading" class="mt-16 sm:mt-20">
       <h2 id="exercises-heading" class:list={SECTION_TITLE}>
-        Ćwiczenia
+        {t.exercisesHeading}
       </h2>
-      <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">
-        Gotowe scenariusze do treningu i pokazów. Ćwiczenie działa jak kryzys, na prawdziwej liście mieszkańców, ale
-        nikt nie dostaje alertu, a numerów telefonów nie można ujawnić. Uruchamia się od razu i liczy do limitu 3
-        aktywacji na godzinę.
-      </p>
+      <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">{t.exercisesIntro}</p>
       <ul class="border-seam mt-6 border-b">
         {scenarios.map((s) => (
           <li class="border-seam grid gap-x-6 gap-y-3 border-t py-4 md:grid-cols-[minmax(0,1fr)_16.5rem_auto] md:items-center">
@@ -140,11 +142,12 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
               <span class="block text-xl font-bold">{s.name}</span>
               <span class="text-ash mt-1 block text-[0.9375rem]">{s.typeName}</span>
             </span>
-            <span class="tabular-nums">{`${s.radiusKm} km, okolice ${s.postcode}`}</span>
+            <span class="tabular-nums">{formatArea(locale, s.radiusKm, s.postcode)}</span>
             <form method="POST" action="/api/koordynator/cwiczenia" data-once>
               <input type="hidden" name="scenario" value={s.slug} />
               <button type="submit" class:list={cn(BUTTON, "btn-secondary w-full cursor-pointer md:w-auto")}>
-                Uruchom ćwiczenie<span class="sr-only">: {s.name}</span>
+                {t.startExercise}
+                <span class="sr-only">: {s.name}</span>
               </button>
             </form>
           </li>
@@ -156,7 +159,7 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
   {endedCrises && endedCrises.length > 0 && (
     <section aria-labelledby="ended-heading" class="mt-16 sm:mt-20">
       <h2 id="ended-heading" class:list={SECTION_TITLE}>
-        Zakończone
+        {t.endedHeading}
       </h2>
       <ul class="border-seam mt-6 border-b">
         {endedCrises.map((c) => (
@@ -165,17 +168,17 @@ const area = (c: CrisisDTO) => `${c.radiusKm} km${c.epicentrePostcode ? `, okoli
               <span class="min-w-0">
                 <span class="block text-xl font-bold underline-offset-4 group-hover:underline">
                   {c.typeName}
-                  {c.isExercise && <span class="text-ash font-normal"> · ćwiczenie</span>}
+                  {c.isExercise && <span class="text-ash font-normal"> · {t.exerciseTag}</span>}
                 </span>
                 <span class="mt-1 block text-[0.9375rem]">
                   <StatusMark tone="neutral">
-                    {c.endedAt ? `Zakończony ${formatActivatedAt(c.endedAt)}` : "Zakończony"}
+                    {c.endedAt ? format(t.endedAt, { time: formatActivatedAt(locale, c.endedAt) }) : t.endedNoTime}
                   </StatusMark>
                 </span>
               </span>
               <span class="text-ash tabular-nums">{area(c)}</span>
-              <span class="text-ash tabular-nums">{`aktywowano ${formatActivatedAt(c.activatedAt)}`}</span>
-              <span class="text-ash tabular-nums md:text-right">{formatPeople(c.matchCount)}</span>
+              <span class="text-ash tabular-nums">{activatedAt(c)}</span>
+              <span class="text-ash tabular-nums md:text-right">{formatPeople(locale, c.matchCount)}</span>
             </a>
           </li>
         ))}

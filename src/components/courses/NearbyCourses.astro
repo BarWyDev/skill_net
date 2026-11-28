@@ -3,7 +3,8 @@
 // shows the organiser, the skill level or the creation date. Plain form POSTs to /api/kursy/*.
 import StatusLine from "@/components/StatusLine.astro";
 import { CoursesMap } from "@/components/courses/CoursesMap";
-import { formatPauseUntil } from "@/lib/pause";
+import { format, formatDate } from "@/lib/i18n/format";
+import { courses as courseMessages } from "@/lib/i18n/messages/courses";
 import { INLINE_LINK, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import { formatCourseDuration } from "@/lib/validation/courses";
@@ -16,6 +17,8 @@ interface Props {
 }
 
 const { courses, area } = Astro.props;
+const { locale } = Astro.locals;
+const t = courseMessages[locale].nearby;
 
 // One letter per square, in the RPC order (square, then title, then id), so the rows of one square
 // sit together and share its letter.
@@ -32,41 +35,38 @@ for (const course of courses) {
 const letterOf = (course: NearbyCourseDTO) => letters.get(JSON.stringify(course.cell.coordinates)) ?? "";
 
 const places = (course: NearbyCourseDTO) =>
-  course.placesLeft === null
-    ? "Bez limitu miejsc"
-    : course.isFull
-      ? "Brak miejsc"
-      : `Wolne miejsca: ${course.placesLeft}`;
+  course.placesLeft === null ? t.noLimit : course.isFull ? t.full : format(t.placesLeft, { count: course.placesLeft });
 
-const eligibleOn = area.eligibleOn ? formatPauseUntil(area.eligibleOn) : null;
+const eligibleOn = area.eligibleOn ? formatDate(locale, area.eligibleOn) : null;
 const SMALL_BUTTON = "inline-flex min-h-11 items-center justify-center px-4 font-bold";
 ---
 
 <section aria-labelledby="nearby-courses-title">
   <h2 id="nearby-courses-title" class:list={SECTION_TITLE}>
-    W okolicy
+    {t.title}
   </h2>
 
   {area.eligibility === "ok" && area.block ? (
     <>
-      <p class="text-ash mt-4 leading-relaxed">
-        Kursy sąsiadów z Twojego kwadratu 2 km i ośmiu kwadratów wokół niego. Nie pokazujemy, kto prowadzi kurs. Miejsce
-        i termin poda organizator osobom zapisanym.
-      </p>
+      <p class="text-ash mt-4 leading-relaxed">{t.lead}</p>
 
       <div class="mt-6">
-        <CoursesMap client:only="react" block={area.block} squares={squares}>
+        <CoursesMap
+          client:only="react"
+          block={area.block}
+          squares={squares}
+          zoomInTitle={t.zoomIn}
+          zoomOutTitle={t.zoomOut}
+        >
           <p slot="fallback" class="text-ash">
-            Ładowanie mapy…
+            {t.mapLoading}
           </p>
         </CoursesMap>
-        <p class="text-ash mt-2 text-[0.9375rem] leading-relaxed">
-          Linia przerywana to Twoja okolica. Litera oznacza kwadrat 2 × 2 km, w którym odbywa się kurs.
-        </p>
+        <p class="text-ash mt-2 text-[0.9375rem] leading-relaxed">{t.mapLegend}</p>
       </div>
 
       {courses.length === 0 ? (
-        <p class="mt-8 leading-relaxed">W Twojej okolicy nie ma teraz żadnych kursów.</p>
+        <p class="mt-8 leading-relaxed">{t.none}</p>
       ) : (
         <ul class="mt-8 space-y-8">
           {courses.map((course) => (
@@ -75,9 +75,9 @@ const SMALL_BUTTON = "inline-flex min-h-11 items-center justify-center px-4 font
                 <div class="flex gap-4">
                   <span
                     class="border-signal inline-flex size-9 shrink-0 items-center justify-center border font-bold"
-                    title={`Kwadrat ${letterOf(course)} na mapie`}
+                    title={format(t.squareTitle, { letter: letterOf(course) })}
                   >
-                    <span class="sr-only">Kwadrat</span>
+                    <span class="sr-only">{t.square}</span>
                     {letterOf(course)}
                   </span>
                   <div class="min-w-0">
@@ -85,7 +85,8 @@ const SMALL_BUTTON = "inline-flex min-h-11 items-center justify-center px-4 font
                       {course.title}
                     </h3>
                     <p class="text-ash mt-1">
-                      {course.skillName} ({course.categoryName}) · {formatCourseDuration(course.durationMinutes)}
+                      {course.skillName} ({course.categoryName}) ·{" "}
+                      {formatCourseDuration(course.durationMinutes, locale)}
                     </p>
                   </div>
                 </div>
@@ -96,12 +97,12 @@ const SMALL_BUTTON = "inline-flex min-h-11 items-center justify-center px-4 font
                 {course.signedUp ? (
                   <div class="mt-4 space-y-4">
                     <StatusLine tone="done">
-                      <p>Masz zapis na ten kurs. Szczegóły spotkania są w „Moje zapisy”.</p>
+                      <p>{t.signedUp}</p>
                     </StatusLine>
                     <form method="post" action="/api/kursy/wypisz">
                       <input type="hidden" name="id" value={course.id} />
                       <button type="submit" class:list={cn(SMALL_BUTTON, "btn-secondary cursor-pointer")}>
-                        Wypisz się
+                        {t.withdraw}
                       </button>
                     </form>
                   </div>
@@ -110,7 +111,7 @@ const SMALL_BUTTON = "inline-flex min-h-11 items-center justify-center px-4 font
                     <form method="post" action="/api/kursy/zapisz" class="mt-4">
                       <input type="hidden" name="id" value={course.id} />
                       <button type="submit" class:list={cn(SMALL_BUTTON, "btn-primary cursor-pointer")}>
-                        Zapisz się
+                        {t.signUp}
                       </button>
                     </form>
                   )
@@ -125,31 +126,29 @@ const SMALL_BUTTON = "inline-flex min-h-11 items-center justify-center px-4 font
     <p class="mt-4 leading-relaxed">
       {area.eligibility === "no_location" ? (
         <>
-          Aby zobaczyć kursy w okolicy,{" "}
+          {t.needLocationBefore}{" "}
           <a href="/profil" class:list={INLINE_LINK}>
-            dodaj lokalizację w profilu
+            {t.needLocationLink}
           </a>
-          . Kursy zobaczysz 7 dni po jej ustawieniu.
+          {t.needLocationAfter}
         </>
       ) : area.eligibility === "recent_move" ? (
         <>
-          Twoja lokalizacja zmieniła się w ostatnich 7 dniach.{" "}
-          {eligibleOn ? `Kursy w okolicy zobaczysz od ${eligibleOn}.` : "Kursy zobaczysz 7 dni po zmianie."}
+          {t.recentMove} {eligibleOn ? format(t.seeFrom, { date: eligibleOn }) : t.seeAfterMove}
         </>
       ) : area.eligibility === "too_new" ? (
         <>
-          Kursy są dostępne dla kont założonych co najmniej 14 dni temu.{" "}
-          {eligibleOn ? `Zobaczysz je od ${eligibleOn}.` : ""}
+          {t.tooNew} {eligibleOn ? format(t.tooNewFrom, { date: eligibleOn }) : ""}
         </>
       ) : area.eligibility === "unconfirmed" ? (
-        "Potwierdź adres e-mail, aby zobaczyć kursy w okolicy."
+        t.unconfirmed
       ) : (
         <>
-          Aby zobaczyć kursy w okolicy,{" "}
+          {t.needConsentBefore}{" "}
           <a href="/zgoda" class:list={INLINE_LINK}>
-            zaakceptuj zgodę na przetwarzanie danych
+            {t.needConsentLink}
           </a>
-          .
+          {t.needConsentAfter}
         </>
       )}
     </p>

@@ -1,20 +1,17 @@
-// Polish messages for Supabase auth error codes (roadmap S-05). Endpoints pass the result back
-// through the flash cookie (src/lib/flash.ts); the raw English `error.message` never reaches the
-// page. Relative imports only, so `node:test` can load it.
+// Messages for Supabase auth error codes (roadmap S-05), in the request's language. Endpoints pass
+// the result back through the flash cookie (src/lib/flash.ts); the raw English `error.message`
+// never reaches the page. The text lives in the `auth` catalogue. Relative imports only, so
+// `node:test` can load it.
 
-const MESSAGES: Record<string, string> = {
-  invalid_credentials: "Nieprawidłowy e-mail lub hasło.",
-  email_not_confirmed: "Adres e-mail nie został jeszcze potwierdzony. Kliknij link z wiadomości, którą wysłaliśmy.",
-  user_already_exists: "Konto z tym adresem e-mail już istnieje. Zaloguj się.",
-  email_exists: "Konto z tym adresem e-mail już istnieje. Zaloguj się.",
-  weak_password: "Hasło jest za słabe. Użyj co najmniej 10 znaków, w tym małej litery, wielkiej litery i cyfry.",
-  over_email_send_rate_limit: "Wysłaliśmy już niedawno wiadomość. Spróbuj ponownie za kilka minut.",
-  validation_failed: "Sprawdź poprawność adresu e-mail i hasła.",
-  captcha_failed: "Nie udało się sprawdzić, czy formularz wysyła człowiek. Spróbuj ponownie.",
-};
+import type { Locale } from "./i18n/locale.ts";
+import { auth } from "./i18n/messages/auth.ts";
 
-export const GENERIC_AUTH_ERROR = "Coś poszło nie tak. Spróbuj ponownie za chwilę.";
+type KnownCode = keyof (typeof auth)["pl"]["errors"];
 
-export function authErrorMessage(code: string | undefined): string {
-  return code !== undefined && Object.hasOwn(MESSAGES, code) ? MESSAGES[code] : GENERIC_AUTH_ERROR;
+/** The message for `code`; the generic one for a code with no message of its own. */
+export function authErrorMessage(code: string | undefined, locale: Locale): string {
+  const messages = auth[locale];
+  return code !== undefined && Object.hasOwn(messages.errors, code)
+    ? messages.errors[code as KnownCode]
+    : messages.genericError;
 }

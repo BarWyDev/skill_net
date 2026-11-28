@@ -1,0 +1,69 @@
+---
+// The language switcher in the header: PL · EN · UA. Rendered only when this environment offers more
+// than one language. Each entry is a plain `?lang=` link, so it works without JavaScript; the
+// middleware remembers the choice and redirects to the same address without the parameter.
+import { cn } from "@/lib/utils";
+import { NAV_LINK } from "@/lib/site-styles";
+import { LOCALE_LABELS, LOCALE_NAMES, langSwitchHref } from "@/lib/i18n/locale";
+import { common } from "@/lib/i18n/messages/common";
+import { RETURN_PARAM, safeReturnPath } from "@/lib/return-path";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+const { locale, enabledLocales } = Astro.locals;
+
+// The links keep the page's query, except a return path the sign-in page would refuse anyway: the
+// page never echoes one (the smoke test asserts it), so the switcher does not either.
+const here = new URL(Astro.url);
+const back = here.searchParams.get(RETURN_PARAM);
+if (back !== null && safeReturnPath(back) === null) here.searchParams.delete(RETURN_PARAM);
+
+// The full name is for screen readers only. A system font, so "Українська" in the switcher does not
+// make a Polish or English page download the Cyrillic font files.
+const NAME = "sr-only [font-family:sans-serif]";
+
+// 44 px each way, so the short codes are as easy to tap as the header's links (QA-001).
+const ITEM = "min-w-11 justify-center";
+---
+
+{enabledLocales.length > 1 && (
+  <nav aria-label={common[locale].languageSwitch.label} class:list={cn("text-[0.9375rem]", className)}>
+    <ul class="flex items-center">
+      {enabledLocales.map((code, index) => (
+        <li class="flex items-center">
+          {index > 0 && (
+            <span aria-hidden="true" class="text-seam">
+              ·
+            </span>
+          )}
+          {code === locale ? (
+            <span
+              aria-current="true"
+              lang={code}
+              title={LOCALE_NAMES[code]}
+              class="text-chalk decoration-signal inline-flex min-h-11 min-w-11 items-center justify-center underline decoration-2 underline-offset-4"
+            >
+              <span aria-hidden="true">{LOCALE_LABELS[code]}</span>
+              <span class:list={NAME}>{LOCALE_NAMES[code]}</span>
+            </span>
+          ) : (
+            <a
+              href={langSwitchHref(here, code)}
+              lang={code}
+              hreflang={code}
+              title={LOCALE_NAMES[code]}
+              rel="nofollow"
+              class:list={cn(NAV_LINK, ITEM)}
+            >
+              <span aria-hidden="true">{LOCALE_LABELS[code]}</span>
+              <span class:list={NAME}>{LOCALE_NAMES[code]}</span>
+            </a>
+          )}
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}

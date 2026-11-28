@@ -2,7 +2,9 @@
 import AuthShell from "@/components/auth/AuthShell.astro";
 import StatusLine from "@/components/StatusLine.astro";
 import DeleteAccount from "@/components/profile/DeleteAccount.astro";
-import { CONSENT_LABEL, CONSENT_LINK_TEXT } from "@/lib/consent";
+import { CONSENT_LABEL } from "@/lib/consent";
+import { auth } from "@/lib/i18n/messages/auth";
+import { legal } from "@/lib/i18n/messages/legal";
 import { BUTTON, INLINE_LINK, TEXT_LINK } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import { takeFlashError } from "@/lib/flash";
@@ -15,38 +17,54 @@ Astro.response.headers.set("Cache-Control", "private, no-store");
 
 // Left by the endpoint that redirected here; never read from the URL (security audit F-06).
 const error = takeFlashError(Astro);
+
+const { locale } = Astro.locals;
+const t = legal[locale].consent;
+const consent = auth[locale].consent;
+// The Polish wording is the binding one (src/lib/consent.ts): a translated label shows it below,
+// as the sign-up form does.
+const consentIsTranslated = locale !== "pl";
 ---
 
-<AuthShell title="Zgoda na przetwarzanie danych — SkillNet" heading="Potrzebujemy Twojej zgody">
+<AuthShell title={t.title} heading={t.heading}>
   {error && (
     <StatusLine tone="error" role="alert" class="mb-8 font-bold">
       {error}
     </StatusLine>
   )}
 
-  <p class="leading-relaxed">
-    Aby dalej korzystać z SkillNet, potwierdź zgodę na przetwarzanie danych. Bez niej nie uwzględniamy Cię w kryzysach
-    ani na mapie. Możesz też wylogować się albo usunąć konto.
-  </p>
+  <p class="leading-relaxed">{t.intro}</p>
 
   <form method="post" action="/api/zgoda" class="mt-8">
     <label for="consent" class="flex min-h-11 cursor-pointer items-start gap-4 py-2.5 text-[0.9375rem] leading-relaxed">
-      <input id="consent" name="consent" type="checkbox" required class="check mt-0.5" />
+      <input
+        id="consent"
+        name="consent"
+        type="checkbox"
+        required
+        aria-describedby={consentIsTranslated ? "consent-original" : undefined}
+        class="check mt-0.5"
+      />
       <span>
-        {CONSENT_LABEL}{" "}
+        {consent.label}{" "}
         <a href="/prywatnosc" target="_blank" rel="noopener" class:list={INLINE_LINK}>
-          {CONSENT_LINK_TEXT}
+          {consent.linkText}
         </a>
       </span>
     </label>
+    {consentIsTranslated && (
+      <p id="consent-original" class="text-ash pb-2.5 pl-10 text-sm leading-relaxed">
+        {consent.bindingNote} <span lang="pl">{CONSENT_LABEL}</span>
+      </p>
+    )}
     <button type="submit" class:list={cn(BUTTON, "btn-primary mt-6 w-full cursor-pointer sm:w-auto")}>
-      Akceptuję i przechodzę dalej
+      {t.accept}
     </button>
   </form>
 
   <form method="post" action="/api/auth/signout" class="mt-6">
     <button type="submit" class:list={cn(TEXT_LINK, "cursor-pointer")}>
-      Wyloguj się
+      {t.signOut}
     </button>
   </form>
 

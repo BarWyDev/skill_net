@@ -2,7 +2,8 @@
 // The Turnstile widget (security audit S-02). Placed inside a form, it adds the token field that
 // the endpoint forwards to Supabase Auth (src/lib/captcha.ts). Renders nothing without
 // TURNSTILE_SITE_KEY, so local dev, previews and CI run without it. A React form takes it as a
-// slot: Astro passes slots as static HTML, so hydration never touches the widget's iframe.
+// slot: Astro passes slots as static HTML, so hydration never touches the widget's iframe. The widget
+// speaks the request's language; Turnstile knows all three codes (pl, en, uk).
 import { TURNSTILE_SITE_KEY } from "astro:env/server";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +16,11 @@ const { class: className } = Astro.props;
 ---
 
 {TURNSTILE_SITE_KEY && (
-  <div class:list={cn("cf-turnstile", className)} data-sitekey={TURNSTILE_SITE_KEY} data-language="pl" />
+  <div
+    class:list={cn("cf-turnstile", className)}
+    data-sitekey={TURNSTILE_SITE_KEY}
+    data-language={Astro.locals.locale}
+  />
 )}
 
 <script>

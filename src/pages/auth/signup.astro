@@ -4,27 +4,23 @@ import SignUpForm from "@/components/auth/SignUpForm";
 import Turnstile from "@/components/auth/Turnstile.astro";
 import { TEXT_LINK } from "@/lib/site-styles";
 import { takeFlashError } from "@/lib/flash";
+import { auth } from "@/lib/i18n/messages/auth";
 
 // Left by the endpoint that redirected here; never read from the URL (security audit F-06).
 const error = takeFlashError(Astro);
+const { locale } = Astro.locals;
+const t = auth[locale].signUp;
 ---
 
-<AuthShell
-  title="Załóż konto — SkillNet"
-  description="Dodaj swoje umiejętności i przybliżoną lokalizację, żeby w razie kryzysu koordynator z gminy mógł poprosić Cię o pomoc."
-  heading="Załóż konto"
->
-  <SignUpForm serverError={error} client:load>
+<AuthShell title={t.title} description={t.description} heading={t.heading}>
+  <SignUpForm locale={locale} serverError={error} client:load>
     <Turnstile slot="captcha" />
   </SignUpForm>
   <p class="text-ash mt-10">
-    Masz już konto?{" "}
+    {t.haveAccount}{" "}
     <a href="/auth/signin" class:list={TEXT_LINK}>
-      Zaloguj się
+      {t.signInLink}
     </a>
   </p>
-  <p slot="aside">
-    Z kontem dodasz swoje umiejętności i przybliżoną lokalizację, żeby koordynator gminy mógł Cię znaleźć. Swoje dane
-    zmienisz albo usuniesz w profilu.
-  </p>
+  <p slot="aside">{t.aside}</p>
 </AuthShell>

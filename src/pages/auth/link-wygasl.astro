@@ -5,22 +5,23 @@ import Turnstile from "@/components/auth/Turnstile.astro";
 import { cn } from "@/lib/utils";
 import { BUTTON, TEXT_LINK } from "@/lib/site-styles";
 import { takeFlashError } from "@/lib/flash";
+import { auth } from "@/lib/i18n/messages/auth";
 
 Astro.response.headers.set("Cache-Control", "private, no-store");
 
 // Left by the endpoint that redirected here; never read from the URL (security audit F-06).
 const error = takeFlashError(Astro);
+const messages = auth[Astro.locals.locale];
+const t = messages.expired;
 ---
 
-<AuthShell title="Link wygasł — SkillNet" heading="Link jest nieważny">
-  <p class="text-lg leading-relaxed sm:text-xl">
-    Link potwierdzający wygasł, został już użyty albo jest niepełny. Podaj adres e-mail, a wyślemy nowy.
-  </p>
+<AuthShell title={t.title} heading={t.heading}>
+  <p class="text-lg leading-relaxed sm:text-xl">{t.body}</p>
 
   <form method="POST" action="/api/auth/resend" class="mt-10 space-y-6">
     <div>
       <label for="email" class="mb-2 block font-bold">
-        E-mail
+        {messages.fields.email}
       </label>
       <input
         id="email"
@@ -28,7 +29,7 @@ const error = takeFlashError(Astro);
         type="email"
         required
         autocomplete="email"
-        placeholder="ty@przyklad.pl"
+        placeholder={messages.fields.emailPlaceholder}
         class="field h-12 w-full px-3 text-lg"
       />
     </div>
@@ -36,15 +37,15 @@ const error = takeFlashError(Astro);
     <div class="space-y-4 pt-2">
       <ServerError message={error} />
       <button type="submit" class:list={cn(BUTTON, "btn-primary w-full cursor-pointer sm:w-auto")}>
-        Wyślij nowy link
+        {t.submit}
       </button>
     </div>
   </form>
 
   <p class="text-ash mt-10">
-    Konto jest już potwierdzone?{" "}
+    {t.alreadyConfirmed}{" "}
     <a href="/auth/signin" class:list={TEXT_LINK}>
-      Zaloguj się
+      {t.signInLink}
     </a>
   </p>
 </AuthShell>

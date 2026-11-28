@@ -14,6 +14,7 @@ Product source of truth: [`context/foundation/prd.md`](context/foundation/prd.md
 - **Resident profile** (`/profil`): skills from a fixed taxonomy, location from a postcode or a map pin (stored only to about 500 m), phone number, weekly availability, pausing availability, and deleting the account with all its data.
 - **Public skills map** (`/mapa`): skill density in 2 km squares, shown as ranges only.
 - **Coordinator panel** (`/koordynator`): activate a crisis by type, place and radius, get a ranked list of matching residents, assemble teams from templates, reveal contact details through an audited break-glass step, and end the crisis.
+- **Three interface languages:** Polish, English and Ukrainian on every page, crisis mode included, chosen with the switcher in the header (or from the browser's language). An environment offers the languages listed in `ENABLED_LOCALES`; Polish is always on. The Polish privacy notice and consent stay binding; the other languages show a courtesy translation.
 
 ## Screenshots
 
@@ -271,7 +272,7 @@ npm run dev            # or: npm run build && npm run preview
 BASE_URL=http://localhost:4321 npm run smoke
 ```
 
-It needs a reachable Supabase instance (local or cloud) with email confirmation disabled.
+It needs a reachable Supabase instance (local or cloud) with email confirmation disabled, and a server that offers all three interface languages (`ENABLED_LOCALES=pl,en,uk`, as in `.env.example`): it checks that the language follows the browser, that a `?lang=` link sets the choice, that `/api/mapa` is the same in every language, that the privacy notice in English keeps the Polish original, and that the profile and its error notices follow the language.
 
 Against production, run only the read-only steps. They create no accounts:
 
@@ -279,14 +280,14 @@ Against production, run only the read-only steps. They create no accounts:
 SMOKE_READONLY=1 BASE_URL=https://skillnet.org.pl npm run smoke
 ```
 
-Against `https://skillnet.org.pl` it also checks that `www` and the old `workers.dev` host answer 301 to it. It also checks the access gates (coordinator-only routes, consent gate, break-glass contact reveal) and security headers. It is a sanity check, not a substitute for the unit and pgTAP suites.
+The read-only run skips the language checks, so it also passes against a build that offers Polish only; it still checks that a `?lang=` link is stripped with a redirect that stays on the same host. Against `https://skillnet.org.pl` it also checks that `www` and the old `workers.dev` host answer 301 to it. It also checks the access gates (coordinator-only routes, consent gate, break-glass contact reveal) and security headers. It is a sanity check, not a substitute for the unit and pgTAP suites.
 
 ## CI
 
 GitHub Actions runs two jobs on every push and PR to `master` and `production`:
 
 - **ci** — lint, unit tests, `astro check` and build. Configure `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
-- **smoke** — starts a local Supabase via the Supabase CLI, runs the pgTAP suites, builds, serves the production preview on the Cloudflare runtime and runs `npm run smoke` against it. No secrets required.
+- **smoke** — starts a local Supabase via the Supabase CLI, runs the pgTAP suites, builds with all three interface languages enabled, serves the production preview on the Cloudflare runtime and runs `npm run smoke` against it. No secrets required.
 
 A third workflow, `promotion.yml`, runs `promotion-source` on PRs into `production`: it fails unless the head branch is `master` of this repository.
 

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Database } from "@/db/database.types";
-import { PHONE_ERROR } from "@/lib/phone";
+import type { Locale } from "@/lib/i18n/locale";
+import { profile, type ProfileMessages } from "@/lib/i18n/messages/profile";
 import type { SupabaseClient } from "@/lib/supabase";
 import type { MyProfileDTO, NumberRevealDTO, SaveProfileInput, TaxonomyDTO } from "@/types";
 
@@ -9,22 +10,23 @@ import type { MyProfileDTO, NumberRevealDTO, SaveProfileInput, TaxonomyDTO } fro
 type SaveMyProfileArgs = Database["public"]["Functions"]["save_my_profile"]["Args"];
 type PauseMyAvailabilityArgs = Database["public"]["Functions"]["pause_my_availability"]["Args"];
 
-const GENERIC_SAVE_ERROR = "Nie udało się zapisać profilu. Spróbuj ponownie.";
-
-// Messages raised by the triggers and RPCs in the profile migrations.
-const DB_ERROR_MESSAGES: Record<string, string> = {
-  unknown_postcode: "Nie znamy tego kodu pocztowego — zaznacz lokalizację na mapie.",
-  postcode_required: "Podaj kod pocztowy w formacie 00-000.",
-  outside_poland: "Lokalizacja musi być w Polsce.",
-  level_required: "Wybierz poziom dla każdej zaznaczonej umiejętności.",
-  level_not_applicable: "Ta umiejętność nie ma poziomu.",
-  invalid_phone: PHONE_ERROR,
+// Codes raised by the triggers and RPCs in the profile migrations, and their message in the
+// profile catalogue's `errors`.
+const DB_ERRORS: Record<string, keyof ProfileMessages["errors"]> = {
+  unknown_postcode: "unknownPostcode",
+  postcode_required: "invalidPostcode",
+  outside_poland: "outsidePoland",
+  level_required: "levelRequired",
+  level_not_applicable: "levelNotApplicable",
+  invalid_phone: "invalidPhone",
 };
 const FOREIGN_KEY_VIOLATION = "23503";
 
-export function saveErrorMessage(error: { code?: string; message?: string }): string {
-  if (error.code === FOREIGN_KEY_VIOLATION) return "Nieznana umiejętność.";
-  return (error.message && DB_ERROR_MESSAGES[error.message]) ?? GENERIC_SAVE_ERROR;
+export function saveErrorMessage(error: { code?: string; message?: string }, locale: Locale): string {
+  const errors = profile[locale].errors;
+  if (error.code === FOREIGN_KEY_VIOLATION) return errors.unknownSkill;
+  const name = error.message !== undefined && Object.hasOwn(DB_ERRORS, error.message) ? DB_ERRORS[error.message] : null;
+  return name ? errors[name] : errors.saveFailed;
 }
 
 export async function getTaxonomy(supabase: SupabaseClient): Promise<TaxonomyDTO> {
@@ -106,11 +108,12 @@ export async function getMyNumberReveals(supabase: SupabaseClient): Promise<Numb
 
 /**
  * Saves the caller's location, whole skill set, phone, availability and visibility switches
- * atomically. A null switch is left unchanged. Returns a Polish message on failure.
+ * atomically. A null switch is left unchanged. Returns a message in `locale` on failure.
  */
 export async function saveMyProfile(
   supabase: SupabaseClient,
   input: SaveProfileInput,
+  locale: Locale,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   // The generated types mark every RPC argument non-null, but SQL accepts nulls for these.
   const args = {
@@ -126,37 +129,40 @@ export async function saveMyProfile(
     p_allow_contact_reveal: input.allowContactReveal,
   } as SaveMyProfileArgs;
   const { error } = await supabase.rpc("save_my_profile", args);
-  return error ? { ok: false, message: saveErrorMessage(error) } : { ok: true };
+  return error ? { ok: false, message: saveErrorMessage(error, locale) } : { ok: true };
 }
 
-const GENERIC_PAUSE_ERROR = "Nie udało się wstrzymać dostępności. Spróbuj ponownie.";
-const GENERIC_RESUME_ERROR = "Nie udało się wznowić dostępności. Spróbuj ponownie.";
-
-// Messages raised by the pause RPCs and the `profiles_check_pause` trigger.
-const PAUSE_DB_ERROR_MESSAGES: Record<string, string> = {
-  invalid_pause_until: "Wybierz datę od dziś do roku naprzód.",
-  profile_required: "Najpierw uzupełnij profil.",
+// Codes raised by the pause RPCs and the `profiles_check_pause` trigger, and their message in the
+// profile catalogue's `pause`.
+const PAUSE_DB_ERRORS: Record<string, keyof ProfileMessages["pause"]> = {
+  invalid_pause_until: "invalidDate",
+  profile_required: "profileRequired",
 };
 
 /**
  * Pauses the caller's availability until `until` (`YYYY-MM-DD`, inclusive) or indefinitely when null.
- * Re-pausing replaces the previous pause. Returns a Polish message on failure.
+ * Re-pausing replaces the previous pause. Returns a message in `locale` on failure.
  */
 export async function pauseMyAvailability(
   supabase: SupabaseClient,
   until: string | null,
+  locale: Locale,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   // The generated types mark the argument non-null, but SQL accepts null for an indefinite pause.
   const { error } = await supabase.rpc("pause_my_availability", { p_until: until } as PauseMyAvailabilityArgs);
-  return error ? { ok: false, message: PAUSE_DB_ERROR_MESSAGES[error.message] ?? GENERIC_PAUSE_ERROR } : { ok: true };
+  if (!error) return { ok: true };
+  const messages = profile[locale].pause;
+  const name = Object.hasOwn(PAUSE_DB_ERRORS, error.message) ? PAUSE_DB_ERRORS[error.message] : "failed";
+  return { ok: false, message: messages[name] };
 }
 
-/** Ends the caller's pause. Idempotent. Returns a Polish message on failure. */
+/** Ends the caller's pause. Idempotent. Returns a message in `locale` on failure. */
 export async function resumeMyAvailability(
   supabase: SupabaseClient,
+  locale: Locale,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const { error } = await supabase.rpc("resume_my_availability");
-  return error ? { ok: false, message: GENERIC_RESUME_ERROR } : { ok: true };
+  return error ? { ok: false, message: profile[locale].pause.resumeFailed } : { ok: true };
 }
 
 /**

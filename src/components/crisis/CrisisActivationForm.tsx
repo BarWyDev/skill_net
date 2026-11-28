@@ -1,6 +1,9 @@
 import { useState } from "react";
 import type React from "react";
 import { LocationPicker, locationProblem, type LocationValue } from "@/components/profile/LocationPicker";
+import { format } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/locale";
+import { crisis as crisisMessages } from "@/lib/i18n/messages/crisis";
 import { BUTTON } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import { normaliseReason, REASON_MAX, REASON_MIN, reasonProblem } from "@/lib/reason";
@@ -8,12 +11,15 @@ import { DEFAULT_RADIUS, RADIUS_PRESETS } from "@/lib/validation/crisis";
 import type { CrisisTypeDTO, RadiusKm } from "@/types";
 
 interface Props {
+  /** Already named in `locale`. */
   crisisTypes: CrisisTypeDTO[];
+  locale: Locale;
 }
 
 const EMPTY_LOCATION: LocationValue = { source: null, postcode: "", lat: null, lng: null };
 
-export default function CrisisActivationForm({ crisisTypes }: Props) {
+export default function CrisisActivationForm({ crisisTypes, locale }: Props) {
+  const t = crisisMessages[locale].form;
   const [crisisType, setCrisisType] = useState("");
   const [location, setLocation] = useState<LocationValue>(EMPTY_LOCATION);
   const [radius, setRadius] = useState<RadiusKm>(DEFAULT_RADIUS);
@@ -24,8 +30,11 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
   // A postcode counts once the lookup found it; the server resolves the raw centroid itself.
   // A pin abroad is refused here too (QA-024), so the form keeps the type and the pin.
   const locationReady =
-    location.source !== null && location.lat !== null && location.lng !== null && locationProblem(location) === null;
-  const reasonError = reasonProblem(normaliseReason(reason));
+    location.source !== null &&
+    location.lat !== null &&
+    location.lng !== null &&
+    locationProblem(location, locale) === null;
+  const reasonError = reasonProblem(normaliseReason(reason), locale);
   const reasonReady = reasonError === null;
   const ready = crisisType !== "" && locationReady && reasonReady;
 
@@ -43,7 +52,7 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
       <div className="space-y-10">
         <div>
           <label htmlFor="crisis_type" className="mb-2 block font-bold">
-            Rodzaj kryzysu
+            {t.typeLabel}
           </label>
           <select
             id="crisis_type"
@@ -55,7 +64,7 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
             className="field [&>option]:bg-graphite h-12 w-full cursor-pointer px-3 text-lg scheme-dark sm:w-80"
           >
             <option value="" disabled>
-              Wybierz…
+              {t.choose}
             </option>
             {crisisTypes.map((t) => (
               <option key={t.slug} value={t.slug}>
@@ -67,19 +76,20 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
 
         <section aria-labelledby="epicentre-heading">
           <h3 id="epicentre-heading" className="mb-1 text-lg font-bold">
-            Epicentrum
+            {t.epicentre}
           </h3>
-          <p className="text-ash mb-4 leading-relaxed">Wpisz kod pocztowy albo zaznacz miejsce na mapie.</p>
+          <p className="text-ash mb-4 leading-relaxed">{t.epicentreHelp}</p>
           <LocationPicker
+            locale={locale}
             value={location}
             initial={EMPTY_LOCATION}
             onChange={setLocation}
-            hint="Epicentrum to środek obszaru, w którym szukamy mieszkańców. Zapisujemy je dokładnie, bez zaokrąglania."
+            hint={t.epicentreHint}
           />
         </section>
 
         <fieldset>
-          <legend className="mb-2 font-bold">Promień</legend>
+          <legend className="mb-2 font-bold">{t.radius}</legend>
           {/* A row of toggle buttons; each is a native radio, so the group keeps its arrow keys and
               checked state for screen readers. */}
           <div className="flex flex-wrap gap-2">
@@ -103,7 +113,7 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
                   }}
                   className="sr-only"
                 />
-                {km} km
+                {format(crisisMessages[locale].format.km, { km })}
               </label>
             ))}
           </div>
@@ -112,7 +122,7 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
         {/* Stored with the crisis and seen by whoever reviews activations (security audit F-02). */}
         <div>
           <label htmlFor="reason" className="mb-2 block font-bold">
-            Powód aktywacji
+            {t.reasonLabel}
           </label>
           <textarea
             id="reason"
@@ -128,11 +138,10 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
             }}
             aria-describedby="reason-hint"
             className="field block w-full max-w-[42rem] resize-y px-3 py-3 text-lg leading-relaxed"
-            placeholder="np. pożar budynku przy ul. Długiej, potrzebni ratownicy"
+            placeholder={t.reasonPlaceholder}
           />
           <p id="reason-hint" className="text-ash mt-2 text-[0.9375rem]">
-            Od {REASON_MIN} do {REASON_MAX} znaków, co najmniej dwa słowa. Powód zapisujemy razem z kryzysem i Twoim
-            kontem. Jeden koordynator może aktywować najwyżej 3 kryzysy na godzinę.
+            {format(t.reasonHint, { min: REASON_MIN, max: REASON_MAX })}
           </p>
         </div>
 
@@ -151,11 +160,10 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
               aria-describedby="exercise-hint"
               className="check mt-0.5"
             />
-            <span className="font-bold">To jest ćwiczenie</span>
+            <span className="font-bold">{t.exerciseLabel}</span>
           </label>
           <p id="exercise-hint" className="text-ash max-w-[42rem] text-[0.9375rem] leading-relaxed">
-            Lista powstanie z prawdziwych mieszkańców, ale nikt nie dostanie alertu, a numerów telefonów nie będzie
-            można ujawnić. Tego nie da się zmienić po aktywacji.
+            {t.exerciseHint}
           </p>
         </div>
       </div>
@@ -163,7 +171,7 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
       {/* Consequential, so the one primary action stands apart from the fields, under a hairline. The
           hint keeps its line when empty, so nothing moves when it goes. */}
       <div className="border-seam mt-12 border-t pt-8">
-        <p className="text-ash mb-4 min-h-7">{!locationReady ? "Wskaż epicentrum, aby aktywować." : reasonError}</p>
+        <p className="text-ash mb-4 min-h-7">{!locationReady ? t.needEpicentre : reasonError}</p>
         <button
           type="submit"
           disabled={!ready || submitting}
@@ -174,7 +182,7 @@ export default function CrisisActivationForm({ crisisTypes }: Props) {
             submitting && "cursor-wait",
           )}
         >
-          {submitting ? "Aktywuję…" : exercise ? "Aktywuj ćwiczenie" : "Aktywuj kryzys"}
+          {submitting ? t.activating : exercise ? t.activateExercise : t.activateCrisis}
         </button>
       </div>
     </form>

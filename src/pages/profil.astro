@@ -5,7 +5,10 @@ import DeleteAccount from "@/components/profile/DeleteAccount.astro";
 import NumberReveals from "@/components/profile/NumberReveals.astro";
 import PauseAvailability from "@/components/profile/PauseAvailability.astro";
 import ProfileForm from "@/components/profile/ProfileForm";
-import { formatPauseUntil } from "@/lib/pause";
+import { format, formatDate } from "@/lib/i18n/format";
+import { auth } from "@/lib/i18n/messages/auth";
+import { profile as profileMessages } from "@/lib/i18n/messages/profile";
+import { categoryName, skillName } from "@/lib/i18n/messages/taxonomy";
 import { createClient } from "@/lib/supabase";
 import { getMyNumberReveals, getMyProfile, getTaxonomy } from "@/lib/services/profile";
 import { BUTTON } from "@/lib/site-styles";
@@ -13,10 +16,13 @@ import { cn } from "@/lib/utils";
 import type { MyProfileDTO, NumberRevealDTO, TaxonomyDTO } from "@/types";
 import { takeFlashError } from "@/lib/flash";
 
+const { locale } = Astro.locals;
+const t = profileMessages[locale];
+
 const SUCCESS_MESSAGES: [param: string, message: string][] = [
-  ["zapisano", "Zapisano."],
-  ["wstrzymano", "Dostępność wstrzymana."],
-  ["wznowiono", "Dostępność wznowiona."],
+  ["zapisano", t.notices.saved],
+  ["wstrzymano", t.notices.paused],
+  ["wznowiono", t.notices.resumed],
 ];
 const success = SUCCESS_MESSAGES.find(([param]) => Astro.url.searchParams.has(param))?.[1] ?? null;
 // Left by the endpoint that redirected here; never read from the URL (security audit F-06).
@@ -30,61 +36,60 @@ let loadError: string | null = null;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (!supabase) {
-  loadError = "Supabase nie jest skonfigurowany.";
+  loadError = auth[locale].notConfigured;
 } else {
   try {
-    [taxonomy, profile] = await Promise.all([getTaxonomy(supabase), getMyProfile(supabase)]);
+    const [names, mine] = await Promise.all([getTaxonomy(supabase), getMyProfile(supabase)]);
+    // The database holds Polish names; the form shows them in the request's language.
+    taxonomy = {
+      categories: names.categories.map((c) => ({ ...c, name: categoryName(locale, c.slug, c.name) })),
+      skills: names.skills.map((s) => ({ ...s, name: skillName(locale, s.slug, s.name) })),
+    };
+    profile = mine;
   } catch {
-    loadError = "Nie udało się wczytać profilu. Odśwież stronę.";
+    loadError = t.page.loadFailed;
   }
   reveals = await getMyNumberReveals(supabase).catch(() => null);
 }
 ---
 
 <!-- PageShell's 42rem column keeps every line under 80 characters. -->
-<PageShell title="Mój profil — SkillNet" heading="Mój profil">
+<PageShell title={t.page.title} heading={t.page.heading}>
   {profile && (
     <div class="space-y-3 text-lg">
       {profile.paused ? (
         <StatusLine tone="attention">
           <p class="font-bold">
             {profile.pausedUntil
-              ? `Twoja dostępność jest wstrzymana do ${formatPauseUntil(profile.pausedUntil)} włącznie.`
-              : "Twoja dostępność jest wstrzymana bezterminowo."}
+              ? format(t.status.pausedUntil, { date: formatDate(locale, profile.pausedUntil) })
+              : t.status.pausedIndefinitely}
           </p>
-          <p class="text-ash mt-1 text-base">
-            Nie pojawisz się w nowych kryzysach ani na mapie, a w trwających kryzysach koordynator Cię nie widzi.
-          </p>
+          <p class="text-ash mt-1 text-base">{t.status.pausedEffect}</p>
           <form method="post" action="/api/profile/resume" class="mt-4">
             <button type="submit" class:list={cn(BUTTON, "btn-secondary text-chalk cursor-pointer")}>
-              Wznów dostępność
+              {t.status.resume}
             </button>
           </form>
         </StatusLine>
       ) : profile.complete && !profile.matchable ? (
         <StatusLine tone="attention">
-          <p class="font-bold">
-            Żadna z Twoich umiejętności nie jest używana w kryzysach, więc koordynator Cię nie znajdzie.
-          </p>
-          <p class="text-ash mt-1 text-base">
-            Zaznacz „Używaj w kryzysie” przy co najmniej jednej umiejętności, jeśli chcesz pomagać w kryzysach.
-          </p>
+          <p class="font-bold">{t.status.noCrisisSkills}</p>
+          <p class="text-ash mt-1 text-base">{t.status.noCrisisSkillsHint}</p>
         </StatusLine>
       ) : profile.complete ? (
         <StatusLine tone="done">
-          <p class="font-bold">Profil kompletny</p>
+          <p class="font-bold">{t.status.complete}</p>
         </StatusLine>
       ) : (
         <StatusLine tone="attention">
           <p>
-            <strong>Profil niekompletny.</strong> Dodaj lokalizację i co najmniej jedną umiejętność, aby koordynator
-            mógł Cię znaleźć.
+            <strong>{t.status.incompleteLead}</strong> {t.status.incompleteBody}
           </p>
         </StatusLine>
       )}
       {profile.phone === null && (
         <StatusLine tone="attention">
-          <p>Bez numeru telefonu nie otrzymasz alertów kryzysowych.</p>
+          <p>{t.status.noPhone}</p>
         </StatusLine>
       )}
     </div>
@@ -112,18 +117,16 @@ if (!supabase) {
   )}
 
   {taxonomy && profile && (
-    <ProfileForm client:only="react" taxonomy={taxonomy} profile={profile}>
+    <ProfileForm client:only="react" locale={locale} taxonomy={taxonomy} profile={profile}>
       <p slot="fallback" class="text-ash mt-14">
-        Ładowanie formularza…
+        {t.page.formLoading}
       </p>
     </ProfileForm>
   )}
 
   {profile?.complete && <PauseAvailability paused={profile.paused} pausedUntil={profile.pausedUntil} />}
   {profile && !profile.complete && (
-    <p class="border-seam text-ash mt-16 border-t pt-10 leading-relaxed">
-      Wstrzymać dostępność możesz, gdy profil jest kompletny: ma lokalizację i co najmniej jedną umiejętność.
-    </p>
+    <p class="border-seam text-ash mt-16 border-t pt-10 leading-relaxed">{t.page.pauseNeedsComplete}</p>
   )}
 
   {profile && <NumberReveals reveals={reveals} />}

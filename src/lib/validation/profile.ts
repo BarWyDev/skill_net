@@ -1,11 +1,19 @@
 import { z } from "zod";
 import { SLOT_COUNT, slotsToMask } from "@/lib/availability";
-import { normalisePhone, PHONE_ERROR } from "@/lib/phone";
-import { normalisePostcode, POSTCODE_ERROR } from "@/lib/postcode";
-import { CRISIS_OFF_UNKNOWN_SKILL, parseSwitch, withCrisisUse } from "@/lib/visibility";
+import { format } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/locale";
+import { profile, type ProfileMessages } from "@/lib/i18n/messages/profile";
+import { normalisePhone } from "@/lib/phone";
+import { normalisePostcode } from "@/lib/postcode";
+import { parseSwitch, withCrisisUse } from "@/lib/visibility";
 import type { SaveProfileInput } from "@/types";
 
 export const MAX_SKILLS = 40;
+
+// The schema's messages are keys of the profile catalogue's `errors`, so one schema serves every
+// language: `parseProfileForm` looks the key up for the request's language.
+type ErrorKey = keyof ProfileMessages["errors"];
+const key = (name: ErrorKey): ErrorKey => name;
 
 // `<slug>` for skills without a level, `<slug>:<1|2|3>` otherwise. Whether a level is
 // required for a given skill is decided by the database trigger, the single source of truth.
@@ -15,13 +23,13 @@ const coordinate = (min: number, max: number) =>
   z
     .string()
     .trim()
-    .min(1, "Zaznacz lokalizację na mapie.")
+    .min(1, key("pinRequired"))
     .transform(Number)
-    .refine((n) => Number.isFinite(n) && n >= min && n <= max, "Nieprawidłowa lokalizacja.");
+    .refine((n) => Number.isFinite(n) && n >= min && n <= max, key("invalidLocation"));
 
 const skillSchema = z
   .string()
-  .regex(SKILL_RE, "Nieprawidłowa umiejętność lub poziom.")
+  .regex(SKILL_RE, key("invalidSkill"))
   .transform((value) => {
     const [slug, level] = value.split(":");
     return { slug, level: level ? (Number(level) as 1 | 2 | 3) : null };
@@ -29,15 +37,15 @@ const skillSchema = z
 
 const skillsSchema = z
   .array(skillSchema)
-  .max(MAX_SKILLS, `Możesz wybrać najwyżej ${MAX_SKILLS} umiejętności.`)
-  .refine((skills) => new Set(skills.map((s) => s.slug)).size === skills.length, "Umiejętności się powtarzają.");
+  .max(MAX_SKILLS, key("tooManySkills"))
+  .refine((skills) => new Set(skills.map((s) => s.slug)).size === skills.length, key("duplicateSkills"));
 
 // Empty means "no phone" (the stored one is deleted). The message never contains the input.
 const phoneSchema = z.string().transform((value, ctx) => {
   if (value.trim() === "") return null;
   const phone = normalisePhone(value);
   if (phone === null) {
-    ctx.addIssue({ code: "custom", message: PHONE_ERROR });
+    ctx.addIssue({ code: "custom", message: key("invalidPhone") });
     return z.NEVER;
   }
   return phone;
@@ -48,11 +56,11 @@ const availabilitySchema = z
   .array(
     z
       .string()
-      .regex(/^\d{1,2}$/, "Nieprawidłowa dostępność.")
+      .regex(/^\d{1,2}$/, key("invalidAvailability"))
       .transform(Number)
-      .refine((bit) => bit < SLOT_COUNT, "Nieprawidłowa dostępność."),
+      .refine((bit) => bit < SLOT_COUNT, key("invalidAvailability")),
   )
-  .max(SLOT_COUNT, "Nieprawidłowa dostępność.")
+  .max(SLOT_COUNT, key("invalidAvailability"))
   .transform((bits) => slotsToMask(bits) || null);
 
 // "1" or "0"; a missing field is null, which leaves the stored switch unchanged.
@@ -62,7 +70,7 @@ const switchSchema = z
   .transform((value, ctx) => {
     const parsed = parseSwitch(value);
     if (parsed === undefined) {
-      ctx.addIssue({ code: "custom", message: "Nieprawidłowe ustawienie widoczności." });
+      ctx.addIssue({ code: "custom", message: key("invalidSwitch") });
       return z.NEVER;
     }
     return parsed;
@@ -73,7 +81,7 @@ const contactFields = {
   availability: availabilitySchema,
   skill: skillsSchema,
   // Slugs of submitted skills hidden from crises (V2).
-  skill_crisis_off: z.array(z.string().regex(/^[a-z0-9-]+$/, CRISIS_OFF_UNKNOWN_SKILL)).max(MAX_SKILLS),
+  skill_crisis_off: z.array(z.string().regex(/^[a-z0-9-]+$/, key("crisisOffUnknownSkill"))).max(MAX_SKILLS),
   show_on_map: switchSchema,
   show_availability: switchSchema,
   allow_contact_reveal: switchSchema,
@@ -87,7 +95,7 @@ const profileFormSchema = z.discriminatedUnion("location_source", [
       if (value.trim() === "") return null;
       const postcode = normalisePostcode(value);
       if (postcode === null) {
-        ctx.addIssue({ code: "custom", message: POSTCODE_ERROR });
+        ctx.addIssue({ code: "custom", message: key("invalidPostcode") });
         return z.NEVER;
       }
       return postcode;
@@ -108,8 +116,9 @@ const profileFormSchema = z.discriminatedUnion("location_source", [
 
 export type ParseResult = { success: true; data: SaveProfileInput } | { success: false; message: string };
 
-/** Parses the profile form POST into the RPC input. Messages are Polish and safe to show. */
-export function parseProfileForm(form: FormData): ParseResult {
+/** Parses the profile form POST into the RPC input. Messages are in `locale` and safe to show. */
+export function parseProfileForm(form: FormData, locale: Locale): ParseResult {
+  const errors = profile[locale].errors;
   const text = (name: string) => {
     const value = form.get(name);
     return typeof value === "string" ? value : "";
@@ -135,12 +144,14 @@ export function parseProfileForm(form: FormData): ParseResult {
   });
 
   if (!result.success) {
-    return { success: false, message: result.error.issues[0]?.message ?? "Nieprawidłowe dane formularza." };
+    const name = result.error.issues.at(0)?.message ?? "";
+    const message = Object.hasOwn(errors, name) ? errors[name as ErrorKey] : errors.invalidForm;
+    return { success: false, message: format(message, { max: MAX_SKILLS }) };
   }
 
   const parsed = result.data;
   const skills = withCrisisUse(parsed.skill, parsed.skill_crisis_off);
-  if (skills === null) return { success: false, message: CRISIS_OFF_UNKNOWN_SKILL };
+  if (skills === null) return { success: false, message: errors.crisisOffUnknownSkill };
 
   const extras = {
     skills,

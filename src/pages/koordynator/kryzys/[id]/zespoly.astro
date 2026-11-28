@@ -7,12 +7,19 @@ import CrisisFacts from "@/components/crisis/CrisisFacts.astro";
 import PersonStatus from "@/components/crisis/PersonStatus.astro";
 import SkillList from "@/components/crisis/SkillList.astro";
 import { formatDistanceKm } from "@/lib/crisis-format";
+import { format } from "@/lib/i18n/format";
+import { auth } from "@/lib/i18n/messages/auth";
+import { crisis as crisisMessages } from "@/lib/i18n/messages/crisis";
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { createClient } from "@/lib/supabase";
 import { assembleCrisisTeams, getCrisis, getTeamTemplates } from "@/lib/services/crisis";
 import { parseTeamRequest, TEAM_COUNT_MAX, TEAM_COUNT_MIN } from "@/lib/validation/crisis";
 import { cn } from "@/lib/utils";
 import type { CrisisDTO, CrisisTeamDTO, TeamTemplateDTO } from "@/types";
+
+const { locale } = Astro.locals;
+const t = crisisMessages[locale].teams;
+const cp = crisisMessages[locale].crisisPage;
 
 // Crisis team templates (S-10, FR-014). A GET form: the template and the team count live in the
 // query string, so a reload gives the same teams (the solver is deterministic). Teams are computed
@@ -37,13 +44,13 @@ let ended = false;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (!supabase) {
-  loadError = "Supabase nie jest skonfigurowany.";
+  loadError = auth[locale].notConfigured;
 } else if (UUID_RE.test(id)) {
   try {
-    crisis = await getCrisis(supabase, id);
-    if (crisis?.status === "active") templates = await getTeamTemplates(supabase);
+    crisis = await getCrisis(supabase, id, locale);
+    if (crisis?.status === "active") templates = await getTeamTemplates(supabase, locale);
   } catch {
-    loadError = "Nie udało się wczytać kryzysu. Odśwież stronę.";
+    loadError = t.loadFailed;
   }
 }
 
@@ -51,19 +58,19 @@ if (!crisis && !loadError) Astro.response.status = 404;
 if (crisis?.status === "ended") ended = true;
 
 if (supabase && crisis?.status === "active" && !loadError && submitted) {
-  const parsed = parseTeamRequest(params);
-  template = parsed.success ? (templates.find((t) => t.slug === parsed.data.template) ?? null) : null;
+  const parsed = parseTeamRequest(params, locale);
+  template = parsed.success ? (templates.find((tpl) => tpl.slug === parsed.data.template) ?? null) : null;
 
   if (!parsed.success) {
     formError = parsed.message;
     Astro.response.status = 422;
   } else if (!template) {
-    formError = "Wybierz szablon zespołu z listy.";
+    formError = t.chooseTemplate;
     Astro.response.status = 422;
   } else {
     requested = parsed.data.count;
     try {
-      const result = await assembleCrisisTeams(supabase, crisis.id, template, requested);
+      const result = await assembleCrisisTeams(supabase, crisis.id, template, requested, locale);
       if (result.ok) {
         teams = result.teams;
         completeCount = result.completeCount;
@@ -74,7 +81,7 @@ if (supabase && crisis?.status === "active" && !loadError && submitted) {
         Astro.response.status = result.status;
       }
     } catch {
-      formError = "Nie udało się złożyć zespołów. Spróbuj ponownie.";
+      formError = t.failed;
       Astro.response.status = 500;
     }
   }
@@ -83,8 +90,8 @@ if (supabase && crisis?.status === "active" && !loadError && submitted) {
 const selectedSlug = template?.slug ?? params.get("szablon") ?? templates.at(0)?.slug ?? "";
 // Echo what was typed, so an invalid count stays visible next to its message.
 const selectedCount = params.get("liczba") ?? "1";
-const formatRoles = (t: TeamTemplateDTO) =>
-  t.roles.map((r) => (r.slots > 1 ? `${r.slots} × ${r.name}` : r.name)).join(" + ");
+const formatRoles = (tpl: TeamTemplateDTO) =>
+  tpl.roles.map((r) => (r.slots > 1 ? `${r.slots} × ${r.name}` : r.name)).join(" + ");
 const missingRoles = (team: CrisisTeamDTO) => [
   ...new Set(team.slots.filter((slot) => !slot.member).map((slot) => slot.roleName)),
 ];
@@ -94,17 +101,17 @@ const unassembled = teams ? Math.max(0, requested - teams.length) : 0;
 const firstUnassembled = requested - unassembled + 1;
 const shortRoles = teams?.flatMap((team) => (team.complete ? [] : missingRoles(team))) ?? [];
 const crumbs = [
-  { href: "/koordynator", label: "Panel koordynatora" },
+  { href: "/koordynator", label: crisisMessages[locale].panel.heading },
   ...(crisis ? [{ href: `/koordynator/kryzys/${crisis.id}`, label: crisis.typeName }] : []),
 ];
-const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : ended ? crisis.typeName : "Złóż zespoły";
+const heading = !crisis ? (loadError ? t.crumb : cp.notFound) : ended ? crisis.typeName : t.heading;
 ---
 
 <PageShell
-  title={`${crisis ? `Zespoły: ${crisis.typeName}` : "Nie znaleziono kryzysu"} — SkillNet`}
+  title={crisis ? format(t.title, { type: crisis.typeName }) : cp.notFoundTitle}
   heading={heading}
   crumbs={crumbs}
-  crumbLabel={crisis ? "Zespoły" : undefined}
+  crumbLabel={crisis ? t.crumb : undefined}
   wide
 >
   {loadError && (
@@ -113,13 +120,11 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
     </StatusLine>
   )}
 
-  {!crisis && !loadError && (
-    <p class="max-w-[52ch] text-lg leading-relaxed">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
-  )}
+  {!crisis && !loadError && <p class="max-w-[52ch] text-lg leading-relaxed">{cp.notFoundText}</p>}
 
   {crisis && ended && (
     <StatusLine tone="neutral" role="alert" class="max-w-[64ch] text-lg">
-      Ten kryzys został zakończony. Lista osób została usunięta, więc nie można złożyć zespołów.
+      {t.ended}
     </StatusLine>
   )}
 
@@ -129,26 +134,26 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
 
       <form method="get" class="border-seam mt-12 max-w-[42rem] border-t pt-10">
         <fieldset>
-          <legend class:list={cn(SECTION_TITLE, "mb-4")}>Szablon zespołu</legend>
+          <legend class:list={cn(SECTION_TITLE, "mb-4")}>{t.templateLegend}</legend>
           <div class="space-y-1">
-            {templates.map((t) => (
+            {templates.map((tpl) => (
               <label
-                for={`szablon-${t.slug}`}
-                aria-label={`${t.name}: ${formatRoles(t)}`}
+                for={`szablon-${tpl.slug}`}
+                aria-label={`${tpl.name}: ${formatRoles(tpl)}`}
                 class="flex min-h-11 cursor-pointer items-start gap-4 py-2"
               >
                 <input
-                  id={`szablon-${t.slug}`}
+                  id={`szablon-${tpl.slug}`}
                   type="radio"
                   name="szablon"
-                  value={t.slug}
-                  checked={t.slug === selectedSlug}
+                  value={tpl.slug}
+                  checked={tpl.slug === selectedSlug}
                   required
                   class="radio mt-0.5"
                 />
                 <span>
-                  <span class="block text-lg font-bold">{t.name}</span>
-                  <span class="text-ash block leading-relaxed">{formatRoles(t)}</span>
+                  <span class="block text-lg font-bold">{tpl.name}</span>
+                  <span class="text-ash block leading-relaxed">{formatRoles(tpl)}</span>
                 </span>
               </label>
             ))}
@@ -157,7 +162,7 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
 
         <div class="mt-8">
           <label for="liczba" class="mb-2 block font-bold">
-            Liczba zespołów
+            {t.countLabel}
           </label>
           <input
             id="liczba"
@@ -178,13 +183,13 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
             </FieldError>
           ) : (
             <p id="teams-hint" class="text-ash mt-2 text-[0.9375rem]">
-              Od {TEAM_COUNT_MIN} do {TEAM_COUNT_MAX}.
+              {format(t.countHint, { min: TEAM_COUNT_MIN, max: TEAM_COUNT_MAX })}
             </p>
           )}
         </div>
 
         <button type="submit" class:list={cn(BUTTON, "btn-primary mt-8 w-full cursor-pointer sm:w-auto")}>
-          Złóż zespoły
+          {t.submit}
         </button>
       </form>
 
@@ -194,30 +199,27 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
             {template.name}
           </h2>
           <p class="mt-4 text-lg">
-            Pełne zespoły: <strong>{completeCount}</strong> z {requested}
-            {partialCount > 0 && <>, niepełne: {partialCount}</>}
-            {unassembled > 0 && <>, niezłożone: {unassembled}</>}
+            {t.completeLabel} <strong>{completeCount}</strong> {format(t.completeOf, { count: requested })}
+            {partialCount > 0 && <>{format(t.partial, { count: partialCount })}</>}
+            {unassembled > 0 && <>{format(t.unassembled, { count: unassembled })}</>}
           </p>
-          <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">
-            Zespoły składamy z listy dopasowanych do tego kryzysu, według aktualnych umiejętności mieszkańców: najpierw
-            jak najwięcej pełnych zespołów, potem osoby wyżej na liście. Deklarowana dostępność nie wpływa na wybór.
-          </p>
+          <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">{t.method}</p>
 
           {teams.length === 0 ? (
-            <p class="mt-8 text-lg">Nikt z listy dopasowanych nie pasuje do tego szablonu.</p>
+            <p class="mt-8 text-lg">{t.noneFit}</p>
           ) : (
             <ol class="mt-10 space-y-12">
               {teams.map((team) => (
                 <li>
                   <div class="flex flex-wrap items-baseline gap-x-5 gap-y-1">
                     <h3 id={`team-${team.number}`} class="font-display text-[1.75rem] leading-none">
-                      Zespół {team.number}
+                      {format(t.team, { number: team.number })}
                     </h3>
                     {team.complete ? (
-                      <StatusMark tone="done">pełny</StatusMark>
+                      <StatusMark tone="done">{t.complete}</StatusMark>
                     ) : (
                       <StatusMark tone="attention" class="font-bold">
-                        niepełny, brakuje: {missingRoles(team).join(", ")}
+                        {format(t.incomplete, { roles: missingRoles(team).join(", ") })}
                       </StatusMark>
                     )}
                   </div>
@@ -229,14 +231,16 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
                           <>
                             <div class="min-w-0">
                               <p class="font-bold">
-                                Osoba #{slot.member.position}
-                                <span class="text-ash font-normal">, miejsce {slot.member.rank}.</span>
+                                {format(cp.person, { position: slot.member.position })}
+                                <span class="text-ash font-normal">
+                                  {format(t.listPlace, { rank: slot.member.rank })}
+                                </span>
                               </p>
                               <SkillList skills={slot.member.skills} class="mt-1" />
                             </div>
                             <p class="tabular-nums">
-                              {formatDistanceKm(slot.member.distanceKm)}
-                              <span class="sr-only"> od epicentrum</span>
+                              {formatDistanceKm(locale, slot.member.distanceKm)}
+                              <span class="sr-only"> {cp.fromEpicentre}</span>
                             </p>
                             <PersonStatus
                               availableNow={slot.member.availableNow}
@@ -246,7 +250,7 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
                           </>
                         ) : (
                           <p class="md:col-span-3">
-                            <StatusMark tone="attention">brak osoby</StatusMark>
+                            <StatusMark tone="attention">{t.noPerson}</StatusMark>
                           </p>
                         )}
                       </li>
@@ -259,11 +263,9 @@ const heading = !crisis ? (loadError ? "Zespoły" : "Nie znaleziono kryzysu") : 
           {teams.length > 0 && unassembled > 0 && (
             <StatusLine tone="attention" class="mt-10 max-w-[64ch]">
               {unassembled === 1
-                ? `Zespołu ${requested} nie da się złożyć`
-                : `Zespołów ${firstUnassembled}–${requested} nie da się złożyć`}
-              {shortRoles.length > 0
-                ? `: na liście dopasowanych brakuje osób z rolą ${shortRoles.join(", ")}.`
-                : ": na liście dopasowanych brakuje osób do tego szablonu."}
+                ? format(t.cannotAssembleOne, { number: requested })
+                : format(t.cannotAssembleRange, { from: firstUnassembled, to: requested })}
+              {shortRoles.length > 0 ? format(t.shortRoles, { roles: shortRoles.join(", ") }) : t.shortGeneric}
             </StatusLine>
           )}
         </section>

@@ -20,6 +20,13 @@
   "observability": {
     "enabled": true,
   },
+  // The interface languages each environment offers (src/lib/i18n/locale.ts). Production offers all
+  // three since the resident area was translated (roadmap S-19); the coordinator area is still Polish
+  // (S-20), and the Ukrainian text has not been checked by a native reader. Setting this back to
+  // "pl" is the rollback. `vars` are not inherited, so staging and previews set their own.
+  "vars": {
+    "ENABLED_LOCALES": "pl,en,uk",
+  },
   "kv_namespaces": [
     {
       "binding": "SESSION",
@@ -44,6 +51,9 @@
   // Previews don't inherit bindings, and the adapter would inject an ID-less SESSION here (error 10021).
   // A separate namespace keeps previews from writing to production KV.
   "previews": {
+    "vars": {
+      "ENABLED_LOCALES": "pl,en,uk",
+    },
     "kv_namespaces": [
       {
         "binding": "SESSION",
@@ -62,6 +72,9 @@
       "workers_dev": false,
       "preview_urls": false,
       "routes": [{ "pattern": "staging.skillnet.org.pl", "custom_domain": true }],
+      "vars": {
+        "ENABLED_LOCALES": "pl,en,uk",
+      },
       "kv_namespaces": [
         {
           "binding": "SESSION",

@@ -9,6 +9,7 @@
 // in the flash cookie, which is how endpoints report errors since security audit F-06.
 // A step may set `sessionCookie: true` to assert the response sets the Supabase session cookie
 // with HttpOnly, Secure, SameSite=Lax and at most 30 days of Max-Age (security audit S-01).
+// A step may set `cookie: name` to assert the response sets a cookie of that name.
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const READONLY = process.env.SMOKE_READONLY === "1";
@@ -111,6 +112,30 @@ async function request(path, { method = "GET", form, json, rawBody, contentType,
     body: await response.text(),
   };
 }
+
+// The interface language (src/lib/i18n/locale.ts). These requests carry their own headers and never
+// touch the shared jar: a language cookie there would turn every later Polish assertion English.
+const LANG_COOKIE = "skillnet_lang";
+async function langRequest(path, { acceptLanguage, cookie } = {}) {
+  const response = await fetch(BASE_URL + path, {
+    redirect: "manual",
+    headers: {
+      ...(acceptLanguage ? { "Accept-Language": acceptLanguage } : {}),
+      ...(cookie ? { Cookie: cookie } : {}),
+    },
+  });
+  return {
+    setCookieNames: response.headers.getSetCookie().map((raw) => raw.split("=")[0].trim()),
+    setCookies: response.headers.getSetCookie(),
+    status: response.status,
+    location: response.headers.get("location") ?? "",
+    cacheControl: response.headers.get("cache-control") ?? "",
+    headers: response.headers,
+    body: await response.text(),
+  };
+}
+// The `name=value` pair the `?lang=en` step received, for the step after it.
+let languageCookie = "";
 
 const readonlySteps = [
   ["home renders", () => request("/"), { status: 200 }],
@@ -249,7 +274,71 @@ const readonlySteps = [
     () => request("/api/auth/resend", { method: "POST", form: { email: "not-an-email" } }),
     { status: 302, location: "/auth/link-wygasl", flash: true },
   ],
+  // A `?lang=` link is always stripped with a redirect, whether or not the environment offers the
+  // language, so this holds on production too (Polish only).
+  [
+    "lang link is stripped with a redirect",
+    () => langRequest("/?lang=en"),
+    { status: 303, location: `${BASE_URL}/`, exact: true },
+  ],
 ];
+
+// The language rules, on an environment that offers all three (ENABLED_LOCALES=pl,en,uk: local,
+// CI, previews, staging). Skipped with SMOKE_READONLY=1: production may still run a build that
+// offers Polish only.
+const languageSteps = [
+  // Node's fetch sends `Accept-Language: *`, which names no language.
+  ["no language preference reads in Polish", () => langRequest("/"), { status: 200, bodyIncludes: '<html lang="pl"' }],
+  [
+    "a Ukrainian browser reads in Ukrainian",
+    () => langRequest("/", { acceptLanguage: "uk" }),
+    { status: 200, bodyIncludes: '<html lang="uk"' },
+  ],
+  [
+    "a browser in an unsupported language reads in English",
+    () => langRequest("/", { acceptLanguage: "de" }),
+    { status: 200, bodyIncludes: '<html lang="en"' },
+  ],
+  [
+    "lang link sets the language cookie",
+    async () => {
+      const response = await langRequest("/mapa?lang=en");
+      languageCookie = response.setCookies.find((raw) => raw.startsWith(`${LANG_COOKIE}=`))?.split(";")[0] ?? "";
+      return response;
+    },
+    { status: 303, location: `${BASE_URL}/mapa`, exact: true, cookie: LANG_COOKIE },
+  ],
+  [
+    "the language cookie holds on the next request",
+    () => langRequest("/mapa", { cookie: languageCookie }),
+    { status: 200, bodyIncludes: '<html lang="en"' },
+  ],
+  // /api/mapa is cached as `public`, so it must not vary by language.
+  [
+    "density map is the same in every language",
+    async () => {
+      const plain = await langRequest("/api/mapa");
+      const english = await langRequest("/api/mapa", { cookie: `${LANG_COOKIE}=en`, acceptLanguage: "uk" });
+      return { ...english, body: plain.body === english.body ? "same body" : "different body" };
+    },
+    { status: 200, bodyIncludes: "same body", cacheControlIncludes: "public" },
+  ],
+  // The privacy notice is a courtesy translation: it must carry the binding Polish text as well.
+  [
+    "privacy notice reads in English and keeps the Polish original",
+    async () => {
+      const response = await langRequest("/prywatnosc", { cookie: `${LANG_COOKIE}=en` });
+      const both =
+        response.body.includes("Information on data processing") && response.body.includes("Administrator danych");
+      return { ...response, body: both ? "translation and original" : "one is missing" };
+    },
+    { status: 200, bodyIncludes: "translation and original", cacheControlIncludes: "private" },
+  ],
+];
+
+// The session's cookies plus an English language cookie, for one request. The shared jar never
+// holds the language cookie, so every other step stays Polish.
+const englishSession = () => ({ Cookie: `${cookieHeader()}; ${LANG_COOKIE}=en` });
 
 const writeSteps = [
   // Refused before GoTrue is called, so no account is created.
@@ -383,6 +472,30 @@ const writeSteps = [
         ],
       }),
     { status: 302, location: "/profil", flash: true },
+  ],
+  // The resident area follows the language (roadmap S-19): the page, and the notice an endpoint
+  // leaves for it. The GET also takes the Polish notice of the step above out of the way.
+  [
+    "profil reads in English with the language cookie",
+    () => request("/profil", { headers: englishSession() }),
+    { status: 200, bodyIncludes: "My profile" },
+  ],
+  [
+    "a refused profile save answers in English",
+    async () => {
+      await request("/api/profile", {
+        method: "POST",
+        form: [
+          ["location_source", "pin"],
+          ["lat", "52.2297"],
+          ["lng", "21.0122"],
+          ["skill", "elektryk:5"],
+        ],
+        headers: englishSession(),
+      });
+      return request("/profil", { headers: englishSession() });
+    },
+    { status: 200, bodyIncludes: "Invalid skill or level." },
   ],
   [
     "profile save accepts pin and skill",
@@ -559,6 +672,15 @@ const httpsSteps = BASE_URL.startsWith("https://")
         },
         { status: 308, location: `${BASE_URL}/mapa?x=1`, exact: true },
       ],
+      // A path starting with `//` must not turn the `?lang=` redirect into one to another host
+      // (security audit F-01 class). Deployed hosts only: a local server reads `//example.com/` as
+      // the request's host, so there the plain-HTTP redirect above answers before the language code.
+      [
+        "lang link on a // path stays on this origin",
+        () => langRequest("//example.com/?lang=en"),
+        // A prefix match: the trailing slash ends the host, so a look-alike host cannot pass.
+        { status: 303, location: `${BASE_URL}/` },
+      ],
     ]
   : [];
 
@@ -593,7 +715,7 @@ const canonicalSteps =
 
 const steps = READONLY
   ? [...readonlySteps, ...httpsSteps, ...canonicalSteps]
-  : [...readonlySteps, ...httpsSteps, ...canonicalSteps, ...writeSteps];
+  : [...readonlySteps, ...httpsSteps, ...canonicalSteps, ...languageSteps, ...writeSteps];
 
 let failed = 0;
 for (const [name, run, expected] of steps) {
@@ -607,6 +729,7 @@ for (const [name, run, expected] of steps) {
     (expected.cacheControlIncludes === undefined || actual.cacheControl.includes(expected.cacheControlIncludes)) &&
     (expected.header === undefined || actual.headers.get(expected.header[0]) === expected.header[1]) &&
     (expected.flash === undefined || actual.setCookieNames.includes(FLASH_COOKIE) === expected.flash) &&
+    (expected.cookie === undefined || actual.setCookieNames.includes(expected.cookie)) &&
     (expected.sessionCookie === undefined || sessionCookieFlagsOk(actual.setCookies) === expected.sessionCookie);
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
@@ -619,6 +742,7 @@ for (const [name, run, expected] of steps) {
         `      expected Cache-Control to include ${expected.cacheControlIncludes}, got "${actual.cacheControl}"`,
       );
     if (expected.flash !== undefined) console.log(`      expected a ${FLASH_COOKIE} cookie: ${expected.flash}`);
+    if (expected.cookie !== undefined) console.log(`      expected a ${expected.cookie} cookie`);
     if (expected.sessionCookie !== undefined)
       // Names and attributes only: the values are session tokens.
       console.log(

@@ -30,8 +30,13 @@ test("summary: an empty matrix has nothing missing", () => {
 });
 
 test("joinNames: one, two and three names", () => {
-  assert.equal(joinNames([]), "");
-  assert.equal(joinNames(["sternik"]), "sternik");
-  assert.equal(joinNames(["sternik", "łódź"]), "sternik i łódź");
-  assert.equal(joinNames(["sternik", "łódź", "pompa"]), "sternik, łódź i pompa");
+  assert.equal(joinNames("pl", []), "");
+  assert.equal(joinNames("pl", ["sternik"]), "sternik");
+  assert.equal(joinNames("pl", ["sternik", "łódź"]), "sternik i łódź");
+  assert.equal(joinNames("pl", ["sternik", "łódź", "pompa"]), "sternik, łódź i pompa");
+});
+
+test("joinNames: the final word follows the language", () => {
+  assert.equal(joinNames("en", ["boatman", "boat", "pump"]), "boatman, boat and pump");
+  assert.equal(joinNames("uk", ["стерновий", "човен", "помпа"]), "стерновий, човен і помпа");
 });

@@ -67,7 +67,8 @@ jobs:
       - name: Configure secrets for build and preview
         run: |
           source supabase.env
-          printf 'SUPABASE_URL=%s\nSUPABASE_KEY=%s\n' "$API_URL" "$ANON_KEY" > .env
+          # All three interface languages, so the smoke test can check the language rules.
+          printf 'SUPABASE_URL=%s\nSUPABASE_KEY=%s\nENABLED_LOCALES=pl,en,uk\n' "$API_URL" "$ANON_KEY" > .env
           cp .env .dev.vars
       - run: npm run build
       - name: Run smoke test against production preview
