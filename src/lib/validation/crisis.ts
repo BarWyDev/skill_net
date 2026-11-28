@@ -1,9 +1,10 @@
 import { z } from "zod";
+import { format } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/locale";
 import { crisis } from "@/lib/i18n/messages/crisis";
 import { profile } from "@/lib/i18n/messages/profile";
 import { normalisePostcode } from "@/lib/postcode";
-import { normaliseReason, REASON_REQUIRED_MESSAGE, reasonProblem } from "@/lib/reason";
+import { normaliseReason, reasonMessages, reasonProblem } from "@/lib/reason";
 import type { ActivateCrisisInput, RadiusKm } from "@/types";
 
 export const RADIUS_PRESETS: RadiusKm[] = [1, 2, 5, 10, 20];
@@ -68,43 +69,52 @@ function crisisFormSchema(locale: Locale) {
   );
 }
 
-/** Parses the break-glass reason from the reveal form. Messages are Polish and safe to show. */
+/** Parses the break-glass reason from the reveal form. Messages are in `locale` and safe to show. */
 export function parseRevealReason(
   form: FormData,
+  locale: Locale,
 ): { success: true; data: string } | { success: false; message: string } {
   const value = form.get("reason");
-  // Polish until the break-glass page is translated (coordinator-area-translations, Phase 3).
-  const result = reasonSchema("pl").safeParse(typeof value === "string" ? value : "");
+  const result = reasonSchema(locale).safeParse(typeof value === "string" ? value : "");
   return result.success
     ? { success: true, data: result.data }
-    : { success: false, message: result.error.issues[0]?.message ?? REASON_REQUIRED_MESSAGE };
+    : { success: false, message: result.error.issues[0]?.message ?? reasonMessages(locale).required };
 }
 
 export const TEAM_COUNT_MIN = 1;
 export const TEAM_COUNT_MAX = 10;
 
+/** "Podaj liczbę zespołów od 1 do 10." in `locale`: the form's message and that of `invalid_team_count`. */
+export function invalidTeamCountMessage(locale: Locale): string {
+  return format(crisis[locale].teams.invalidCount, { min: TEAM_COUNT_MIN, max: TEAM_COUNT_MAX });
+}
+
 // The same bounds as get_team_candidates, which checks them again; whether the template exists is
 // checked against the seeded templates.
-export const teamRequestSchema = z.object({
-  szablon: z.string().regex(/^[a-z-]{1,40}$/, "Wybierz szablon zespołu z listy."),
-  liczba: z.coerce
-    .number({ error: `Podaj liczbę zespołów od ${TEAM_COUNT_MIN} do ${TEAM_COUNT_MAX}.` })
-    .int(`Podaj liczbę zespołów od ${TEAM_COUNT_MIN} do ${TEAM_COUNT_MAX}.`)
-    .min(TEAM_COUNT_MIN, `Podaj liczbę zespołów od ${TEAM_COUNT_MIN} do ${TEAM_COUNT_MAX}.`)
-    .max(TEAM_COUNT_MAX, `Podaj liczbę zespołów od ${TEAM_COUNT_MIN} do ${TEAM_COUNT_MAX}.`),
-});
+function teamRequestSchema(locale: Locale) {
+  const invalidCount = invalidTeamCountMessage(locale);
+  return z.object({
+    szablon: z.string().regex(/^[a-z-]{1,40}$/, crisis[locale].teams.chooseTemplate),
+    liczba: z.coerce
+      .number({ error: invalidCount })
+      .int(invalidCount)
+      .min(TEAM_COUNT_MIN, invalidCount)
+      .max(TEAM_COUNT_MAX, invalidCount),
+  });
+}
 
-/** Parses the team page's query string. Messages are Polish and safe to show. */
+/** Parses the team page's query string. Messages are in `locale` and safe to show. */
 export function parseTeamRequest(
   params: URLSearchParams,
+  locale: Locale,
 ): { success: true; data: { template: string; count: number } } | { success: false; message: string } {
-  const result = teamRequestSchema.safeParse({
+  const result = teamRequestSchema(locale).safeParse({
     szablon: params.get("szablon") ?? "",
     liczba: (params.get("liczba") ?? "").trim() || undefined,
   });
   return result.success
     ? { success: true, data: { template: result.data.szablon, count: result.data.liczba } }
-    : { success: false, message: result.error.issues[0]?.message ?? "Nieprawidłowe zapytanie." };
+    : { success: false, message: result.error.issues[0]?.message ?? crisis[locale].teams.invalidRequest };
 }
 
 export type CrisisParseResult = { success: true; data: ActivateCrisisInput } | { success: false; message: string };

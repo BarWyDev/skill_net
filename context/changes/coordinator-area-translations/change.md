@@ -3,7 +3,7 @@ change_id: coordinator-area-translations
 title: Coordinator area and crisis mode in English and Ukrainian
 status: implementing
 created: 2026-11-27
-updated: 2026-11-27
+updated: 2026-11-28
 archived_at: null
 ---
 
