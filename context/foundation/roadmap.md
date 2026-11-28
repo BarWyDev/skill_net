@@ -4,7 +4,7 @@ version: 1
 status: draft
 created: 2026-09-26
 updated: 2026-11-28
-prd_version: 2
+prd_version: 3
 main_goal: market-feedback
 top_blocker: decisions
 milestone_id: pilot-ready-crisis-matching
@@ -23,9 +23,9 @@ milestone_status: open
 **M-1: Pilot-ready crisis matching** — Status: open
 
 - **Intent:** A council coordinator can run a simulated crisis on real registrations from one area: residents register skills and location, the coordinator activates a crisis, gets a ranked list, alerts go out, and confirmed people land on the operational list, with the privacy guardrails in place for a real pilot.
-- **Source materials:** `context/foundation/prd.md` (v2); crisis-type × skills matrix and team templates from `docs/shape_not.md`, which the PRD cites as the seed spec.
+- **Source materials:** `context/foundation/prd.md` (v3); crisis-type × skills matrix and team templates from `docs/shape_not.md`, which the PRD cites as the seed spec.
 - **Done when:** every S-NN below is `done`.
-- **Scope anchors:** all must-have FRs (FR-001 to FR-012, FR-014, FR-015, FR-017, FR-019) and US-01, plus the nice-to-have FR-020 (neighbour courses), pulled in on 2026-10-20, and FR-021 (interface in English and Ukrainian), pulled in on 2026-11-26. The other nice-to-have FRs (FR-013, FR-016, FR-018) are parked.
+- **Scope anchors:** all must-have FRs (FR-001 to FR-012, FR-014, FR-015, FR-017, FR-019) and US-01, plus the nice-to-have FR-020 (neighbour courses), pulled in on 2026-10-20, FR-021 (interface in English and Ukrainian), pulled in on 2026-11-26, and FR-022 to FR-027 (everyday neighbour help), pulled in on 2026-11-28. The other nice-to-have FRs (FR-013, FR-016, FR-018) are parked.
 
 ## Vision recap
 
@@ -62,6 +62,12 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 | S-19 | resident-area-translations      | resident can use their profile, courses, consent and privacy pages in English or Ukrainian | S-18                          | FR-021                | done     |
 | S-20 | coordinator-area-translations   | coordinator can run the coordinator area and crisis mode in English or Ukrainian           | S-18, S-19                    | FR-021                | done     |
 | S-21 | emails-in-chosen-language       | resident can receive SkillNet's emails in the language they chose                          | S-18                          | FR-021                | proposed |
+| S-22 | everyday-help-skills            | resident can add everyday-help skills to their profile, and they count on the map          | S-01, S-11                    | FR-022                | ready    |
+| S-23 | content-reports-and-rules       | resident can report a course that breaks the community rules; the operator can hide it     | S-17                          | FR-023                | ready    |
+| S-24 | neighbour-help-requests         | resident can ask for help tied to a skill, and matching neighbours can offer it            | S-17, S-22, S-23              | FR-024                | proposed |
+| S-25 | help-request-notifications      | resident can get an email about a matching help request or a new offer of help             | S-21, S-24, Workers Paid plan | FR-025                | proposed |
+| S-26 | help-confirmation-and-history   | person who asked can confirm the help; both people see it in a private history             | S-24                          | FR-026                | proposed |
+| S-27 | remote-help                     | resident can mark a help request or a course as possible remotely                          | S-24                          | FR-027, FR-020        | proposed |
 
 ## Before pilot launch
 
@@ -77,16 +83,19 @@ In a crisis, the most valuable local resource is people nearby with specific ski
 
 While these wait, the open S-07 branches drift from `master`; rebase them when work resumes, before reviewing.
 
+The Workers Paid plan also gates S-25 (email notifications about help requests). On 2026-11-28 the owner confirmed that production will move to the Paid plan; the date is still Open Roadmap Question 10. The other everyday-help slices (S-22, S-23, S-24, S-26, S-27) need nothing from this table and do not block the pilot.
+
 ## Streams
 
 Navigation aid: items grouped by the prerequisite chain they share. The canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks. There are no foundations in this milestone, so streams follow the slice chains.
 
-| Stream | Theme                             | Chain                                                          | Note                                                                                                                                                                  |
-| ------ | --------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A      | Crisis matching core              | `S-01` → `S-15` → `S-02` → `S-03` → `S-04` → `S-10`            | Reaches the north star as fast as possible; the first thing a coordinator can give feedback on.                                                                       |
-| B      | Alert and confirmation loop       | `S-06` → `S-07` → `S-08` → `S-09`                              | Joins Stream A at `S-03`; completes US-01 end to end and carries the riskiest integration (SMS).                                                                      |
-| C      | Resident control and everyday use | `S-05` → `S-16` → `S-11` → `S-12` → `S-13` → `S-14` → `S-17`   | Joins Stream A at `S-01` (and B at `S-06` for `S-12`); the guardrails a real pilot needs before launch, then neighbour courses as an everyday reason to open the app. |
-| D      | Interface language                | `S-18` → `S-19` → `S-20`, with `S-21` beside them after `S-18` | Starts from nothing and touches every page, so it runs while Stream B waits. It does not block the pilot.                                                             |
+| Stream | Theme                             | Chain                                                                | Note                                                                                                                                                                  |
+| ------ | --------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A      | Crisis matching core              | `S-01` → `S-15` → `S-02` → `S-03` → `S-04` → `S-10`                  | Reaches the north star as fast as possible; the first thing a coordinator can give feedback on.                                                                       |
+| B      | Alert and confirmation loop       | `S-06` → `S-07` → `S-08` → `S-09`                                    | Joins Stream A at `S-03`; completes US-01 end to end and carries the riskiest integration (SMS).                                                                      |
+| C      | Resident control and everyday use | `S-05` → `S-16` → `S-11` → `S-12` → `S-13` → `S-14` → `S-17`         | Joins Stream A at `S-01` (and B at `S-06` for `S-12`); the guardrails a real pilot needs before launch, then neighbour courses as an everyday reason to open the app. |
+| D      | Interface language                | `S-18` → `S-19` → `S-20`, with `S-21` beside them after `S-18`       | Starts from nothing and touches every page, so it runs while Stream B waits. It does not block the pilot.                                                             |
+| E      | Everyday neighbour help           | `S-22` → `S-23` → `S-24` → `S-26` → `S-27`, with `S-25` after `S-24` | Joins Stream C at `S-17`, whose course rules it reuses, and D at `S-21` for `S-25`. Gives residents an everyday reason to open the app; does not block the pilot.     |
 
 ## Baseline
 
@@ -109,6 +118,7 @@ No foundations in this milestone. Every absent or partial layer is introduced in
 - The crisis matrix and ranking come with S-03.
 - The consent and audit trail come with S-05 and S-09.
 - Background alert delivery comes with S-07.
+- Email sent by the app itself (outside sign-in emails) comes with S-25.
 
 Each of these can be planned inside its consuming slice, so none of them needed to be pulled ahead as a separate foundation.
 
@@ -390,6 +400,94 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **Risk:** Email settings are per Supabase project and have drifted on production before (S-16's lesson), so the templates must be checked on production through the Management API after the change. The crisis SMS wording and the YES/NO replies in three languages belong to S-07, not here: a Ukrainian SMS in Cyrillic holds 70 characters per part instead of 160, which raises the cost per alert.
 - **Status:** proposed
 
+### S-22: Resident adds everyday-help skills
+
+- **Outcome:** a resident can add everyday-help skills (for example shopping, clearing snow, looking after a pet, keeping someone company, help with moving, small repairs) to their profile, in all three languages; the skills form a seventh category with no level, show on the aggregated map under the same anonymity threshold, and carry no weight in any crisis type.
+- **Change ID:** everyday-help-skills
+- **PRD refs:** FR-022
+- **Prerequisites:** S-01, S-11
+- **Parallel with:** S-07, S-08, S-21, S-23
+- **Blockers:** —
+- **Unknowns:**
+  - Which skills make the final list? — Owner: user. Block: no; the default list is in `context/foundation/neighbour-help-plan.md`.
+  - Should any everyday skill count in a crisis type (for example shopping during a heat wave)? — Owner: user. Block: no; the default is no weight, so the crisis ranking does not change.
+- **Risk:** Sequenced first because it is the smallest slice and the later ones need it: without everyday skills a help request can name only crisis skills, and a resident without a specialist skill has nothing to put in the profile. The category shows up in every place that lists categories (profile, map filter, courses), so a missing translation would be visible at once; the Ukrainian names wait for a native reader (Open Roadmap Question 13).
+- **Status:** ready
+
+### S-23: Resident reports content that breaks the rules
+
+- **Outcome:** a signed-in resident can report a course with a reason from a fixed list; a course reported by several residents is hidden until the operator decides, and the operator can hide or restore it; its organiser sees that it is hidden and why; anyone can read the community rules, which include advice on meeting a stranger safely.
+- **Change ID:** content-reports-and-rules
+- **PRD refs:** FR-023
+- **Prerequisites:** S-17
+- **Parallel with:** S-07, S-08, S-21, S-22
+- **Blockers:** —
+- **Unknowns:**
+  - Where does the operator read and decide reports: in Supabase Studio, as with the coordinator role, or on an operator page in the app? — Owner: user. Block: no; Studio is the default and needs no new role.
+  - How many distinct reports hide an item before the operator has looked? — Owner: user. Block: no; three is the default.
+  - Who reads the reports once the pilot runs, and how fast? — Owner: user. Block: no for planning; see Open Roadmap Question 16.
+- **Risk:** Sequenced before help requests because a request is the first content written by a person who may be vulnerable, and it must not ship without a way to flag abuse. A report is itself personal data (who reported what), so the privacy notice changes and a new consent version follows (Open Roadmap Question 15). Reports can also be used to silence a neighbour, so each resident's reports are limited and a hidden item is restored by the operator, never deleted automatically.
+- **Status:** ready
+
+### S-24: Resident asks neighbours for help
+
+- **Outcome:** a resident can ask for help tied to one skill, with a short description, for 14 days; only signed-in residents in the area who declared that skill see the request, with no name or contact and the place only as the 2 km square of the public map; a neighbour offers help in the app; the person asking sees how many offered and gives the details (place, time, contact) only to the offers they accept; either side can withdraw, and reporting (S-23) covers requests too.
+- **Change ID:** neighbour-help-requests
+- **PRD refs:** FR-024
+- **Prerequisites:** S-17 (visibility, squares and eligibility rules), S-22, S-23
+- **Parallel with:** S-07, S-08, S-21
+- **Blockers:** —
+- **Unknowns:**
+  - What does the person asking see about a neighbour who offered, before deciding to share the details? — Owner: user. Block: no; the default is the skill level and how long the account has existed, never a name.
+  - Do only residents with the matching skill see a request, or every signed-in neighbour? — Owner: user. Block: no; matching skill only is the default (FR-024).
+  - How do requests and offers interact with the resident's controls: pausing (S-13), turning off map contribution (S-12) and unregistering (S-14)? — Owner: planning. Block: no; the course rules are the default.
+  - How many open requests may one resident have, and can a request be renewed after 14 days? — Owner: planning. Block: no; three open requests and one renewal are the defaults.
+- **Risk:** The largest slice of this stream, and the one that reverses a PRD non-goal, so the narrowing in FR-024 is the whole slice: no board of offers, no browsing without the skill, no chat. Two strangers meet with no identity shown on either side, so the hand-over of details must be a deliberate act of the person asking, per accepted offer, and the safety advice (S-23) must be on the page. The privacy notice changes (a new consent version; Open Roadmap Question 15). Without notifications (S-25) a neighbour sees a request only when they open the app, so the first feedback may look quieter than the feature deserves.
+- **Status:** proposed
+
+### S-25: Resident gets an email about a matching request
+
+- **Outcome:** a resident who switched the notification on receives an email, in their chosen language, when a neighbour asks for help matching their skills; the person asking receives an email when a neighbour offers help; every such email carries a link that switches the notification off, and no email carries personal data of the other person.
+- **Change ID:** help-request-notifications
+- **PRD refs:** FR-025
+- **Prerequisites:** S-21 (the language stored with the account), S-24, Workers Paid plan
+- **Parallel with:** S-07, S-08, S-26, S-27
+- **Blockers:** Workers Paid plan (human-only change; Open Roadmap Question 10). A sending key for the email provider on production and staging (owner).
+- **Unknowns:**
+  - How many matching neighbours get the email for one request, and how often may one resident be emailed? — Owner: user. Block: no; the nearest 20 and at most one email a day are the defaults.
+  - Does the pilot council's data-protection officer accept the email provider's US-hosted logs for these emails too (Open Roadmap Questions 11 and 12)? — Owner: user. Block: no for planning; yes for a pilot with real residents.
+  - Does this slice share its background queue with the crisis alerts of S-07 or get its own? — Owner: planning. Block: no; its own queue is the default, so an everyday burst can never delay a crisis alert.
+- **Risk:** The only slice here that costs money and sends to many people at once: on the Free plan the fan-out would be cut off silently, as with crisis alerts. It is also the first email the app sends by itself (sign-in emails go through the auth provider), so it brings a new secret per environment and a new way to annoy residents. The one criticism of Commu found in its App Store reviews was notifications used for marketing, so the notification is off by default and limited. S-07 touches the same queue configuration; whichever lands second rebases onto the other.
+- **Status:** proposed
+
+### S-26: Person who asked confirms the help
+
+- **Outcome:** the person who asked can confirm that the help took place, and is asked about it when closing the request; the confirmed help appears in the private history of both people and nowhere else; the map shows how many helps were confirmed and how many courses are open in an area, under the same anonymity threshold as the skills map.
+- **Change ID:** help-confirmation-and-history
+- **PRD refs:** FR-026
+- **Prerequisites:** S-24
+- **Parallel with:** S-07, S-08, S-25, S-27
+- **Blockers:** —
+- **Unknowns:**
+  - How long is the history kept, and can a resident remove an entry? — Owner: user. Block: no; until the account is deleted, with removal of single entries, is the default.
+  - Does the number of confirmed helps ever feed the coordinator's crisis ranking? — Owner: user. Block: no; the default is never, so everyday behaviour does not become a crisis score.
+  - Are small numbers on the map shown exactly or as a band? — Owner: planning. Block: no; bands, as on the skills map, are the default.
+- **Risk:** The history is new personal data about who helped whom, so the privacy notice changes again (a new consent version; Open Roadmap Question 15) and unregistering (S-14) must erase it on both sides. A count per area must not single out one household in a sparse square, which is why it follows the map's threshold. Public rankings and badges stay out: they would contradict the promise that nobody sees a resident outside a crisis.
+- **Status:** proposed
+
+### S-27: Resident marks help as possible remotely
+
+- **Outcome:** a resident can mark a help request or a course as possible remotely (for example help with a phone, a language, a conversation); a remote item is offered to matching residents beyond the neighbouring squares and shows no square at all.
+- **Change ID:** remote-help
+- **PRD refs:** FR-027, FR-020
+- **Prerequisites:** S-24
+- **Parallel with:** S-07, S-08, S-25, S-26
+- **Blockers:** —
+- **Unknowns:**
+  - How far does a remote item reach: a fixed distance, or every resident with the skill? — Owner: user. Block: no; 25 km is the default, so the pilot area stays the audience.
+- **Risk:** Small, and last because it only widens the audience of what S-17 and S-24 already show. A wider audience means more people see that someone needs help, so a remote item must show even less about the place than a local one.
+- **Status:** proposed
+
 ## Backlog Handoff
 
 | Roadmap ID | Issue | Change ID                       | Suggested issue title                                                  | Ready for `/10x-plan` | Notes                                               |
@@ -415,6 +513,12 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 | S-19       | —     | resident-area-translations      | Resident area, taxonomy and legal texts in English and Ukrainian       | no                    | Waits on S-18                                       |
 | S-20       | —     | coordinator-area-translations   | Coordinator area and crisis mode in English and Ukrainian              | no                    | Waits on S-18 and S-19                              |
 | S-21       | —     | emails-in-chosen-language       | Emails in the resident's chosen language                               | no                    | Waits on S-18                                       |
+| S-22       | —     | everyday-help-skills            | Everyday-help skills: a seventh taxonomy category with no level        | yes                   | Run `/10x-plan everyday-help-skills`                |
+| S-23       | —     | content-reports-and-rules       | Report a course; operator hides or restores; community rules page      | yes                   | Run `/10x-plan content-reports-and-rules`           |
+| S-24       | —     | neighbour-help-requests         | Help requests matched to skills; offers and hand-over of details       | no                    | Waits on S-22 and S-23                              |
+| S-25       | —     | help-request-notifications      | Opt-in emails about matching help requests and new offers              | no                    | Waits on S-21, S-24 and the Workers Paid plan       |
+| S-26       | —     | help-confirmation-and-history   | Confirm help; private history; counts of help on the map               | no                    | Waits on S-24                                       |
+| S-27       | —     | remote-help                     | Mark a help request or a course as possible remotely                   | no                    | Waits on S-24                                       |
 
 ## Open Roadmap Questions
 
@@ -427,11 +531,13 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 7. **What are the user's additional non-goals?** — Owner: user. Block: roadmap-wide (may park more).
 8. **The shaping quality cross-check never ran** (`quality_check_status: pending`, phase 6 of 8). — Owner: user. Block: roadmap-wide (unknown gaps).
 9. **Parallel incidents, alert limits and per-municipality matrices are unresolved at scale.** — Owner: user. Block: none for the pilot; must be answered before multi-municipality rollout.
-10. **When does production move to the Workers Paid plan?** It is a human-only change, and it must happen before the first deploy that carries crisis alerts. — Owner: user. Block: S-07.
+10. **When does production move to the Workers Paid plan?** It is a human-only change, and it must happen before the first deploy that carries crisis alerts. On 2026-11-28 the owner confirmed the move; the date is open. — Owner: user. Block: S-07, S-25.
 11. ~~**Which own domain and email-sending provider back sign-up verification?**~~ Resolved 2026-10-24: `skillnet.org.pl` with Resend (eu-west-1). Open follow-up: the pilot council's DPO on Resend's US-hosted logs (see 12).
 12. **What will the pilot council's data-protection officer accept for where phone numbers and locations are processed?** The Supabase region is fixed, but Workers process requests at any edge location. — Owner: user. Block: pilot launch (S-07, S-08, S-09 with real data).
 13. **Who checks the Ukrainian (and English) text before it reaches production?** Crisis instructions and the consent need a native reader, not only a machine translation. — Owner: user. Block: promoting S-18 to S-21 to production with Ukrainian switched on.
 14. **In which languages do the crisis SMS and its YES/NO replies go out?** A Cyrillic SMS holds 70 characters per part instead of 160. — Owner: user. Block: S-07.
+15. **Do the everyday-help slices reach production before the pilot, and with how many consent versions?** S-23, S-24, S-25 and S-26 each change the privacy notice, and a changed notice means a new consent version, which sends every resident through the consent page again. Before the pilot that costs almost nothing; after it starts, each new version interrupts every resident. — Owner: user. Block: promoting S-23 to S-26 to production (not planning). Default: one consent version per promotion, with all four on production before the pilot starts.
+16. **Who reads content reports once real residents use the app, and how fast?** The operator is the product owner today; a help request from a vulnerable person should not wait days for a decision. — Owner: user. Block: pilot launch with S-24 on production.
 
 ## Parked
 
@@ -440,7 +546,8 @@ Each of these can be planned inside its consuming slice, so none of them needed 
 - **In-product editing of the taxonomy and crisis matrix (FR-018)** — Why parked: nice-to-have; v1 matrix and weights are fixed and change only through a release.
 - **Skill verification (diplomas, certificates)** — Why parked: PRD §Non-Goals; self-declaration and trust.
 - **Payments for services** — Why parked: PRD §Non-Goals; volunteering only.
-- **Everyday exchange board or wanted-skills list** — Why parked: PRD §Non-Goals; everyday mode in v1 is the aggregated map, plus neighbour courses (FR-020) as nice-to-have.
+- **Open exchange board, chat between residents, public profiles, exchange of goods or food, wanted-skills list** — Why parked: PRD §Non-Goals, narrowed on 2026-11-28; everyday mode is the aggregated map, neighbour courses (FR-020) and help requests matched to skills (FR-024).
+- **Organisation accounts with volunteer shifts, a council information page usable offline, a confirmed-identity badge** — Why parked: ideas from the Commu comparison of 2026-11-24 that no PRD requirement covers yet; organisations bear on the cold-start question (Open Roadmap Question 3).
 
 ## Milestone History
 
