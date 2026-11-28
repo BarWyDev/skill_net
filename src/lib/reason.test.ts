@@ -4,18 +4,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  REASON_REQUIRED_MESSAGE,
-  REASON_TOO_LONG_MESSAGE,
-  normaliseReason,
-  reasonMessages,
-  reasonProblem,
-} from "./reason.ts";
+import { normaliseReason, reasonMessages, reasonProblem } from "./reason.ts";
 
 const cp = (...points: number[]) => String.fromCodePoint(...points);
 const ZWSP = cp(0x200b);
 
 const check = (raw: string) => reasonProblem(normaliseReason(raw), "pl");
+const { required: REASON_REQUIRED_MESSAGE, tooLong: REASON_TOO_LONG_MESSAGE } = reasonMessages("pl");
 
 test("whitespace and invisible characters collapse to one space and are trimmed", () => {
   assert.equal(normaliseReason("  Pożar w bloku, brak prądu  "), "Pożar w bloku, brak prądu");
@@ -63,5 +58,4 @@ test("the messages follow the language and keep the bounds", () => {
   assert.match(reasonMessages("en").tooLong, /500 characters/);
   assert.equal(reasonProblem("Pożar domu ".repeat(46).trim(), "uk"), reasonMessages("uk").tooLong);
   assert.match(reasonMessages("uk").required, /10 символів/);
-  assert.equal(reasonMessages("pl").required, REASON_REQUIRED_MESSAGE);
 });
