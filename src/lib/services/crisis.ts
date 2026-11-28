@@ -1,8 +1,18 @@
 import { z } from "zod";
 import type { Database } from "@/db/database.types";
+import type { Locale } from "@/lib/i18n/locale";
+import {
+  crisis as crisisMessages,
+  crisisTypeName,
+  scenarioName,
+  teamRoleName,
+  teamTemplateName,
+} from "@/lib/i18n/messages/crisis";
+import { skillName } from "@/lib/i18n/messages/taxonomy";
 import type { SupabaseClient } from "@/lib/supabase";
-import { REASON_REQUIRED_MESSAGE, REASON_TOO_LONG_MESSAGE } from "@/lib/reason";
+import { reasonMessages } from "@/lib/reason";
 import { assembleTeams } from "@/lib/team-assembly";
+import { invalidTeamCountMessage } from "@/lib/validation/crisis";
 import type {
   ActivateCrisisInput,
   CrisisContactDTO,
@@ -23,43 +33,45 @@ type ActivateCrisisArgs = Database["public"]["Functions"]["activate_crisis"]["Ar
 
 export const MATCHES_PAGE_SIZE = 200;
 
-const GENERIC_ACTIVATE_ERROR = "Nie udało się aktywować trybu kryzysowego. Spróbuj ponownie.";
+// Codes raised by activate_crisis in the crisis matching and activation audit migrations; their
+// messages are in the `crisis` catalogue under `activate`.
+const ACTIVATE_DB_ERRORS = [
+  "not_coordinator",
+  "unknown_crisis_type",
+  "invalid_radius",
+  "unknown_postcode",
+  "outside_poland",
+  "location_required",
+  "activation_rate_limited",
+] as const;
 
-// Messages raised by activate_crisis in the crisis matching and activation audit migrations.
-const DB_ERROR_MESSAGES: Record<string, string> = {
-  not_coordinator: "Tylko koordynator może aktywować tryb kryzysowy.",
-  unknown_crisis_type: "Wybierz rodzaj kryzysu z listy.",
-  invalid_radius: "Wybierz promień z listy.",
-  unknown_postcode: "Nie znamy tego kodu pocztowego — zaznacz epicentrum na mapie.",
-  outside_poland: "Epicentrum musi być w Polsce.",
-  location_required: "Wskaż epicentrum: wpisz kod pocztowy albo zaznacz punkt na mapie.",
-  reason_required: REASON_REQUIRED_MESSAGE,
-  reason_too_long: REASON_TOO_LONG_MESSAGE,
-  activation_rate_limited:
-    "Limit aktywacji: najwyżej 3 kryzysy na godzinę na jednego koordynatora, licząc też zakończone. Spróbuj później albo poproś o aktywację innego koordynatora.",
-};
-
-export function activateErrorMessage(error: { message?: string }): string {
-  return (error.message && DB_ERROR_MESSAGES[error.message]) ?? GENERIC_ACTIVATE_ERROR;
+export function activateErrorMessage(error: { message?: string }, locale: Locale): string {
+  const t = crisisMessages[locale].activate;
+  const code = error.message;
+  if (code === "reason_required") return reasonMessages(locale).required;
+  if (code === "reason_too_long") return reasonMessages(locale).tooLong;
+  const known = ACTIVATE_DB_ERRORS.find((c) => c === code);
+  return known ? t[known] : t.failed;
 }
 
-export async function getCrisisTypes(supabase: SupabaseClient): Promise<CrisisTypeDTO[]> {
+/** Every crisis type, in its seeded order, named in `locale`. */
+export async function getCrisisTypes(supabase: SupabaseClient, locale: Locale): Promise<CrisisTypeDTO[]> {
   const { data, error } = await supabase.from("crisis_types").select("slug, name_pl").order("sort");
   if (error) throw new Error(`getCrisisTypes: ${error.code}`);
-  return data.map((t) => ({ slug: t.slug, name: t.name_pl }));
+  return data.map((t) => ({ slug: t.slug, name: crisisTypeName(locale, t.slug, t.name_pl) }));
 }
 
-/** Every ready exercise, in its seeded order. RLS shows them to coordinators only. */
-export async function getCrisisScenarios(supabase: SupabaseClient): Promise<CrisisScenarioDTO[]> {
+/** Every ready exercise, in its seeded order, named in `locale`. RLS shows them to coordinators only. */
+export async function getCrisisScenarios(supabase: SupabaseClient, locale: Locale): Promise<CrisisScenarioDTO[]> {
   const { data, error } = await supabase
     .from("crisis_scenarios")
-    .select("slug, name_pl, postcode, radius_km, crisis_types(name_pl)")
+    .select("slug, name_pl, postcode, radius_km, crisis_types(slug, name_pl)")
     .order("sort");
   if (error) throw new Error(`getCrisisScenarios: ${error.code}`);
   return data.map((s) => ({
     slug: s.slug,
-    name: s.name_pl,
-    typeName: s.crisis_types.name_pl,
+    name: scenarioName(locale, s.slug, s.name_pl),
+    typeName: crisisTypeName(locale, s.crisis_types.slug, s.crisis_types.name_pl),
     postcode: s.postcode,
     radiusKm: s.radius_km,
   }));
@@ -67,37 +79,45 @@ export async function getCrisisScenarios(supabase: SupabaseClient): Promise<Cris
 
 /**
  * Starts a ready exercise: activates its crisis type at its postcode and radius, with its reason, as
- * an exercise. Returns a Polish message on failure.
+ * an exercise. The stored reason stays as seeded, whatever the language. Returns a message in
+ * `locale` on failure.
  */
 export async function startScenario(
   supabase: SupabaseClient,
   slug: string,
+  locale: Locale,
 ): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
   const { data, error } = await supabase
     .from("crisis_scenarios")
     .select("crisis_type_slug, postcode, radius_km, reason")
     .eq("slug", slug)
     .maybeSingle();
-  if (error) return { ok: false, message: GENERIC_ACTIVATE_ERROR };
-  if (!data) return { ok: false, message: "Nie znaleziono tego ćwiczenia. Odśwież stronę i wybierz je z listy." };
+  const t = crisisMessages[locale].activate;
+  if (error) return { ok: false, message: t.failed };
+  if (!data) return { ok: false, message: t.exerciseNotFound };
 
-  return activateCrisis(supabase, {
-    crisisType: data.crisis_type_slug,
-    locationSource: "postcode",
-    postcode: data.postcode,
-    lat: null,
-    lng: null,
-    // The table's check constraint keeps the radius to the presets.
-    radiusKm: data.radius_km as ActivateCrisisInput["radiusKm"],
-    reason: data.reason,
-    exercise: true,
-  });
+  return activateCrisis(
+    supabase,
+    {
+      crisisType: data.crisis_type_slug,
+      locationSource: "postcode",
+      postcode: data.postcode,
+      lat: null,
+      lng: null,
+      // The table's check constraint keeps the radius to the presets.
+      radiusKm: data.radius_km as ActivateCrisisInput["radiusKm"],
+      reason: data.reason,
+      exercise: true,
+    },
+    locale,
+  );
 }
 
-/** Activates a crisis and writes its ranking snapshot. Returns a Polish message on failure. */
+/** Activates a crisis and writes its ranking snapshot. Returns a message in `locale` on failure. */
 export async function activateCrisis(
   supabase: SupabaseClient,
   input: ActivateCrisisInput,
+  locale: Locale,
 ): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
   // The generated types mark every RPC argument non-null, but SQL accepts nulls for these.
   const args = {
@@ -111,37 +131,36 @@ export async function activateCrisis(
     p_exercise: input.exercise,
   } as ActivateCrisisArgs;
   const { data, error } = await supabase.rpc("activate_crisis", args);
-  return error ? { ok: false, message: activateErrorMessage(error) } : { ok: true, id: data };
+  return error ? { ok: false, message: activateErrorMessage(error, locale) } : { ok: true, id: data };
 }
 
-const GENERIC_END_ERROR = "Nie udało się zakończyć kryzysu. Spróbuj ponownie.";
+// Codes raised by end_crisis in the crisis deactivation migration; their messages are in the
+// `crisis` catalogue under `end`.
+const END_DB_ERRORS = ["not_coordinator", "unknown_crisis"] as const;
 
-// Messages raised by end_crisis in the crisis deactivation migration.
-const END_DB_ERROR_MESSAGES: Record<string, string> = {
-  not_coordinator: "Tylko koordynator może zakończyć tryb kryzysowy.",
-  unknown_crisis: "Nie znaleziono kryzysu.",
-};
-
-function endErrorMessage(error: { message?: string }): string {
-  return (error.message && END_DB_ERROR_MESSAGES[error.message]) ?? GENERIC_END_ERROR;
+function endErrorMessage(error: { message?: string }, locale: Locale): string {
+  const t = crisisMessages[locale].end;
+  const known = END_DB_ERRORS.find((c) => c === error.message);
+  return known ? t[known] : t.failed;
 }
 
 /**
  * Ends a crisis and deletes its ranking snapshot. `ended: false` means it was already ended.
- * Returns a Polish message on failure.
+ * Returns a message in `locale` on failure.
  */
 export async function endCrisis(
   supabase: SupabaseClient,
   id: string,
+  locale: Locale,
 ): Promise<{ ok: true; ended: boolean } | { ok: false; message: string }> {
   const { data, error } = await supabase.rpc("end_crisis", { p_crisis_id: id });
-  return error ? { ok: false, message: endErrorMessage(error) } : { ok: true, ended: data };
+  return error ? { ok: false, message: endErrorMessage(error, locale) } : { ok: true, ended: data };
 }
 
 // `visible_match_count` and `reveal_declined_count` are PostgREST computed columns (SQL functions
 // over the crises row type).
 const CRISIS_COLUMNS =
-  "id, radius_m, activated_at, ended_at, visible_match_count, reveal_declined_count, status, is_exercise, epicentre_postcode, crisis_types(name_pl)";
+  "id, radius_m, activated_at, ended_at, visible_match_count, reveal_declined_count, status, is_exercise, epicentre_postcode, crisis_types(slug, name_pl)";
 
 interface CrisisRow {
   id: string;
@@ -153,13 +172,14 @@ interface CrisisRow {
   status: string;
   is_exercise: boolean;
   epicentre_postcode: string | null;
-  crisis_types: { name_pl: string } | null;
+  crisis_types: { slug: string; name_pl: string } | null;
 }
 
-function toCrisisDTO(row: CrisisRow): CrisisDTO {
+function toCrisisDTO(row: CrisisRow, locale: Locale): CrisisDTO {
+  const type = row.crisis_types;
   return {
     id: row.id,
-    typeName: row.crisis_types?.name_pl ?? "",
+    typeName: type ? crisisTypeName(locale, type.slug, type.name_pl) : "",
     radiusKm: row.radius_m / 1000,
     epicentrePostcode: row.epicentre_postcode,
     activatedAt: row.activated_at,
@@ -171,19 +191,23 @@ function toCrisisDTO(row: CrisisRow): CrisisDTO {
   };
 }
 
-/** Every active crisis, newest first. RLS shows them to coordinators only. */
-export async function listActiveCrises(supabase: SupabaseClient): Promise<CrisisDTO[]> {
+/** Every active crisis, newest first, its type named in `locale`. RLS shows them to coordinators only. */
+export async function listActiveCrises(supabase: SupabaseClient, locale: Locale): Promise<CrisisDTO[]> {
   const { data, error } = await supabase
     .from("crises")
     .select(CRISIS_COLUMNS)
     .eq("status", "active")
     .order("activated_at", { ascending: false });
   if (error) throw new Error(`listActiveCrises: ${error.code}`);
-  return data.map(toCrisisDTO);
+  return data.map((row) => toCrisisDTO(row, locale));
 }
 
 /** The most recently ended crises, newest end first. */
-export async function listRecentEndedCrises(supabase: SupabaseClient, limit = 10): Promise<CrisisDTO[]> {
+export async function listRecentEndedCrises(
+  supabase: SupabaseClient,
+  locale: Locale,
+  limit = 10,
+): Promise<CrisisDTO[]> {
   const { data, error } = await supabase
     .from("crises")
     .select(CRISIS_COLUMNS)
@@ -191,14 +215,14 @@ export async function listRecentEndedCrises(supabase: SupabaseClient, limit = 10
     .order("ended_at", { ascending: false })
     .limit(limit);
   if (error) throw new Error(`listRecentEndedCrises: ${error.code}`);
-  return data.map(toCrisisDTO);
+  return data.map((row) => toCrisisDTO(row, locale));
 }
 
 /** One crisis, or null when it does not exist or is not visible to the caller. */
-export async function getCrisis(supabase: SupabaseClient, id: string): Promise<CrisisDTO | null> {
+export async function getCrisis(supabase: SupabaseClient, id: string, locale: Locale): Promise<CrisisDTO | null> {
   const { data, error } = await supabase.from("crises").select(CRISIS_COLUMNS).eq("id", id).maybeSingle();
   if (error) throw new Error(`getCrisis: ${error.code}`);
-  return data ? toCrisisDTO(data) : null;
+  return data ? toCrisisDTO(data, locale) : null;
 }
 
 const matchedSkillsSchema = z.array(
@@ -221,12 +245,24 @@ async function getSkillNames(supabase: SupabaseClient): Promise<Map<string, stri
   return new Map(data.map((s) => [s.slug, s.name_pl]));
 }
 
-function toSkills(raw: unknown, names: Map<string, string>): MatchedSkills {
-  return matchedSkillsSchema.parse(raw).map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug }));
+/**
+ * A skill's name in `locale`: the catalogue, then the Polish name from the database, and the slug
+ * only when both are missing (a skill added later, with the names lookup failed).
+ */
+function displaySkillName(locale: Locale, slug: string, names: Map<string, string>): string {
+  return skillName(locale, slug, names.get(slug) ?? slug);
 }
 
-/** The first page of the ranked list, in position order, with skill names for display. */
-export async function getCrisisMatches(supabase: SupabaseClient, id: string): Promise<CrisisMatchDTO[]> {
+function toSkills(raw: unknown, names: Map<string, string>, locale: Locale): MatchedSkills {
+  return matchedSkillsSchema.parse(raw).map((s) => ({ ...s, name: displaySkillName(locale, s.slug, names) }));
+}
+
+/** The first page of the ranked list, in position order, with skill names in `locale`. */
+export async function getCrisisMatches(
+  supabase: SupabaseClient,
+  id: string,
+  locale: Locale,
+): Promise<CrisisMatchDTO[]> {
   const [matches, names] = await Promise.all([
     supabase.rpc("get_crisis_matches", { p_crisis_id: id, p_limit: MATCHES_PAGE_SIZE }),
     getSkillNames(supabase),
@@ -237,7 +273,7 @@ export async function getCrisisMatches(supabase: SupabaseClient, id: string): Pr
     rank: row.rank,
     position: row.position,
     distanceKm: row.distance_km_rounded,
-    skills: toSkills(row.matched_skills, names),
+    skills: toSkills(row.matched_skills, names, locale),
     hasPhone: row.has_phone,
     availabilitySlots: availabilitySlotsSchema.parse(row.availability_slots),
     availableNow: availableNowSchema.parse(row.available_now),
@@ -250,7 +286,11 @@ const coverageTierSchema = z.enum(["priority", "supporting"]);
  * Every skill of the crisis type's matrix with how many people on the visible list have it, priority
  * skills first. Counts only, no person: reading them is not logged.
  */
-export async function getCrisisCoverage(supabase: SupabaseClient, id: string): Promise<CrisisCoverageDTO[]> {
+export async function getCrisisCoverage(
+  supabase: SupabaseClient,
+  id: string,
+  locale: Locale,
+): Promise<CrisisCoverageDTO[]> {
   const [coverage, names] = await Promise.all([
     supabase.rpc("get_crisis_coverage", { p_crisis_id: id }),
     getSkillNames(supabase),
@@ -259,39 +299,42 @@ export async function getCrisisCoverage(supabase: SupabaseClient, id: string): P
 
   return coverage.data.map((row) => ({
     slug: row.skill_slug,
-    name: names.get(row.skill_slug) ?? row.skill_slug,
+    name: displaySkillName(locale, row.skill_slug, names),
     tier: coverageTierSchema.parse(row.tier),
     people: row.people,
     availableNow: row.available_now,
   }));
 }
 
-const GENERIC_REVEAL_ERROR = "Nie udało się ujawnić kontaktów. Spróbuj ponownie.";
+// Codes raised by reveal_crisis_contacts in the break-glass migration (and `reveal_rate_limited`
+// from the crisis RPC limits migration); their messages are in the `crisis` catalogue under
+// `contacts`. `field` marks the ones the coordinator fixes in the reason box; `status` is the page's
+// HTTP status, so failed reveals show up in Workers error logs without logging anything personal.
+const REVEAL_DB_ERRORS = {
+  not_coordinator: { status: 403 },
+  unknown_crisis: { status: 404 },
+  crisis_not_active: { status: 200, ended: true },
+  reason_required: { status: 422, field: "reason" },
+  reason_too_long: { status: 422, field: "reason" },
+  exercise_no_reveal: { status: 409 },
+  reveal_rate_limited: { status: 429 },
+} as const satisfies Record<string, { status: number; field?: "reason"; ended?: true }>;
 
-export const EXERCISE_NO_REVEAL_MESSAGE =
-  "To jest ćwiczenie. W ćwiczeniu nie ujawniamy numerów telefonów: mieszkańcy nie biorą w nim udziału.";
+type RevealErrorCode = keyof typeof REVEAL_DB_ERRORS;
+const REVEAL_ERROR_CODES = Object.keys(REVEAL_DB_ERRORS) as RevealErrorCode[];
 
-// Messages raised by reveal_crisis_contacts in the break-glass migration. `field` marks the ones
-// the coordinator fixes in the reason box; `status` is the page's HTTP status, so failed reveals
-// show up in Workers error logs without logging anything personal.
-const REVEAL_DB_ERRORS: Partial<Record<string, { message: string; status: number; field?: "reason"; ended?: true }>> = {
-  not_coordinator: { message: "Tylko koordynator może ujawnić kontakty.", status: 403 },
-  unknown_crisis: { message: "Nie znaleziono kryzysu.", status: 404 },
-  crisis_not_active: {
-    message: "Ten kryzys został już zakończony — kontaktów nie można ujawnić.",
-    status: 200,
-    ended: true,
-  },
-  reason_required: { message: REASON_REQUIRED_MESSAGE, status: 422, field: "reason" },
-  reason_too_long: { message: REASON_TOO_LONG_MESSAGE, status: 422, field: "reason" },
-  exercise_no_reveal: { message: EXERCISE_NO_REVEAL_MESSAGE, status: 409 },
-  // From the crisis RPC limits migration.
-  reveal_rate_limited: {
-    message:
-      "Limit ujawnień: najwyżej 10 na godzinę na jednego koordynatora, we wszystkich kryzysach. Spróbuj później albo poproś o ujawnienie innego koordynatora.",
-    status: 429,
-  },
-};
+function revealError(error: { message?: string }, locale: Locale): Extract<RevealResult, { ok: false }> {
+  const t = crisisMessages[locale].contacts;
+  const code = REVEAL_ERROR_CODES.find((c) => c === error.message);
+  if (!code) return { ok: false, message: t.failed, status: 500 };
+  const message =
+    code === "reason_required"
+      ? reasonMessages(locale).required
+      : code === "reason_too_long"
+        ? reasonMessages(locale).tooLong
+        : t[code];
+  return { ok: false, message, ...REVEAL_DB_ERRORS[code] };
+}
 
 export type RevealResult =
   | { ok: true; contacts: CrisisContactDTO[] }
@@ -299,20 +342,21 @@ export type RevealResult =
 
 /**
  * Break-glass: logs the reveal and returns the current number of every matched resident who has
- * one, in position order. The numbers exist only in this result: never store or log them.
+ * one, in position order, with skill names in `locale`. The numbers exist only in this result:
+ * never store or log them. Returns a message in `locale` on failure.
  */
 export async function revealCrisisContacts(
   supabase: SupabaseClient,
   id: string,
   reason: string,
+  locale: Locale,
 ): Promise<RevealResult> {
   const { data, error } = await supabase.rpc("reveal_crisis_contacts", { p_crisis_id: id, p_reason: reason });
-  if (error) {
-    return { ok: false, ...(REVEAL_DB_ERRORS[error.message] ?? { message: GENERIC_REVEAL_ERROR, status: 500 }) };
-  }
+  if (error) return revealError(error, locale);
 
   // The reveal is already logged, so nothing after this point may hide the numbers: a failed
-  // name lookup or an unexpected column shape falls back instead of throwing.
+  // name lookup or an unexpected column shape falls back instead of throwing. Naming a skill is a
+  // lookup in a static catalogue, with the Polish name and then the slug behind it, so it cannot fail.
   const names = await getSkillNames(supabase).catch(() => new Map<string, string>());
   return {
     ok: true,
@@ -324,7 +368,7 @@ export async function revealCrisisContacts(
         rank: row.rank,
         position: row.position,
         distanceKm: row.distance_km_rounded,
-        skills: skills.success ? skills.data.map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug })) : [],
+        skills: skills.success ? skills.data.map((s) => ({ ...s, name: displaySkillName(locale, s.slug, names) })) : [],
         phone: row.phone,
         phoneVerified: row.phone_verified,
         availabilitySlots: slots.success ? slots.data : null,
@@ -334,8 +378,8 @@ export async function revealCrisisContacts(
   };
 }
 
-/** Every team template with its roles, both in their seeded order. */
-export async function getTeamTemplates(supabase: SupabaseClient): Promise<TeamTemplateDTO[]> {
+/** Every team template with its roles, both in their seeded order and named in `locale`. */
+export async function getTeamTemplates(supabase: SupabaseClient, locale: Locale): Promise<TeamTemplateDTO[]> {
   const { data, error } = await supabase
     .from("team_templates")
     .select("slug, name_pl, team_template_roles(role_slug, name_pl, slots, sort)")
@@ -343,10 +387,10 @@ export async function getTeamTemplates(supabase: SupabaseClient): Promise<TeamTe
   if (error) throw new Error(`getTeamTemplates: ${error.code}`);
   return data.map((t) => ({
     slug: t.slug,
-    name: t.name_pl,
+    name: teamTemplateName(locale, t.slug, t.name_pl),
     roles: [...t.team_template_roles]
       .sort((a, b) => a.sort - b.sort)
-      .map((r) => ({ slug: r.role_slug, name: r.name_pl, slots: r.slots })),
+      .map((r) => ({ slug: r.role_slug, name: teamRoleName(locale, t.slug, r.role_slug, r.name_pl), slots: r.slots })),
   }));
 }
 
@@ -360,20 +404,31 @@ const roleSkillsSchema = z.record(
   ),
 );
 
-const GENERIC_TEAMS_ERROR = "Nie udało się złożyć zespołów. Spróbuj ponownie.";
+// Codes raised by get_team_candidates in the crisis team templates migration; their messages are in
+// the `crisis` catalogue under `teams`.
+const TEAMS_DB_ERRORS = {
+  not_coordinator: { status: 403 },
+  unknown_crisis: { status: 404 },
+  crisis_not_active: { status: 200, ended: true },
+  unknown_template: { status: 422 },
+  invalid_team_count: { status: 422 },
+} as const satisfies Record<string, { status: number; ended?: true }>;
 
-// Messages raised by get_team_candidates in the crisis team templates migration.
-const TEAMS_DB_ERRORS: Partial<Record<string, { message: string; status: number; ended?: true }>> = {
-  not_coordinator: { message: "Tylko koordynator może składać zespoły.", status: 403 },
-  unknown_crisis: { message: "Nie znaleziono kryzysu.", status: 404 },
-  crisis_not_active: {
-    message: "Ten kryzys został zakończony — lista osób została usunięta.",
-    status: 200,
-    ended: true,
-  },
-  unknown_template: { message: "Wybierz szablon zespołu z listy.", status: 422 },
-  invalid_team_count: { message: "Podaj liczbę zespołów od 1 do 10.", status: 422 },
-};
+type TeamsErrorCode = keyof typeof TEAMS_DB_ERRORS;
+const TEAMS_ERROR_CODES = Object.keys(TEAMS_DB_ERRORS) as TeamsErrorCode[];
+
+function teamsError(error: { message?: string }, locale: Locale): Extract<AssembleTeamsResult, { ok: false }> {
+  const t = crisisMessages[locale].teams;
+  const code = TEAMS_ERROR_CODES.find((c) => c === error.message);
+  if (!code) return { ok: false, message: t.failed, status: 500 };
+  const message =
+    code === "unknown_template"
+      ? t.chooseTemplate
+      : code === "invalid_team_count"
+        ? invalidTeamCountMessage(locale)
+        : t[code];
+  return { ok: false, message, ...TEAMS_DB_ERRORS[code] };
+}
 
 export type AssembleTeamsResult =
   | { ok: true; teams: CrisisTeamDTO[]; completeCount: number }
@@ -382,24 +437,21 @@ export type AssembleTeamsResult =
 /**
  * Assembles up to `count` teams of `template` from the crisis's ranked list: as many complete
  * teams as possible, then the best-ranked people, then at most one partial team. Computed per
- * request from the snapshot and the residents' current skills; nothing is stored.
+ * request from the snapshot and the residents' current skills; nothing is stored. Skill names and
+ * messages are in `locale`; role names come translated with `template`.
  */
 export async function assembleCrisisTeams(
   supabase: SupabaseClient,
   crisisId: string,
   template: TeamTemplateDTO,
   count: number,
+  locale: Locale,
 ): Promise<AssembleTeamsResult> {
   const [candidates, names] = await Promise.all([
     supabase.rpc("get_team_candidates", { p_crisis_id: crisisId, p_template: template.slug, p_teams: count }),
     getSkillNames(supabase),
   ]);
-  if (candidates.error) {
-    return {
-      ok: false,
-      ...(TEAMS_DB_ERRORS[candidates.error.message] ?? { message: GENERIC_TEAMS_ERROR, status: 500 }),
-    };
-  }
+  if (candidates.error) return teamsError(candidates.error, locale);
 
   const pool = candidates.data.map((row) => {
     const roleSkills = roleSkillsSchema.parse(row.role_skills);
@@ -426,7 +478,7 @@ export async function assembleCrisisTeams(
       slots: team.slots.map((slot) => ({
         roleSlug: slot.role,
         roleName: roleNames.get(slot.role) ?? slot.role,
-        member: slot.candidate && toTeamMember(slot.candidate, slot.role, names),
+        member: slot.candidate && toTeamMember(slot.candidate, slot.role, names, locale),
       })),
     })),
   };
@@ -436,7 +488,11 @@ function toTeamMember(
   candidate: { roleSkills: z.infer<typeof roleSkillsSchema>; base: Omit<TeamMemberDTO, "skills"> },
   role: string,
   names: Map<string, string>,
+  locale: Locale,
 ): TeamMemberDTO {
-  const skills = (candidate.roleSkills[role] ?? []).map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug }));
+  const skills = (candidate.roleSkills[role] ?? []).map((s) => ({
+    ...s,
+    name: displaySkillName(locale, s.slug, names),
+  }));
   return { ...candidate.base, skills };
 }

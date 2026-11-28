@@ -43,10 +43,20 @@ test("the counts are floored at 0 when the count and the reveal disagree", () =>
 });
 
 test("the declined verb agrees with the Polish plural", () => {
-  assert.equal(declinedVerb(1), "nie zgodziła się");
-  assert.equal(declinedVerb(2), "nie zgodziły się");
-  assert.equal(declinedVerb(4), "nie zgodziły się");
-  assert.equal(declinedVerb(5), "nie zgodziło się");
-  assert.equal(declinedVerb(12), "nie zgodziło się");
-  assert.equal(declinedVerb(22), "nie zgodziły się");
+  assert.equal(declinedVerb("pl", 1), "nie zgodziła się");
+  assert.equal(declinedVerb("pl", 2), "nie zgodziły się");
+  assert.equal(declinedVerb("pl", 4), "nie zgodziły się");
+  assert.equal(declinedVerb("pl", 5), "nie zgodziło się");
+  assert.equal(declinedVerb("pl", 12), "nie zgodziło się");
+  assert.equal(declinedVerb("pl", 22), "nie zgodziły się");
+});
+
+test("the declined verb follows the language", () => {
+  assert.equal(declinedVerb("pl", 0), "nie zgodziło się");
+  assert.equal(declinedVerb("en", 1), "did not agree");
+  assert.equal(declinedVerb("en", 5), "did not agree");
+  assert.equal(declinedVerb("uk", 1), "не погодилася");
+  assert.equal(declinedVerb("uk", 2), "не погодилися");
+  assert.equal(declinedVerb("uk", 5), "не погодилися");
+  assert.equal(declinedVerb("uk", 21), "не погодилася");
 });

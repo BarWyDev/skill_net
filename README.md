@@ -14,6 +14,7 @@ Product source of truth: [`context/foundation/prd.md`](context/foundation/prd.md
 - **Resident profile** (`/profil`): skills from a fixed taxonomy, location from a postcode or a map pin (stored only to about 500 m), phone number, weekly availability, pausing availability, and deleting the account with all its data.
 - **Public skills map** (`/mapa`): skill density in 2 km squares, shown as ranges only.
 - **Coordinator panel** (`/koordynator`): activate a crisis by type, place and radius, get a ranked list of matching residents, assemble teams from templates, reveal contact details through an audited break-glass step, and end the crisis.
+- **Three interface languages:** Polish, English and Ukrainian on every page, crisis mode included, chosen with the switcher in the header (or from the browser's language). An environment offers the languages listed in `ENABLED_LOCALES`; Polish is always on. The Polish privacy notice and consent stay binding; the other languages show a courtesy translation.
 
 ## Screenshots
 

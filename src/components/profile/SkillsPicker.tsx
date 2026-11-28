@@ -5,12 +5,6 @@ import { profile } from "@/lib/i18n/messages/profile";
 import { cn } from "@/lib/utils";
 import type { SkillCategoryDTO, SkillDTO, SkillLevel } from "@/types";
 
-// Polish, for the coordinator's skill list (translated with S-20). The picker reads the catalogue.
-export const LEVEL_LABELS: Record<SkillLevel, string> = {
-  1: "Podstawowy kurs",
-  2: "Praktyk",
-  3: "Profesjonalista",
-};
 const LEVELS: SkillLevel[] = [1, 2, 3];
 
 /** Checked skills, keyed by slug; the value is the chosen level (null until chosen or for no-level skills). */

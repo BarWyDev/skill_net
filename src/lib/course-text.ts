@@ -2,7 +2,7 @@
 // details. The same rule lives in `check_course_text` in the neighbour courses migration, which
 // checks it again; change both together. Relative imports only, so `node:test` can load it.
 
-import { normaliseReason } from "./reason.ts";
+import { normaliseReason } from "./reason-text.ts";
 
 export type CourseTextField = "title" | "description" | "meeting";
 

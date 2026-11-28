@@ -8,13 +8,20 @@ import PersonStatus from "@/components/crisis/PersonStatus.astro";
 import SkillList from "@/components/crisis/SkillList.astro";
 import { formatActivatedAt, formatDistanceKm, formatPeople } from "@/lib/crisis-format";
 import { BUTTON, NAV_LINK } from "@/lib/site-styles";
+import { format } from "@/lib/i18n/format";
+import { auth } from "@/lib/i18n/messages/auth";
+import { crisis as crisisMessages } from "@/lib/i18n/messages/crisis";
 import { formatPhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase";
-import { EXERCISE_NO_REVEAL_MESSAGE, getCrisis, revealCrisisContacts } from "@/lib/services/crisis";
+import { getCrisis, revealCrisisContacts } from "@/lib/services/crisis";
 import { parseRevealReason, REASON_MAX, REASON_MIN } from "@/lib/validation/crisis";
 import { cn } from "@/lib/utils";
 import { declinedVerb, revealCounts } from "@/lib/visibility";
 import type { CrisisContactDTO, CrisisDTO } from "@/types";
+
+const { locale } = Astro.locals;
+const t = crisisMessages[locale].contacts;
+const cp = crisisMessages[locale].crisisPage;
 
 // Break-glass (S-09, FR-012). GET shows the warning and the reason form, never a number. POST calls
 // reveal_crisis_contacts, which logs the reveal, and renders the numbers in this response only:
@@ -36,12 +43,12 @@ let reason = "";
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (!supabase) {
-  loadError = "Supabase nie jest skonfigurowany.";
+  loadError = auth[locale].notConfigured;
 } else if (UUID_RE.test(id)) {
   try {
-    crisis = await getCrisis(supabase, id);
+    crisis = await getCrisis(supabase, id, locale);
   } catch {
-    loadError = "Nie udało się wczytać kryzysu. Odśwież stronę.";
+    loadError = t.loadFailed;
   }
 }
 
@@ -51,14 +58,14 @@ if (supabase && crisis?.status === "active" && !crisis.isExercise && Astro.reque
   const form = await Astro.request.formData();
   const raw = form.get("reason");
   reason = typeof raw === "string" ? raw : "";
-  const parsed = parseRevealReason(form);
+  const parsed = parseRevealReason(form, locale);
 
   if (!parsed.success) {
     formError = parsed.message;
     Astro.response.status = 422;
   } else {
     try {
-      const result = await revealCrisisContacts(supabase, crisis.id, parsed.data);
+      const result = await revealCrisisContacts(supabase, crisis.id, parsed.data, locale);
       if (result.ok) {
         contacts = result.contacts;
         revealedAt = new Date().toISOString();
@@ -69,16 +76,16 @@ if (supabase && crisis?.status === "active" && !crisis.isExercise && Astro.reque
         Astro.response.status = result.status;
       }
     } catch {
-      formError = "Nie udało się ujawnić kontaktów. Spróbuj ponownie.";
+      formError = t.failed;
       Astro.response.status = 500;
     }
   }
 }
 
 if (crisis?.status === "ended") {
-  closedMessage = "Ten kryzys został zakończony — kontaktów nie można ujawnić.";
+  closedMessage = t.ended;
 } else if (crisis?.isExercise) {
-  closedMessage = EXERCISE_NO_REVEAL_MESSAGE;
+  closedMessage = t.exercise_no_reveal;
 }
 
 // Declined (V4) is a count only, never who. The list's "ma telefon" marker and the revealed positions
@@ -86,25 +93,25 @@ if (crisis?.status === "ended") {
 const counts = crisis && contacts ? revealCounts(crisis.matchCount, contacts.length, crisis.revealDeclinedCount) : null;
 const anyUnverified = contacts?.some((c) => !c.phoneVerified) ?? false;
 const crumbs = [
-  { href: "/koordynator", label: "Panel koordynatora" },
+  { href: "/koordynator", label: crisisMessages[locale].panel.heading },
   ...(crisis ? [{ href: `/koordynator/kryzys/${crisis.id}`, label: crisis.typeName }] : []),
 ];
 const heading = !crisis
   ? loadError
-    ? "Kontakty"
-    : "Nie znaleziono kryzysu"
+    ? t.crumb
+    : cp.notFound
   : closedMessage
     ? crisis.typeName
     : contacts
-      ? "Kontakty ujawnione"
-      : "Ujawnij kontakty";
+      ? t.headingRevealed
+      : cp.revealContacts;
 ---
 
 <PageShell
-  title={`${crisis ? `Kontakty: ${crisis.typeName}` : "Nie znaleziono kryzysu"} — SkillNet`}
+  title={crisis ? format(t.title, { type: crisis.typeName }) : cp.notFoundTitle}
   heading={heading}
   crumbs={crumbs}
-  crumbLabel={crisis ? "Kontakty" : undefined}
+  crumbLabel={crisis ? t.crumb : undefined}
   wide
 >
   {loadError && (
@@ -113,9 +120,7 @@ const heading = !crisis
     </StatusLine>
   )}
 
-  {!crisis && !loadError && (
-    <p class="max-w-[52ch] text-lg leading-relaxed">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
-  )}
+  {!crisis && !loadError && <p class="max-w-[52ch] text-lg leading-relaxed">{cp.notFoundText}</p>}
 
   {crisis && closedMessage && (
     <StatusLine tone="neutral" role="alert" class="max-w-[64ch] text-lg">
@@ -130,24 +135,23 @@ const heading = !crisis
       <!-- Serious, not loud: plain statements, and the alarm tone only on the action that reveals. -->
       <div class="border-seam mt-12 max-w-[42rem] space-y-4 border-t pt-10 leading-relaxed">
         <p class="text-lg">
-          Zobaczysz numery telefonów <strong>wszystkich</strong> dopasowanych osób, które podały numer. Używaj tego
-          tylko wtedy, gdy nie da się ich zawiadomić inaczej.
+          {t.warningBefore} <strong>{t.warningAll}</strong> {t.warningAfter}
         </p>
-        <p>Ujawnienie zostanie trwale zapisane: Twoje konto, czas, powód i lista osób, których numery zobaczysz.</p>
+        <p>{t.logged}</p>
         {crisis.revealDeclinedCount > 0 && (
           <p>
-            {formatPeople(crisis.revealDeclinedCount)} {declinedVerb(crisis.revealDeclinedCount)} na awaryjne
-            odsłonięcie numeru. Ich numerów nie zobaczysz.
+            {format(t.declined, {
+              people: formatPeople(locale, crisis.revealDeclinedCount),
+              verb: declinedVerb(locale, crisis.revealDeclinedCount),
+            })}
           </p>
         )}
-        <p class="text-ash">
-          Numery znikną po opuszczeniu strony. Każde ponowne wyświetlenie to nowe, osobno zapisane ujawnienie.
-        </p>
+        <p class="text-ash">{t.vanish}</p>
       </div>
 
       <form method="post" class="mt-10 max-w-[42rem]">
         <label for="reason" class="mb-2 block font-bold">
-          Powód ujawnienia
+          {t.reasonLabel}
         </label>
         <textarea
           id="reason"
@@ -160,7 +164,7 @@ const heading = !crisis
           aria-invalid={formError ? "true" : undefined}
           aria-describedby={formError ? "reason-error" : "reason-hint"}
           class="field block w-full resize-y px-3 py-3 text-lg leading-relaxed"
-          placeholder="np. brak potwierdzeń od 30 minut, awaria sieci komórkowej"
+          placeholder={t.reasonPlaceholder}
         >{reason}</textarea>
         {formError ? (
           <FieldError id="reason-error" role="alert">
@@ -168,15 +172,15 @@ const heading = !crisis
           </FieldError>
         ) : (
           <p id="reason-hint" class="text-ash mt-2 text-[0.9375rem]">
-            Od {REASON_MIN} do {REASON_MAX} znaków, co najmniej dwa słowa.
+            {format(t.reasonHint, { min: REASON_MIN, max: REASON_MAX })}
           </p>
         )}
         <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
           <button type="submit" class:list={cn(BUTTON, "btn-danger w-full cursor-pointer sm:w-auto")}>
-            Ujawnij kontakty
+            {cp.revealContacts}
           </button>
           <a href={`/koordynator/kryzys/${crisis.id}`} class:list={NAV_LINK}>
-            Anuluj
+            {crisisMessages[locale].end.cancel}
           </a>
         </div>
       </form>
@@ -186,37 +190,31 @@ const heading = !crisis
   {crisis && contacts && revealedAt && (
     <>
       <StatusLine tone="done" role="status" class="max-w-[64ch] text-lg">
-        <p class="font-bold">Ujawnienie zapisano w dzienniku, {formatActivatedAt(revealedAt)}.</p>
-        <p class="text-ash text-base">
-          {crisis.typeName}, promień {crisis.radiusKm} km. Numery znikną po opuszczeniu tej strony.
-        </p>
+        <p class="font-bold">{format(t.revealed, { time: formatActivatedAt(locale, revealedAt) })}</p>
+        <p class="text-ash text-base">{format(t.revealedFacts, { type: crisis.typeName, radius: crisis.radiusKm })}</p>
       </StatusLine>
 
       {anyUnverified && (
         <StatusLine tone="attention" class="mt-6 max-w-[64ch] font-bold">
-          Numery nie są zweryfikowane i mogą być błędne.
+          {t.unverified}
         </StatusLine>
       )}
 
       {contacts.length === 0 ? (
-        <p class="mt-10 text-lg">
-          {counts && counts.declined > 0
-            ? "Żaden numer nie jest dostępny do odsłonięcia."
-            : "Żadna z dopasowanych osób nie podała numeru telefonu."}
-        </p>
+        <p class="mt-10 text-lg">{counts && counts.declined > 0 ? t.noneAvailable : t.noneGiven}</p>
       ) : (
         <ol class="border-seam mt-10 border-b">
           {contacts.map((c) => (
             <li class="border-seam grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-4 gap-y-2 border-t py-5 md:grid-cols-[4rem_minmax(0,1fr)_13rem_17rem] md:grid-rows-[auto_1fr] md:gap-x-6">
               <p class="font-display row-span-4 text-right text-[2.25rem] leading-[0.85] tabular-nums md:row-span-2 md:text-[2.75rem]">
-                <span class="sr-only">Miejsce </span>
+                <span class="sr-only">{cp.rank} </span>
                 {c.rank}
               </p>
               <p class="text-lg leading-tight">
-                <span class="font-bold">Osoba #{c.position}</span>
+                <span class="font-bold">{format(cp.person, { position: c.position })}</span>
                 <span class="text-ash tabular-nums">
-                  , {formatDistanceKm(c.distanceKm)}
-                  <span class="sr-only"> od epicentrum</span>
+                  , {formatDistanceKm(locale, c.distanceKm)}
+                  <span class="sr-only"> {cp.fromEpicentre}</span>
                 </span>
               </p>
               <div class="md:col-start-3 md:row-span-2 md:row-start-1">
@@ -224,12 +222,12 @@ const heading = !crisis
                   href={`tel:${c.phone}`}
                   class="inline-flex min-h-12 items-center text-2xl font-bold tabular-nums underline decoration-2 underline-offset-6 hover:decoration-signal"
                 >
-                  <span class="sr-only">Zadzwoń: </span>
+                  <span class="sr-only">{t.call} </span>
                   {formatPhone(c.phone)}
                 </a>
                 {anyUnverified && c.phoneVerified && (
                   <p class="text-[0.9375rem]">
-                    <StatusMark tone="done">zweryfikowany</StatusMark>
+                    <StatusMark tone="done">{t.verified}</StatusMark>
                   </p>
                 )}
               </div>
@@ -245,9 +243,12 @@ const heading = !crisis
       )}
 
       <p class="text-ash mt-6 leading-relaxed">
-        Bez numeru telefonu: {formatPeople(counts?.withoutPhone ?? 0)}.
-        {counts && counts.declined > 0 && <>Bez zgody na awaryjne odsłonięcie: {formatPeople(counts.declined)}.</>}
-        Numery znikną po opuszczeniu tej strony.
+        {/* Explicit spaces: the whitespace between two expressions is dropped. */}
+        {format(t.withoutPhone, { people: formatPeople(locale, counts?.withoutPhone ?? 0) })}{" "}
+        {counts && counts.declined > 0 && (
+          <>{format(t.withoutConsent, { people: formatPeople(locale, counts.declined) })} </>
+        )}
+        {t.numbersGone}
       </p>
     </>
   )}

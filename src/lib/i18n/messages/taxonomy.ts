@@ -1,6 +1,6 @@
 // Names of the six skill categories and of every skill, by slug (the slugs come from the taxonomy
 // migration, and taxonomy.test.ts checks this file against it). The database holds only Polish
-// names (`name_pl`); crisis types and team templates wait for S-20. Polish is the shape; `en` and
+// names (`name_pl`); crisis types, team templates and exercises are in `crisis.ts`. Polish is the shape; `en` and
 // `uk` are typed as it. Relative imports only, so `node:test` loads it. The Ukrainian text waits
 // for a native reader.
 
