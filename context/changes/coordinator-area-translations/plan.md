@@ -302,16 +302,16 @@ No migration. The area reaches production with the next promotion after the phas
 
 #### Automated
 
-- [x] 3.1 Unit tests pass: `npm run test:unit`
-- [x] 3.2 Type check passes: `npx astro check`
-- [x] 3.3 Lint passes: `npm run lint`
-- [x] 3.4 Build passes: `npm run build` (to a scratch `--outDir`)
-- [x] 3.5 Local smoke passes: `npm run smoke`
+- [x] 3.1 Unit tests pass: `npm run test:unit` — daed99c
+- [x] 3.2 Type check passes: `npx astro check` — daed99c
+- [x] 3.3 Lint passes: `npm run lint` — daed99c
+- [x] 3.4 Build passes: `npm run build` (to a scratch `--outDir`) — daed99c
+- [x] 3.5 Local smoke passes: `npm run smoke` — daed99c
 
 #### Manual
 
-- [x] 3.6 Teams and break-glass in `en` and `uk`: every outcome reads in that language
-- [x] 3.7 Both pages in `pl` read as before
+- [x] 3.6 Teams and break-glass in `en` and `uk`: every outcome reads in that language — daed99c
+- [x] 3.7 Both pages in `pl` read as before — daed99c
 
 ### Phase 4: Clean-up and rollout
 
