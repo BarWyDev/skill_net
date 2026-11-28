@@ -1,11 +1,18 @@
 import { z } from "zod";
 import type { Database } from "@/db/database.types";
 import type { Locale } from "@/lib/i18n/locale";
-import { crisis as crisisMessages, crisisTypeName, scenarioName } from "@/lib/i18n/messages/crisis";
+import {
+  crisis as crisisMessages,
+  crisisTypeName,
+  scenarioName,
+  teamRoleName,
+  teamTemplateName,
+} from "@/lib/i18n/messages/crisis";
 import { skillName } from "@/lib/i18n/messages/taxonomy";
 import type { SupabaseClient } from "@/lib/supabase";
-import { REASON_REQUIRED_MESSAGE, REASON_TOO_LONG_MESSAGE, reasonMessages } from "@/lib/reason";
+import { reasonMessages } from "@/lib/reason";
 import { assembleTeams } from "@/lib/team-assembly";
+import { invalidTeamCountMessage } from "@/lib/validation/crisis";
 import type {
   ActivateCrisisInput,
   CrisisContactDTO,
@@ -299,32 +306,35 @@ export async function getCrisisCoverage(
   }));
 }
 
-const GENERIC_REVEAL_ERROR = "Nie udało się ujawnić kontaktów. Spróbuj ponownie.";
+// Codes raised by reveal_crisis_contacts in the break-glass migration (and `reveal_rate_limited`
+// from the crisis RPC limits migration); their messages are in the `crisis` catalogue under
+// `contacts`. `field` marks the ones the coordinator fixes in the reason box; `status` is the page's
+// HTTP status, so failed reveals show up in Workers error logs without logging anything personal.
+const REVEAL_DB_ERRORS = {
+  not_coordinator: { status: 403 },
+  unknown_crisis: { status: 404 },
+  crisis_not_active: { status: 200, ended: true },
+  reason_required: { status: 422, field: "reason" },
+  reason_too_long: { status: 422, field: "reason" },
+  exercise_no_reveal: { status: 409 },
+  reveal_rate_limited: { status: 429 },
+} as const satisfies Record<string, { status: number; field?: "reason"; ended?: true }>;
 
-export const EXERCISE_NO_REVEAL_MESSAGE =
-  "To jest ćwiczenie. W ćwiczeniu nie ujawniamy numerów telefonów: mieszkańcy nie biorą w nim udziału.";
+type RevealErrorCode = keyof typeof REVEAL_DB_ERRORS;
+const REVEAL_ERROR_CODES = Object.keys(REVEAL_DB_ERRORS) as RevealErrorCode[];
 
-// Messages raised by reveal_crisis_contacts in the break-glass migration. `field` marks the ones
-// the coordinator fixes in the reason box; `status` is the page's HTTP status, so failed reveals
-// show up in Workers error logs without logging anything personal.
-const REVEAL_DB_ERRORS: Partial<Record<string, { message: string; status: number; field?: "reason"; ended?: true }>> = {
-  not_coordinator: { message: "Tylko koordynator może ujawnić kontakty.", status: 403 },
-  unknown_crisis: { message: "Nie znaleziono kryzysu.", status: 404 },
-  crisis_not_active: {
-    message: "Ten kryzys został już zakończony — kontaktów nie można ujawnić.",
-    status: 200,
-    ended: true,
-  },
-  reason_required: { message: REASON_REQUIRED_MESSAGE, status: 422, field: "reason" },
-  reason_too_long: { message: REASON_TOO_LONG_MESSAGE, status: 422, field: "reason" },
-  exercise_no_reveal: { message: EXERCISE_NO_REVEAL_MESSAGE, status: 409 },
-  // From the crisis RPC limits migration.
-  reveal_rate_limited: {
-    message:
-      "Limit ujawnień: najwyżej 10 na godzinę na jednego koordynatora, we wszystkich kryzysach. Spróbuj później albo poproś o ujawnienie innego koordynatora.",
-    status: 429,
-  },
-};
+function revealError(error: { message?: string }, locale: Locale): Extract<RevealResult, { ok: false }> {
+  const t = crisisMessages[locale].contacts;
+  const code = REVEAL_ERROR_CODES.find((c) => c === error.message);
+  if (!code) return { ok: false, message: t.failed, status: 500 };
+  const message =
+    code === "reason_required"
+      ? reasonMessages(locale).required
+      : code === "reason_too_long"
+        ? reasonMessages(locale).tooLong
+        : t[code];
+  return { ok: false, message, ...REVEAL_DB_ERRORS[code] };
+}
 
 export type RevealResult =
   | { ok: true; contacts: CrisisContactDTO[] }
@@ -332,20 +342,21 @@ export type RevealResult =
 
 /**
  * Break-glass: logs the reveal and returns the current number of every matched resident who has
- * one, in position order. The numbers exist only in this result: never store or log them.
+ * one, in position order, with skill names in `locale`. The numbers exist only in this result:
+ * never store or log them. Returns a message in `locale` on failure.
  */
 export async function revealCrisisContacts(
   supabase: SupabaseClient,
   id: string,
   reason: string,
+  locale: Locale,
 ): Promise<RevealResult> {
   const { data, error } = await supabase.rpc("reveal_crisis_contacts", { p_crisis_id: id, p_reason: reason });
-  if (error) {
-    return { ok: false, ...(REVEAL_DB_ERRORS[error.message] ?? { message: GENERIC_REVEAL_ERROR, status: 500 }) };
-  }
+  if (error) return revealError(error, locale);
 
   // The reveal is already logged, so nothing after this point may hide the numbers: a failed
-  // name lookup or an unexpected column shape falls back instead of throwing.
+  // name lookup or an unexpected column shape falls back instead of throwing. Naming a skill is a
+  // lookup in a static catalogue, with the Polish name and then the slug behind it, so it cannot fail.
   const names = await getSkillNames(supabase).catch(() => new Map<string, string>());
   return {
     ok: true,
@@ -357,7 +368,7 @@ export async function revealCrisisContacts(
         rank: row.rank,
         position: row.position,
         distanceKm: row.distance_km_rounded,
-        skills: skills.success ? skills.data.map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug })) : [],
+        skills: skills.success ? skills.data.map((s) => ({ ...s, name: displaySkillName(locale, s.slug, names) })) : [],
         phone: row.phone,
         phoneVerified: row.phone_verified,
         availabilitySlots: slots.success ? slots.data : null,
@@ -367,8 +378,8 @@ export async function revealCrisisContacts(
   };
 }
 
-/** Every team template with its roles, both in their seeded order. */
-export async function getTeamTemplates(supabase: SupabaseClient): Promise<TeamTemplateDTO[]> {
+/** Every team template with its roles, both in their seeded order and named in `locale`. */
+export async function getTeamTemplates(supabase: SupabaseClient, locale: Locale): Promise<TeamTemplateDTO[]> {
   const { data, error } = await supabase
     .from("team_templates")
     .select("slug, name_pl, team_template_roles(role_slug, name_pl, slots, sort)")
@@ -376,10 +387,10 @@ export async function getTeamTemplates(supabase: SupabaseClient): Promise<TeamTe
   if (error) throw new Error(`getTeamTemplates: ${error.code}`);
   return data.map((t) => ({
     slug: t.slug,
-    name: t.name_pl,
+    name: teamTemplateName(locale, t.slug, t.name_pl),
     roles: [...t.team_template_roles]
       .sort((a, b) => a.sort - b.sort)
-      .map((r) => ({ slug: r.role_slug, name: r.name_pl, slots: r.slots })),
+      .map((r) => ({ slug: r.role_slug, name: teamRoleName(locale, t.slug, r.role_slug, r.name_pl), slots: r.slots })),
   }));
 }
 
@@ -393,20 +404,31 @@ const roleSkillsSchema = z.record(
   ),
 );
 
-const GENERIC_TEAMS_ERROR = "Nie udało się złożyć zespołów. Spróbuj ponownie.";
+// Codes raised by get_team_candidates in the crisis team templates migration; their messages are in
+// the `crisis` catalogue under `teams`.
+const TEAMS_DB_ERRORS = {
+  not_coordinator: { status: 403 },
+  unknown_crisis: { status: 404 },
+  crisis_not_active: { status: 200, ended: true },
+  unknown_template: { status: 422 },
+  invalid_team_count: { status: 422 },
+} as const satisfies Record<string, { status: number; ended?: true }>;
 
-// Messages raised by get_team_candidates in the crisis team templates migration.
-const TEAMS_DB_ERRORS: Partial<Record<string, { message: string; status: number; ended?: true }>> = {
-  not_coordinator: { message: "Tylko koordynator może składać zespoły.", status: 403 },
-  unknown_crisis: { message: "Nie znaleziono kryzysu.", status: 404 },
-  crisis_not_active: {
-    message: "Ten kryzys został zakończony — lista osób została usunięta.",
-    status: 200,
-    ended: true,
-  },
-  unknown_template: { message: "Wybierz szablon zespołu z listy.", status: 422 },
-  invalid_team_count: { message: "Podaj liczbę zespołów od 1 do 10.", status: 422 },
-};
+type TeamsErrorCode = keyof typeof TEAMS_DB_ERRORS;
+const TEAMS_ERROR_CODES = Object.keys(TEAMS_DB_ERRORS) as TeamsErrorCode[];
+
+function teamsError(error: { message?: string }, locale: Locale): Extract<AssembleTeamsResult, { ok: false }> {
+  const t = crisisMessages[locale].teams;
+  const code = TEAMS_ERROR_CODES.find((c) => c === error.message);
+  if (!code) return { ok: false, message: t.failed, status: 500 };
+  const message =
+    code === "unknown_template"
+      ? t.chooseTemplate
+      : code === "invalid_team_count"
+        ? invalidTeamCountMessage(locale)
+        : t[code];
+  return { ok: false, message, ...TEAMS_DB_ERRORS[code] };
+}
 
 export type AssembleTeamsResult =
   | { ok: true; teams: CrisisTeamDTO[]; completeCount: number }
@@ -415,24 +437,21 @@ export type AssembleTeamsResult =
 /**
  * Assembles up to `count` teams of `template` from the crisis's ranked list: as many complete
  * teams as possible, then the best-ranked people, then at most one partial team. Computed per
- * request from the snapshot and the residents' current skills; nothing is stored.
+ * request from the snapshot and the residents' current skills; nothing is stored. Skill names and
+ * messages are in `locale`; role names come translated with `template`.
  */
 export async function assembleCrisisTeams(
   supabase: SupabaseClient,
   crisisId: string,
   template: TeamTemplateDTO,
   count: number,
+  locale: Locale,
 ): Promise<AssembleTeamsResult> {
   const [candidates, names] = await Promise.all([
     supabase.rpc("get_team_candidates", { p_crisis_id: crisisId, p_template: template.slug, p_teams: count }),
     getSkillNames(supabase),
   ]);
-  if (candidates.error) {
-    return {
-      ok: false,
-      ...(TEAMS_DB_ERRORS[candidates.error.message] ?? { message: GENERIC_TEAMS_ERROR, status: 500 }),
-    };
-  }
+  if (candidates.error) return teamsError(candidates.error, locale);
 
   const pool = candidates.data.map((row) => {
     const roleSkills = roleSkillsSchema.parse(row.role_skills);
@@ -459,7 +478,7 @@ export async function assembleCrisisTeams(
       slots: team.slots.map((slot) => ({
         roleSlug: slot.role,
         roleName: roleNames.get(slot.role) ?? slot.role,
-        member: slot.candidate && toTeamMember(slot.candidate, slot.role, names),
+        member: slot.candidate && toTeamMember(slot.candidate, slot.role, names, locale),
       })),
     })),
   };
@@ -469,7 +488,11 @@ function toTeamMember(
   candidate: { roleSkills: z.infer<typeof roleSkillsSchema>; base: Omit<TeamMemberDTO, "skills"> },
   role: string,
   names: Map<string, string>,
+  locale: Locale,
 ): TeamMemberDTO {
-  const skills = (candidate.roleSkills[role] ?? []).map((s) => ({ ...s, name: names.get(s.slug) ?? s.slug }));
+  const skills = (candidate.roleSkills[role] ?? []).map((s) => ({
+    ...s,
+    name: displaySkillName(locale, s.slug, names),
+  }));
   return { ...candidate.base, skills };
 }

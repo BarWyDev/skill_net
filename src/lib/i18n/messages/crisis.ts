@@ -1,12 +1,13 @@
 // The coordinator area and crisis mode (roadmap S-20): names of crisis types, team templates, team
 // roles and ready exercises by slug, the words of crisis formatting, the reason rule, the coordinator
-// panel and the activation form. Polish is the shape; `en` and `uk` are typed as it. Relative
-// imports only, so `node:test` loads it.
+// panel, the activation form, the crisis page, teams and break-glass contacts. Polish is the shape;
+// `en` and `uk` are typed as it. Relative imports only, so `node:test` loads it.
 //
 // The names come from the database in Polish only (`name_pl`); crisis.test.ts checks them against
 // the seed migrations and `supabase/seed.sql`. Text a coordinator types (activation and break-glass
-// reasons) and an exercise's stored reason are never translated. Postcodes and the 3-per-hour limit
-// are the same in every language. The Ukrainian text waits for a native reader.
+// reasons) and an exercise's stored reason are never translated. Postcodes and the hourly limits (3
+// activations, 10 reveals) are the same in every language. The Ukrainian text waits for a native
+// reader.
 
 import type { Locale } from "../locale.ts";
 
@@ -217,6 +218,89 @@ export const pl = {
     unknown_crisis: "Nie znaleziono kryzysu.",
     alreadyEnded: "Ten kryzys został już zakończony.",
   },
+  /** The teams page (`…/zespoly`) and the messages of `get_team_candidates`, by the code it raises. */
+  teams: {
+    title: "Zespoły: {type} — SkillNet",
+    crumb: "Zespoły",
+    heading: "Złóż zespoły",
+    loadFailed: "Nie udało się wczytać kryzysu. Odśwież stronę.",
+    ended: "Ten kryzys został zakończony. Lista osób została usunięta, więc nie można złożyć zespołów.",
+    templateLegend: "Szablon zespołu",
+    countLabel: "Liczba zespołów",
+    countHint: "Od {min} do {max}.",
+    submit: "Złóż zespoły",
+    /** "Pełne zespoły: **2** z 3, niepełne: 1, niezłożone: 0": the count in bold sits between the first two. */
+    completeLabel: "Pełne zespoły:",
+    completeOf: "z {count}",
+    partial: ", niepełne: {count}",
+    unassembled: ", niezłożone: {count}",
+    method:
+      "Zespoły składamy z listy dopasowanych do tego kryzysu, według aktualnych umiejętności mieszkańców: najpierw jak najwięcej pełnych zespołów, potem osoby wyżej na liście. Deklarowana dostępność nie wpływa na wybór.",
+    noneFit: "Nikt z listy dopasowanych nie pasuje do tego szablonu.",
+    team: "Zespół {number}",
+    complete: "pełny",
+    incomplete: "niepełny, brakuje: {roles}",
+    /** After "Osoba #12". */
+    listPlace: ", miejsce {rank}.",
+    noPerson: "brak osoby",
+    cannotAssembleOne: "Zespołu {number} nie da się złożyć",
+    cannotAssembleRange: "Zespołów {from}–{to} nie da się złożyć",
+    /** Each follows `cannotAssembleOne` or `cannotAssembleRange`. */
+    shortRoles: ": na liście dopasowanych brakuje osób z rolą {roles}.",
+    shortGeneric: ": na liście dopasowanych brakuje osób do tego szablonu.",
+    chooseTemplate: "Wybierz szablon zespołu z listy.",
+    invalidCount: "Podaj liczbę zespołów od {min} do {max}.",
+    invalidRequest: "Nieprawidłowe zapytanie.",
+    failed: "Nie udało się złożyć zespołów. Spróbuj ponownie.",
+    not_coordinator: "Tylko koordynator może składać zespoły.",
+    unknown_crisis: "Nie znaleziono kryzysu.",
+    crisis_not_active: "Ten kryzys został zakończony — lista osób została usunięta.",
+  },
+  /** The break-glass page (`…/kontakty`) and the messages of `reveal_crisis_contacts`, by the code it raises. */
+  contacts: {
+    title: "Kontakty: {type} — SkillNet",
+    crumb: "Kontakty",
+    headingRevealed: "Kontakty ujawnione",
+    loadFailed: "Nie udało się wczytać kryzysu. Odśwież stronę.",
+    ended: "Ten kryzys został zakończony — kontaktów nie można ujawnić.",
+    /** One sentence; `warningAll` is in bold between the other two. */
+    warningBefore: "Zobaczysz numery telefonów",
+    warningAll: "wszystkich",
+    warningAfter:
+      "dopasowanych osób, które podały numer. Używaj tego tylko wtedy, gdy nie da się ich zawiadomić inaczej.",
+    logged: "Ujawnienie zostanie trwale zapisane: Twoje konto, czas, powód i lista osób, których numery zobaczysz.",
+    declined: "{people} {verb} na awaryjne odsłonięcie numeru. Ich numerów nie zobaczysz.",
+    /** The verb after "1 osoba", "2 osoby", "5 osób". */
+    declinedVerb: {
+      one: "nie zgodziła się",
+      few: "nie zgodziły się",
+      many: "nie zgodziło się",
+      other: "nie zgodziło się",
+    },
+    vanish: "Numery znikną po opuszczeniu strony. Każde ponowne wyświetlenie to nowe, osobno zapisane ujawnienie.",
+    reasonLabel: "Powód ujawnienia",
+    reasonPlaceholder: "np. brak potwierdzeń od 30 minut, awaria sieci komórkowej",
+    reasonHint: "Od {min} do {max} znaków, co najmniej dwa słowa.",
+    revealed: "Ujawnienie zapisano w dzienniku, {time}.",
+    revealedFacts: "{type}, promień {radius} km. Numery znikną po opuszczeniu tej strony.",
+    unverified: "Numery nie są zweryfikowane i mogą być błędne.",
+    noneAvailable: "Żaden numer nie jest dostępny do odsłonięcia.",
+    noneGiven: "Żadna z dopasowanych osób nie podała numeru telefonu.",
+    /** Read before the number by screen readers. */
+    call: "Zadzwoń:",
+    verified: "zweryfikowany",
+    withoutPhone: "Bez numeru telefonu: {people}.",
+    withoutConsent: "Bez zgody na awaryjne odsłonięcie: {people}.",
+    numbersGone: "Numery znikną po opuszczeniu tej strony.",
+    failed: "Nie udało się ujawnić kontaktów. Spróbuj ponownie.",
+    not_coordinator: "Tylko koordynator może ujawnić kontakty.",
+    unknown_crisis: "Nie znaleziono kryzysu.",
+    crisis_not_active: "Ten kryzys został już zakończony — kontaktów nie można ujawnić.",
+    exercise_no_reveal:
+      "To jest ćwiczenie. W ćwiczeniu nie ujawniamy numerów telefonów: mieszkańcy nie biorą w nim udziału.",
+    reveal_rate_limited:
+      "Limit ujawnień: najwyżej 10 na godzinę na jednego koordynatora, we wszystkich kryzysach. Spróbuj później albo poproś o ujawnienie innego koordynatora.",
+  },
 };
 
 export type CrisisMessages = typeof pl;
@@ -421,6 +505,81 @@ export const en: CrisisMessages = {
     unknown_crisis: "Crisis not found.",
     alreadyEnded: "This crisis has already ended.",
   },
+  teams: {
+    title: "Teams: {type} — SkillNet",
+    crumb: "Teams",
+    heading: "Assemble teams",
+    loadFailed: "Could not load the crisis. Refresh the page.",
+    ended: "This crisis has ended. The list of people was deleted, so teams cannot be assembled.",
+    templateLegend: "Team template",
+    countLabel: "Number of teams",
+    countHint: "From {min} to {max}.",
+    submit: "Assemble teams",
+    completeLabel: "Complete teams:",
+    completeOf: "of {count}",
+    partial: ", partial: {count}",
+    unassembled: ", not assembled: {count}",
+    method:
+      "We assemble teams from the people matched to this crisis, by the residents' current skills: as many complete teams as possible first, then the people higher on the list. Declared availability does not affect the choice.",
+    noneFit: "Nobody on the matched list fits this template.",
+    team: "Team {number}",
+    complete: "complete",
+    incomplete: "incomplete, missing: {roles}",
+    listPlace: ", rank {rank}.",
+    noPerson: "no person",
+    cannotAssembleOne: "Team {number} cannot be assembled",
+    cannotAssembleRange: "Teams {from}–{to} cannot be assembled",
+    shortRoles: ": the matched list is short of people for the role {roles}.",
+    shortGeneric: ": the matched list is short of people for this template.",
+    chooseTemplate: "Choose a team template from the list.",
+    invalidCount: "Enter a number of teams from {min} to {max}.",
+    invalidRequest: "Invalid request.",
+    failed: "Could not assemble the teams. Try again.",
+    not_coordinator: "Only a coordinator can assemble teams.",
+    unknown_crisis: "Crisis not found.",
+    crisis_not_active: "This crisis has ended — the list of people was deleted.",
+  },
+  contacts: {
+    title: "Contacts: {type} — SkillNet",
+    crumb: "Contacts",
+    headingRevealed: "Contacts revealed",
+    loadFailed: "Could not load the crisis. Refresh the page.",
+    ended: "This crisis has ended — contacts cannot be revealed.",
+    warningBefore: "You will see the phone numbers of",
+    warningAll: "all",
+    warningAfter: "matched people who gave one. Use this only when there is no other way to reach them.",
+    logged:
+      "The reveal will be permanently logged: your account, the time, the reason and the list of people whose numbers you see.",
+    declined: "{people} {verb} to an emergency reveal of their number. You will not see their numbers.",
+    declinedVerb: {
+      one: "did not agree",
+      few: "did not agree",
+      many: "did not agree",
+      other: "did not agree",
+    },
+    vanish: "The numbers disappear when you leave the page. Every new view is a new, separately logged reveal.",
+    reasonLabel: "Reason for the reveal",
+    reasonPlaceholder: "e.g. no confirmations for 30 minutes, mobile network failure",
+    reasonHint: "{min} to {max} characters, at least two words.",
+    revealed: "The reveal was logged, {time}.",
+    revealedFacts: "{type}, radius {radius} km. The numbers disappear when you leave this page.",
+    unverified: "The numbers are not verified and may be wrong.",
+    noneAvailable: "No number is available to reveal.",
+    noneGiven: "None of the matched people gave a phone number.",
+    call: "Call:",
+    verified: "verified",
+    withoutPhone: "Without a phone number: {people}.",
+    withoutConsent: "Without consent to an emergency reveal: {people}.",
+    numbersGone: "The numbers disappear when you leave this page.",
+    failed: "Could not reveal the contacts. Try again.",
+    not_coordinator: "Only a coordinator can reveal contacts.",
+    unknown_crisis: "Crisis not found.",
+    crisis_not_active: "This crisis has already ended — contacts cannot be revealed.",
+    exercise_no_reveal:
+      "This is an exercise. In an exercise we do not reveal phone numbers: residents do not take part in it.",
+    reveal_rate_limited:
+      "Reveal limit: at most 10 per hour per coordinator, across all crises. Try later or ask another coordinator to reveal them.",
+  },
 };
 
 export const uk: CrisisMessages = {
@@ -619,6 +778,82 @@ export const uk: CrisisMessages = {
     not_coordinator: "Лише координатор може завершити кризовий режим.",
     unknown_crisis: "Кризу не знайдено.",
     alreadyEnded: "Цю кризу вже завершено.",
+  },
+  teams: {
+    title: "Команди: {type} — SkillNet",
+    crumb: "Команди",
+    heading: "Скласти команди",
+    loadFailed: "Не вдалося завантажити кризу. Оновіть сторінку.",
+    ended: "Цю кризу завершено. Список осіб видалено, тому скласти команди не можна.",
+    templateLegend: "Шаблон команди",
+    countLabel: "Кількість команд",
+    countHint: "Від {min} до {max}.",
+    submit: "Скласти команди",
+    completeLabel: "Повні команди:",
+    completeOf: "з {count}",
+    partial: ", неповні: {count}",
+    unassembled: ", не складені: {count}",
+    method:
+      "Команди ми складаємо зі списку дібраних до цієї кризи осіб, за поточними навичками мешканців: спершу якомога більше повних команд, потім особи, вищі в списку. Заявлена доступність не впливає на вибір.",
+    noneFit: "Ніхто зі списку дібраних не підходить до цього шаблону.",
+    team: "Команда {number}",
+    complete: "повна",
+    incomplete: "неповна, бракує: {roles}",
+    listPlace: ", місце {rank}.",
+    noPerson: "немає особи",
+    cannotAssembleOne: "Команду {number} скласти не вдається",
+    cannotAssembleRange: "Команди {from}–{to} скласти не вдається",
+    shortRoles: ": у списку дібраних бракує осіб з роллю {roles}.",
+    shortGeneric: ": у списку дібраних бракує осіб для цього шаблону.",
+    chooseTemplate: "Виберіть шаблон команди зі списку.",
+    invalidCount: "Вкажіть кількість команд від {min} до {max}.",
+    invalidRequest: "Неправильний запит.",
+    failed: "Не вдалося скласти команди. Спробуйте ще раз.",
+    not_coordinator: "Лише координатор може складати команди.",
+    unknown_crisis: "Кризу не знайдено.",
+    crisis_not_active: "Цю кризу завершено — список осіб видалено.",
+  },
+  contacts: {
+    title: "Контакти: {type} — SkillNet",
+    crumb: "Контакти",
+    headingRevealed: "Контакти розкрито",
+    loadFailed: "Не вдалося завантажити кризу. Оновіть сторінку.",
+    ended: "Цю кризу завершено — контакти розкрити не можна.",
+    warningBefore: "Ви побачите номери телефонів",
+    warningAll: "усіх",
+    warningAfter: "дібраних осіб, які вказали номер. Використовуйте це лише тоді, коли сповістити їх інакше неможливо.",
+    logged:
+      "Розкриття буде назавжди записано: ваш обліковий запис, час, причина і список осіб, чиї номери ви побачите.",
+    declined: "{people} {verb} на екстрене розкриття номера. Їхніх номерів ви не побачите.",
+    declinedVerb: {
+      one: "не погодилася",
+      few: "не погодилися",
+      many: "не погодилися",
+      other: "не погодилися",
+    },
+    vanish:
+      "Номери зникнуть, коли ви залишите сторінку. Кожен повторний перегляд — це нове, окремо записане розкриття.",
+    reasonLabel: "Причина розкриття",
+    reasonPlaceholder: "напр. немає підтверджень уже 30 хвилин, збій мобільної мережі",
+    reasonHint: "Від {min} до {max} символів, щонайменше два слова.",
+    revealed: "Розкриття записано в журнал, {time}.",
+    revealedFacts: "{type}, радіус {radius} км. Номери зникнуть, коли ви залишите цю сторінку.",
+    unverified: "Номери не перевірені й можуть бути помилковими.",
+    noneAvailable: "Жоден номер не доступний для розкриття.",
+    noneGiven: "Жодна з дібраних осіб не вказала номер телефону.",
+    call: "Зателефонувати:",
+    verified: "перевірений",
+    withoutPhone: "Без номера телефону: {people}.",
+    withoutConsent: "Без згоди на екстрене розкриття: {people}.",
+    numbersGone: "Номери зникнуть, коли ви залишите цю сторінку.",
+    failed: "Не вдалося розкрити контакти. Спробуйте ще раз.",
+    not_coordinator: "Лише координатор може розкривати контакти.",
+    unknown_crisis: "Кризу не знайдено.",
+    crisis_not_active: "Цю кризу вже завершено — контакти розкрити не можна.",
+    exercise_no_reveal:
+      "Це навчання. Під час навчання ми не розкриваємо номерів телефонів: мешканці в ньому не беруть участі.",
+    reveal_rate_limited:
+      "Ліміт розкриттів: щонайбільше 10 на годину на одного координатора, в усіх кризах. Спробуйте пізніше або попросіть розкрити іншого координатора.",
   },
 };
 
