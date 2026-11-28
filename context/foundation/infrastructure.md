@@ -124,7 +124,7 @@ Six months in, the pilot council's first real drill failed. The team had deploye
 - **The first deploy creates a KV namespace.** The adapter adds a KV binding named `SESSION` with no ID (verified in `node_modules/@astrojs/cloudflare/dist/wrangler.js`). On the first deploy, wrangler 4.131.1 creates the namespace itself. A CI token scoped without KV edit permission will fail that deploy.
 - **Some Node modules are only stubs.** Under `nodejs_compat`, `http2`, `child_process`, `vm` and `worker_threads` build fine but fail at runtime. SMS and push SDKs built on them, such as firebase-admin's FCM client, break only in production. Call providers' REST APIs with `fetch`.
 - **`astro dev` already runs on workerd.** `wrangler dev` is redundant for this adapter version. `.dev.vars` is still the local secrets file.
-- **Workers Logs are short-lived.** They keep 7 days on Paid (3 on Free). The audit trail for the break-glass contact reveal (FR-012) and consent records (NFR) must live in Supabase tables, not in platform logs.
+- **Workers Logs are short-lived.** From 2026-12-01 Cloudflare Observability bills logs and traces by volume. Free includes 0.5 GB ingested per day with seven-day retention; ingestion pauses at the daily limit until it resets, so a request flood costs nothing but loses the rest of that day's logs. Workers Paid brings an Observability Paid subscription automatically: 50 GB ingested and 10 GB-month stored per billing cycle, then $0.25 per GB ingested and $0.10 per GB-month stored. The audit trail for the break-glass contact reveal (FR-012) and consent records (NFR) must live in Supabase tables, not in platform logs.
 
 ## Operational Story
 
