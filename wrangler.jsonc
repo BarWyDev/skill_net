@@ -21,9 +21,9 @@
     "enabled": true,
   },
   // The interface languages each environment offers (src/lib/i18n/locale.ts). Production offers all
-  // three since the resident area was translated (roadmap S-19); the coordinator area is still Polish
-  // (S-20), and the Ukrainian text has not been checked by a native reader. Setting this back to
-  // "pl" is the rollback. `vars` are not inherited, so staging and previews set their own.
+  // three: the resident area (roadmap S-19) and the coordinator area (S-20) are translated, and the
+  // Ukrainian text has not been checked by a native reader. Setting this back to "pl" is the
+  // rollback. `vars` are not inherited, so staging and previews set their own.
   "vars": {
     "ENABLED_LOCALES": "pl,en,uk",
   },
