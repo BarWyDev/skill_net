@@ -6,11 +6,11 @@ import StatusLine from "@/components/StatusLine.astro";
 import StatusMark from "@/components/StatusMark.astro";
 import { joinNames, summariseCoverage } from "@/lib/crisis-coverage";
 import { formatPeople } from "@/lib/crisis-format";
+import { format } from "@/lib/i18n/format";
+import { crisis as crisisMessages } from "@/lib/i18n/messages/crisis";
 import { SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import type { CrisisCoverageDTO } from "@/types";
-
-const { locale } = Astro.locals;
 
 interface Props {
   coverage: CrisisCoverageDTO[];
@@ -18,29 +18,30 @@ interface Props {
 }
 
 const { coverage, class: className } = Astro.props;
+const { locale } = Astro.locals;
+const t = crisisMessages[locale].coverage;
 const summary = summariseCoverage(coverage);
 const groups = [
-  { title: "Priorytetowe", priority: true, rows: coverage.filter((r) => r.tier === "priority") },
-  { title: "Wspierające", priority: false, rows: coverage.filter((r) => r.tier === "supporting") },
+  { title: t.priority, priority: true, rows: coverage.filter((r) => r.tier === "priority") },
+  { title: t.supporting, priority: false, rows: coverage.filter((r) => r.tier === "supporting") },
 ].filter((g) => g.rows.length > 0);
 ---
 
 <section aria-labelledby="coverage-heading" class:list={cn(className)}>
   <h2 id="coverage-heading" class:list={SECTION_TITLE}>
-    Pokrycie umiejętności
+    {t.heading}
   </h2>
 
   {summary.missingPriority.length > 0 ? (
     <StatusLine tone="attention" class="mt-4 max-w-[64ch] text-lg">
-      <p class="font-bold">W promieniu brakuje: {joinNames(locale, summary.missingPriority)}.</p>
+      <p class="font-bold">{format(t.missing, { names: joinNames(locale, summary.missingPriority) })}</p>
       <p class="text-ash text-base">
-        Priorytetowe umiejętności na liście: {summary.priorityCovered} z {summary.priorityTotal}. Rozważ większy promień
-        albo pomoc z zewnątrz.
+        {format(t.missingHelp, { covered: summary.priorityCovered, total: summary.priorityTotal })}
       </p>
     </StatusLine>
   ) : (
     <StatusLine tone="done" class="mt-4 max-w-[64ch] text-lg font-bold">
-      Każda priorytetowa umiejętność ({summary.priorityTotal}) ma na liście co najmniej jedną osobę.
+      {format(t.allCovered, { total: summary.priorityTotal })}
     </StatusLine>
   )}
 
@@ -53,11 +54,13 @@ const groups = [
             <li class="border-seam flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t py-3">
               <span class:list={cn(g.priority && "font-bold")}>{r.name}</span>
               {r.people === 0 ? (
-                <StatusMark tone="attention">nikt w promieniu</StatusMark>
+                <StatusMark tone="attention">{t.nobody}</StatusMark>
               ) : (
                 <span class="tabular-nums">
                   {formatPeople(locale, r.people)}
-                  {r.availableNow > 0 && <span class="text-ash">, teraz dostępne: {r.availableNow}</span>}
+                  {r.availableNow > 0 && (
+                    <span class="text-ash">, {format(t.availableNow, { count: r.availableNow })}</span>
+                  )}
                 </span>
               )}
             </li>
@@ -67,8 +70,5 @@ const groups = [
     ))}
   </div>
 
-  <p class="text-ash mt-4 max-w-[64ch] text-[0.9375rem] leading-relaxed">
-    Liczymy osoby z całej listy, nie tylko z pierwszej strony. Jedna osoba może mieć kilka umiejętności. „Teraz
-    dostępne” to osoby, które udostępniają dostępność i deklarują ją na tę godzinę.
-  </p>
+  <p class="text-ash mt-4 max-w-[64ch] text-[0.9375rem] leading-relaxed">{t.note}</p>
 </section>

@@ -287,16 +287,16 @@ No migration. The area reaches production with the next promotion after the phas
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm run test:unit`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Lint passes: `npm run lint`
-- [ ] 2.4 Build passes: `npm run build` (to a scratch `--outDir`)
-- [ ] 2.5 Local smoke passes: `npm run smoke`
+- [x] 2.1 Unit tests pass: `npm run test:unit` — 8b7fd73
+- [x] 2.2 Type check passes: `npx astro check` — 8b7fd73
+- [x] 2.3 Lint passes: `npm run lint` — 8b7fd73
+- [x] 2.4 Build passes: `npm run build` (to a scratch `--outDir`) — 8b7fd73
+- [x] 2.5 Local smoke passes: `npm run smoke` — 8b7fd73
 
 #### Manual
 
-- [ ] 2.6 An active crisis in `en` and `uk` reads in that language, the list loads without delay, ending shows a translated notice
-- [ ] 2.7 The same crisis in `pl` reads as before
+- [x] 2.6 An active crisis in `en` and `uk` reads in that language, the list loads without delay, ending shows a translated notice — 8b7fd73
+- [x] 2.7 The same crisis in `pl` reads as before — 8b7fd73
 
 ### Phase 3: Teams and contacts
 

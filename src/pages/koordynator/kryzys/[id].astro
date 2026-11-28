@@ -9,12 +9,16 @@ import CrisisCoverage from "@/components/crisis/CrisisCoverage.astro";
 import { createClient } from "@/lib/supabase";
 import { getCrisis, getCrisisCoverage, getCrisisMatches, MATCHES_PAGE_SIZE } from "@/lib/services/crisis";
 import { formatDistanceKm, formatPeople } from "@/lib/crisis-format";
+import { format } from "@/lib/i18n/format";
+import { auth } from "@/lib/i18n/messages/auth";
+import { crisis as crisisMessages } from "@/lib/i18n/messages/crisis";
 import { BUTTON, SECTION_TITLE } from "@/lib/site-styles";
 import { cn } from "@/lib/utils";
 import type { CrisisCoverageDTO, CrisisDTO, CrisisMatchDTO } from "@/types";
 import { takeFlashError } from "@/lib/flash";
 
 const { locale } = Astro.locals;
+const t = crisisMessages[locale].crisisPage;
 
 // The middleware gates this route (coordinators only) and sends Cache-Control: private, no-store.
 // The list is a snapshot from activation: no identity, coordinates or score reach this page.
@@ -36,30 +40,30 @@ let loadError: string | null = null;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (!supabase) {
-  loadError = "Supabase nie jest skonfigurowany.";
+  loadError = auth[locale].notConfigured;
 } else if (UUID_RE.test(id)) {
   try {
     crisis = await getCrisis(supabase, id, locale);
     if (crisis?.status === "active") {
       [matches, coverage] = await Promise.all([
-        getCrisisMatches(supabase, id),
-        getCrisisCoverage(supabase, id).catch(() => null),
+        getCrisisMatches(supabase, id, locale),
+        getCrisisCoverage(supabase, id, locale).catch(() => null),
       ]);
     }
   } catch {
-    loadError = "Nie udało się wczytać listy. Odśwież stronę.";
+    loadError = t.loadFailed;
   }
 }
 
 if (!crisis && !loadError) Astro.response.status = 404;
 const hidden = crisis?.status === "active" ? Math.max(0, crisis.matchCount - matches.length) : 0;
-const panel = { href: "/koordynator", label: "Panel koordynatora" };
-const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
+const panel = { href: "/koordynator", label: crisisMessages[locale].panel.heading };
+const kind = crisis?.isExercise ? t.kindExercise : t.kindCrisis;
 ---
 
 <PageShell
-  title={`${crisis ? `${kind}: ${crisis.typeName}` : "Nie znaleziono kryzysu"} — SkillNet`}
-  heading={crisis?.typeName ?? (loadError ? "Kryzys" : "Nie znaleziono kryzysu")}
+  title={crisis ? format(t.title, { kind, type: crisis.typeName }) : t.notFoundTitle}
+  heading={crisis?.typeName ?? (loadError ? t.kindCrisis : t.notFound)}
   crumbs={[panel]}
   wide
 >
@@ -69,14 +73,12 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
     </StatusLine>
   )}
 
-  {!crisis && !loadError && (
-    <p class="max-w-[52ch] text-lg leading-relaxed">Ten kryzys nie istnieje albo nie masz do niego dostępu.</p>
-  )}
+  {!crisis && !loadError && <p class="max-w-[52ch] text-lg leading-relaxed">{t.notFoundText}</p>}
 
   {crisis?.status === "ended" && (
     <>
       <CrisisFacts crisis={crisis} />
-      <p class="text-ash mt-8 max-w-[64ch] leading-relaxed">Lista osób została usunięta po zakończeniu kryzysu.</p>
+      <p class="text-ash mt-8 max-w-[64ch] leading-relaxed">{t.endedListGone}</p>
     </>
   )}
 
@@ -95,11 +97,7 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
         <EndCrisisDialog crisis={crisis} />
       </div>
 
-      <p class="text-ash mt-14 max-w-[64ch] leading-relaxed">
-        Kolejność i umiejętności to stan z chwili aktywacji. Dostępność to aktualna deklaracja mieszkańca, sprawdzana
-        względem bieżącej godziny, i nie wpływa na kolejność. Numery telefonów są domyślnie ukryte. „Bez telefonu”
-        oznacza, że ta osoba nie otrzyma alertu.
-      </p>
+      <p class="text-ash mt-14 max-w-[64ch] leading-relaxed">{t.listNote}</p>
 
       <ul class="mt-8 space-y-6">
         <li class="grid gap-x-8 gap-y-3 md:grid-cols-[16rem_minmax(0,1fr)] md:items-center">
@@ -107,11 +105,9 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
             href={`/koordynator/kryzys/${crisis.id}/zespoly`}
             class:list={cn(BUTTON, "btn-secondary w-full md:w-auto")}
           >
-            Złóż zespoły
+            {t.assembleTeams}
           </a>
-          <p class="max-w-[52ch] leading-relaxed">
-            Potrzebujesz gotowych składów? Złóż zespoły z szablonu (np. ewakuacyjny) z osób z tej listy.
-          </p>
+          <p class="max-w-[52ch] leading-relaxed">{t.assembleTeamsHelp}</p>
         </li>
         {!crisis.isExercise && (
           <li class="grid gap-x-8 gap-y-3 md:grid-cols-[16rem_minmax(0,1fr)] md:items-center">
@@ -119,12 +115,9 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
               href={`/koordynator/kryzys/${crisis.id}/kontakty`}
               class:list={cn(BUTTON, "btn-secondary w-full md:w-auto")}
             >
-              Ujawnij kontakty
+              {t.revealContacts}
             </a>
-            <p class="max-w-[52ch] leading-relaxed">
-              Nikt nie potwierdza? Możesz ujawnić numery wszystkich dopasowanych osób. Każde ujawnienie jest zapisywane
-              razem z Twoim kontem i powodem.
-            </p>
+            <p class="max-w-[52ch] leading-relaxed">{t.revealContactsHelp}</p>
           </li>
         )}
       </ul>
@@ -133,27 +126,25 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
 
       <section aria-labelledby="matches-heading" class="mt-16 sm:mt-20">
         <h2 id="matches-heading" class:list={SECTION_TITLE}>
-          Dopasowane osoby
+          {t.matchesHeading}
         </h2>
 
         {matches.length === 0 ? (
-          <p class="mt-4 max-w-[64ch] text-lg leading-relaxed">W tym promieniu nie ma dopasowanych mieszkańców.</p>
+          <p class="mt-4 max-w-[64ch] text-lg leading-relaxed">{t.noMatches}</p>
         ) : (
           <>
-            <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">
-              Od najlepiej dopasowanej. Pogrubione umiejętności są priorytetowe dla tego rodzaju kryzysu.
-            </p>
+            <p class="text-ash mt-3 max-w-[64ch] leading-relaxed">{t.matchesIntro}</p>
             <ol class="border-seam mt-6 border-b">
               {matches.map((m) => (
                 <li class="border-seam grid grid-cols-[2.75rem_minmax(0,1fr)_auto] gap-x-4 gap-y-2 border-t py-5 md:grid-cols-[4rem_minmax(0,1fr)_6rem_17rem] md:grid-rows-[auto_1fr] md:gap-x-6">
                   <p class="font-display row-span-3 text-right text-[2.25rem] leading-[0.85] tabular-nums md:row-span-2 md:text-[2.75rem]">
-                    <span class="sr-only">Miejsce </span>
+                    <span class="sr-only">{t.rank} </span>
                     {m.rank}
                   </p>
-                  <p class="text-lg leading-tight font-bold">Osoba #{m.position}</p>
+                  <p class="text-lg leading-tight font-bold">{format(t.person, { position: m.position })}</p>
                   <p class="text-right text-lg leading-tight tabular-nums md:text-left">
                     {formatDistanceKm(locale, m.distanceKm)}
-                    <span class="sr-only"> od epicentrum</span>
+                    <span class="sr-only"> {t.fromEpicentre}</span>
                   </p>
                   <SkillList skills={m.skills} class="col-span-2 col-start-2 md:col-span-1" />
                   <PersonStatus
@@ -170,7 +161,7 @@ const kind = crisis?.isExercise ? "Ćwiczenie" : "Kryzys";
 
         {hidden > 0 && (
           <p class="text-ash mt-6 leading-relaxed">
-            Pokazano pierwsze {MATCHES_PAGE_SIZE}. Niewyświetlonych: {formatPeople(locale, hidden)}.
+            {format(t.moreHidden, { count: MATCHES_PAGE_SIZE, people: formatPeople(locale, hidden) })}
           </p>
         )}
       </section>
