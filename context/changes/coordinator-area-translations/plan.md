@@ -317,9 +317,9 @@ No migration. The area reaches production with the next promotion after the phas
 
 #### Automated
 
-- [ ] 4.1 Unit tests pass: `npm run test:unit`
-- [ ] 4.2 Type check and lint pass: `npx astro check`, `npm run lint`
-- [ ] 4.3 Local smoke passes: `npm run smoke`
+- [x] 4.1 Unit tests pass: `npm run test:unit`
+- [x] 4.2 Type check and lint pass: `npx astro check`, `npm run lint`
+- [x] 4.3 Local smoke passes: `npm run smoke`
 - [ ] 4.4 CI is green on each PR: `ci`, `smoke`
 
 #### Manual
