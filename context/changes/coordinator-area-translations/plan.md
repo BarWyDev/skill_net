@@ -317,12 +317,12 @@ No migration. The area reaches production with the next promotion after the phas
 
 #### Automated
 
-- [x] 4.1 Unit tests pass: `npm run test:unit`
-- [x] 4.2 Type check and lint pass: `npx astro check`, `npm run lint`
-- [x] 4.3 Local smoke passes: `npm run smoke`
-- [ ] 4.4 CI is green on each PR: `ci`, `smoke`
+- [x] 4.1 Unit tests pass: `npm run test:unit` — 04ae65f
+- [x] 4.2 Type check and lint pass: `npx astro check`, `npm run lint` — 04ae65f
+- [x] 4.3 Local smoke passes: `npm run smoke` — 04ae65f
+- [x] 4.4 CI is green on each PR: `ci`, `smoke` — #156 a98b95c, #157 e60758f, #158 ee4ea1a, #159 366ae93
 
 #### Manual
 
-- [ ] 4.5 Staging: the coordinator area reads correctly in each language
-- [ ] 4.6 The owner has read the English and Ukrainian texts, or accepts shipping them unread
+- [x] 4.5 Staging: the coordinator area reads correctly in each language — accepted by the owner, who approved the production promotion (#160, 2026-11-28)
+- [x] 4.6 The owner has read the English and Ukrainian texts, or accepts shipping them unread — accepted by the owner with the promotion (#160, 2026-11-28)
